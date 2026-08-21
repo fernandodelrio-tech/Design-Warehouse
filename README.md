@@ -274,27 +274,36 @@ types.
    publishing is worth doing, because grants issued while the app is still in
    *Testing* expire after a week.
 3. To switch publishing status to **In production**, the Branding page also needs an
-   **Application home page** and an **Application privacy policy link** — those two are
-   optional while in Testing but required to publish. Once Pages is enabled they are:
+   **Application home page** and an **Application privacy policy link** — optional while
+   in Testing, required to publish. This path is confirmed to work end to end:
 
-   ```
-   https://fernandodelrio-tech.github.io/Design-Warehouse/
-   https://fernandodelrio-tech.github.io/Design-Warehouse/privacy.html
-   ```
+   1. Enable Pages and let `Deploy web app` publish the site, so the URLs below resolve.
+   2. In [Search Console](https://search.google.com/search-console), add a **URL prefix**
+      property for `https://fernandodelrio-tech.github.io/Design-Warehouse/` and verify by
+      the **HTML tag** method. The token lives in `index.html`; replace it with whichever
+      one Search Console shows you and redeploy before verifying. DNS verification cannot
+      be used — `github.io` is GitHub's domain, so there is no zone to add a TXT record to.
+   3. Back on Branding, set:
 
-   Using them means adding `fernandodelrio-tech.github.io` under *Authorized domains*,
-   which Google requires you to verify once in
-   [Search Console](https://search.google.com/search-console). Staying in *Testing* skips
-   all of this at the cost of reconnecting weekly.
-4. Under *APIs & Services → Credentials*, create the client you need:
-   - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
-     Copy the client ID and client secret into the app's sync panel. Google issues a
-     secret for desktop clients and documents it as not confidential; it is handed
-     straight to the keychain and never read back, so the field appears empty
-     afterwards.
-   - **For the web app** — *Create credentials → OAuth client ID → Web application*.
-     Add your Pages URL (and `http://localhost:5173` for development) as an
-     authorized JavaScript origin. Copy the client ID into the sync panel.
+      ```
+      Application home page:         https://fernandodelrio-tech.github.io/Design-Warehouse/
+      Application privacy policy:    https://fernandodelrio-tech.github.io/Design-Warehouse/privacy.html
+      ```
+
+   4. Under **Authorized domains**, add the bare host `fernandodelrio-tech.github.io` —
+      no scheme, no path, no trailing slash. A red *Missing domain* notice before this
+      step is normal; it means the URLs reference a domain not yet registered, not that
+      the domain was refused. A verified `github.io` host is accepted.
+   5. Save, then **Audience → Publish app**.
+
+   Staying in *Testing* skips all of this, at the cost of Google expiring the sign-in
+   every 7 days. After publishing, sign out and back in once: a grant issued while in
+   Testing keeps its 7-day clock, and only a fresh one is long-lived.
+
+   > When redeploying the site, use **Run workflow** on the branch rather than **Re-run**
+   > on an old run. A re-run rebuilds that old commit and republishes it, which can
+   > silently overwrite a newer deploy — that is what breaks verification most often.
+
 5. Open the cloud button in either app, paste the client ID, and press **Sign in
    with Google**. The consent screen opens in your real browser, not an embedded
    window.
