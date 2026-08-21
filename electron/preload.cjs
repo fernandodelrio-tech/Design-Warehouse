@@ -20,6 +20,19 @@ contextBridge.exposeInMainWorld('designWarehouse', {
     return bytes ? new Uint8Array(bytes).buffer : null;
   },
 
+  /**
+   * Google Drive sign-in. The consent flow, the client secret and the refresh
+   * token all live in the main process; this only ever returns a short-lived
+   * access token.
+   */
+  google: {
+    authorize: (options) => ipcRenderer.invoke('google:authorize', options),
+    token: () => ipcRenderer.invoke('google:token'),
+    disconnect: () => ipcRenderer.invoke('google:disconnect'),
+    status: () => ipcRenderer.invoke('google:status'),
+    cancel: () => ipcRenderer.invoke('google:cancel'),
+  },
+
   /** Subscribe to the application menu. Returns an unsubscribe function. */
   onMenuAction(handler) {
     const listener = (_event, action) => handler(action);

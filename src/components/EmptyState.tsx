@@ -62,8 +62,8 @@ export function EmptyState({
         <div>
           <strong>Everything stays local.</strong> Images and specs are stored{' '}
           {desktop ? 'on this computer' : "in this browser's storage"} — nothing is
-          uploaded anywhere. The web and desktop copies keep separate catalogs; ⬇ and ⬆
-          in the header move one across.
+          uploaded anywhere by default. Connect Google Drive from the cloud button to
+          share one catalog between the web and desktop apps.
         </div>
       </div>
     </div>

@@ -28,7 +28,10 @@ import {
 } from './lib/spec';
 import { copyText, downloadBlob, downloadText, exportCatalog, importCatalog } from './lib/transfer';
 import type { DesignRecord } from './lib/types';
+import { connectionStatus, lastSyncAt, readSettings, runSync } from './lib/sync';
+import type { SyncSummary } from './lib/sync';
 import { releaseAllImages, releaseImage } from './hooks/useImageUrl';
+import { SyncPanel } from './components/SyncPanel';
 import { DesignCard } from './components/DesignCard';
 import { DesignDetail } from './components/DesignDetail';
 import { EmptyState } from './components/EmptyState';
@@ -43,6 +46,7 @@ import {
   IconSearch,
   IconSun,
   IconUpload,
+  IconCloud,
 } from './components/Icons';
 
 type SchemeFilter = 'all' | 'light' | 'dark' | 'mixed';
@@ -105,6 +109,11 @@ export default function App() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [usage, setUsage] = useState<string | null>(null);
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [lastSync, setLastSync] = useState<number | null>(null);
+  const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
@@ -194,6 +203,80 @@ export default function App() {
     },
     [addRecords, notify, takenTitles],
   );
+
+  // --- google drive sync ---------------------------------------------------
+
+  const refreshConnection = useCallback(async () => {
+    const [status, when] = await Promise.all([connectionStatus(), lastSyncAt()]);
+    setConnected(status.connected);
+    setLastSync(when);
+  }, []);
+
+  const sync = useCallback(
+    async (quiet = false) => {
+      if (syncing) return;
+      setSyncing(true);
+      try {
+        const summary = await runSync();
+        setLastSummary(summary);
+        // Anything pulled changed the database underneath us, so re-read it.
+        if (summary.pulled > 0 || summary.deletedLocally > 0) {
+          releaseAllImages();
+          setRecords(await listDesigns());
+          void refreshUsage();
+        }
+        setLastSync(Date.now());
+        if (!quiet) {
+          const parts = [];
+          if (summary.pulled) parts.push(`${summary.pulled} in`);
+          if (summary.pushed) parts.push(`${summary.pushed} out`);
+          const deletions = summary.deletedLocally + summary.deletedRemotely;
+          if (deletions) parts.push(`${deletions} deleted`);
+          notify(parts.length ? `Synced — ${parts.join(', ')}.` : 'Already up to date.', 'success');
+        }
+        if (summary.failed.length && !quiet) {
+          notify(`${summary.failed.length} design(s) could not be synced.`, 'error');
+        }
+      } catch (error) {
+        if (!quiet) {
+          notify(error instanceof Error ? error.message : 'Sync failed.', 'error');
+        }
+      } finally {
+        setSyncing(false);
+      }
+    },
+    [notify, refreshUsage, syncing],
+  );
+
+  // Sync once on launch when a connection is already set up.
+  useEffect(() => {
+    void (async () => {
+      await refreshConnection();
+      const [status, settings] = await Promise.all([connectionStatus(), readSettings()]);
+      if (status.connected && settings.autoSync) void sync(true);
+    })();
+    // Intentionally launch-only; later syncs are driven by edits or the button.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Push edits shortly after they settle, rather than on every keystroke.
+  const recordCount = records.length;
+  const latestEdit = useMemo(
+    () => records.reduce((max, record) => Math.max(max, record.updatedAt), 0),
+    [records],
+  );
+  const syncedThrough = useRef(0);
+  useEffect(() => {
+    if (!connected || loading) return;
+    if (latestEdit === 0 || latestEdit === syncedThrough.current) return;
+    const timer = setTimeout(async () => {
+      if ((await readSettings()).autoSync) {
+        syncedThrough.current = latestEdit;
+        void sync(true);
+      }
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [connected, loading, latestEdit, recordCount, sync]);
 
   // --- clipboard -----------------------------------------------------------
 
@@ -599,6 +682,18 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={`btn btn-ghost btn-icon${syncing ? ' spinning' : ''}`}
+            title={
+              connected
+                ? `Shared catalog${lastSync ? ` — last synced ${new Date(lastSync).toLocaleString()}` : ''}`
+                : 'Share this catalog across devices'
+            }
+            onClick={() => setSyncOpen(true)}
+          >
+            <IconCloud connected={connected} />
+          </button>
+          <button
+            type="button"
             className="btn btn-ghost btn-icon"
             title="Back up the whole catalog to a file"
             onClick={backupCatalog}
@@ -768,6 +863,17 @@ export default function App() {
             <p>Images and folders are both fine — subfolders are walked too.</p>
           </div>
         </div>
+      )}
+
+      {syncOpen && (
+        <SyncPanel
+          onClose={() => setSyncOpen(false)}
+          onSync={() => void sync(false)}
+          syncing={syncing}
+          lastSync={lastSync}
+          lastSummary={lastSummary}
+          onConnectionChange={() => void refreshConnection()}
+        />
       )}
 
       {openRecord && (

@@ -13,10 +13,23 @@ export type MenuAction =
   | 'restore'
   | 'search';
 
+export interface GoogleBridge {
+  authorize(options: {
+    clientId: string;
+    clientSecret: string;
+    scope: string;
+  }): Promise<{ connected: boolean }>;
+  token(): Promise<string | null>;
+  disconnect(): Promise<{ connected: boolean }>;
+  status(): Promise<{ connected: boolean; clientId: string }>;
+  cancel(): Promise<{ cancelled: boolean }>;
+}
+
 export interface DesktopBridge {
   isDesktop: true;
   version: string;
   readClipboardImage(): Promise<ArrayBuffer | null>;
+  google: GoogleBridge;
   onMenuAction(handler: (action: MenuAction) => void): () => void;
 }
 

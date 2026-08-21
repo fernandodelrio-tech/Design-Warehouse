@@ -6,9 +6,11 @@ import type { DesignBlobs, DesignRecord } from './types';
  */
 
 const DB_NAME = 'design-warehouse';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_DESIGNS = 'designs';
 const STORE_BLOBS = 'blobs';
+const STORE_TOMBSTONES = 'tombstones';
+const STORE_META = 'meta';
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -24,6 +26,15 @@ function openDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_BLOBS)) {
         db.createObjectStore(STORE_BLOBS, { keyPath: 'id' });
+      }
+      // A deletion has to be recorded, not just applied: without a tombstone the
+      // next sync sees the design still present on the other device and pulls it
+      // back, and a delete never sticks.
+      if (!db.objectStoreNames.contains(STORE_TOMBSTONES)) {
+        db.createObjectStore(STORE_TOMBSTONES, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_META)) {
+        db.createObjectStore(STORE_META, { keyPath: 'key' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -100,16 +111,61 @@ export async function getBlobs(id: string): Promise<DesignBlobs | undefined> {
 }
 
 export async function deleteDesign(id: string): Promise<void> {
-  await tx([STORE_DESIGNS, STORE_BLOBS], 'readwrite', (t) => {
+  await tx([STORE_DESIGNS, STORE_BLOBS, STORE_TOMBSTONES], 'readwrite', (t) => {
     t.objectStore(STORE_DESIGNS).delete(id);
     t.objectStore(STORE_BLOBS).delete(id);
+    t.objectStore(STORE_TOMBSTONES).put({ id, deletedAt: Date.now() });
+  });
+}
+
+export interface Tombstone {
+  id: string;
+  deletedAt: number;
+}
+
+export async function listTombstones(): Promise<Tombstone[]> {
+  return tx([STORE_TOMBSTONES], 'readonly', (t) =>
+    request(t.objectStore(STORE_TOMBSTONES).getAll() as IDBRequest<Tombstone[]>),
+  );
+}
+
+export async function putTombstone(tombstone: Tombstone): Promise<void> {
+  await tx([STORE_DESIGNS, STORE_BLOBS, STORE_TOMBSTONES], 'readwrite', (t) => {
+    t.objectStore(STORE_DESIGNS).delete(tombstone.id);
+    t.objectStore(STORE_BLOBS).delete(tombstone.id);
+    t.objectStore(STORE_TOMBSTONES).put(tombstone);
+  });
+}
+
+/** Small key/value corner for sync bookkeeping: folder id, tokens, last run. */
+export async function readMeta<T>(key: string): Promise<T | undefined> {
+  const row = await tx([STORE_META], 'readonly', (t) =>
+    request(t.objectStore(STORE_META).get(key) as IDBRequest<{ key: string; value: T } | undefined>),
+  );
+  return row?.value;
+}
+
+export async function writeMeta<T>(key: string, value: T): Promise<void> {
+  await tx([STORE_META], 'readwrite', (t) => {
+    t.objectStore(STORE_META).put({ key, value });
+  });
+}
+
+export async function clearMeta(key: string): Promise<void> {
+  await tx([STORE_META], 'readwrite', (t) => {
+    t.objectStore(STORE_META).delete(key);
   });
 }
 
 export async function clearCatalog(): Promise<void> {
-  await tx([STORE_DESIGNS, STORE_BLOBS], 'readwrite', (t) => {
+  const existing = await listDesigns();
+  const now = Date.now();
+  await tx([STORE_DESIGNS, STORE_BLOBS, STORE_TOMBSTONES], 'readwrite', (t) => {
     t.objectStore(STORE_DESIGNS).clear();
     t.objectStore(STORE_BLOBS).clear();
+    // Clearing is a deletion too, and has to survive the next sync.
+    const tombstones = t.objectStore(STORE_TOMBSTONES);
+    for (const record of existing) tombstones.put({ id: record.id, deletedAt: now });
   });
 }
 

@@ -115,3 +115,14 @@ export const IconRefresh = ({ size = 15 }: Props) => (
     <path d="M20 19.5v-4h-4" />
   </svg>
 );
+
+export const IconCloud = ({ size = 15, connected = false }: Props & { connected?: boolean }) => (
+  <svg {...base(size)}>
+    <path d="M7.2 18.5A3.7 3.7 0 0 1 7 11.1a5 5 0 0 1 9.6-1.4 4.4 4.4 0 0 1 .6 8.8z" />
+    {connected ? (
+      <path d="m9.6 14.2 1.8 1.8 3.2-3.4" />
+    ) : (
+      <path d="M12 10.5v3.2M12 16.2v.1" />
+    )}
+  </svg>
+);

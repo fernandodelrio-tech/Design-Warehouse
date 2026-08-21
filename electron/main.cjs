@@ -22,6 +22,7 @@ const {
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
+const googleAuth = require('./google-auth.cjs');
 
 const APP_SCHEME = 'app';
 const APP_HOST = 'design-warehouse';
@@ -69,7 +70,7 @@ const CSP =
   "style-src 'self' 'unsafe-inline'; " +
   "img-src 'self' data: blob:; " +
   "font-src 'self' data:; " +
-  "connect-src 'self' data: blob:; " +
+  "connect-src 'self' data: blob: https://www.googleapis.com; " +
   "media-src 'self' blob:; " +
   "object-src 'none'; " +
   "base-uri 'none'; " +
@@ -347,6 +348,18 @@ ipcMain.handle('clipboard:read-image', () => {
   const png = image.toPNG();
   return png.length > 0 ? png : null;
 });
+
+// --- google drive sync ----------------------------------------------------
+
+/**
+ * The client secret and refresh token stay in this process. The renderer can
+ * ask for a short-lived access token and nothing more.
+ */
+ipcMain.handle('google:authorize', (_event, options) => googleAuth.authorize(options ?? {}));
+ipcMain.handle('google:token', () => googleAuth.accessToken());
+ipcMain.handle('google:disconnect', () => googleAuth.disconnect());
+ipcMain.handle('google:status', () => googleAuth.status());
+ipcMain.handle('google:cancel', () => googleAuth.cancel());
 
 // --- lifecycle ------------------------------------------------------------
 

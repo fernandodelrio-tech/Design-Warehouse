@@ -10,16 +10,16 @@ you use; nothing is uploaded anywhere and there is no server to run.
 
 ## Where you can run it
 
-| | How to get it | Catalog lives in |
-| --- | --- | --- |
-| **Web** | [The hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) — nothing to install, works in any browser | That browser's storage, on that machine |
-| **Windows** | The installer, below | Your Windows user profile |
-| **macOS / Linux** | From source, below | That browser profile or user profile |
+| | How to get it |
+| --- | --- |
+| **Web** | [The hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) — nothing to install, works in any browser |
+| **Windows** | The installer, below |
+| **macOS / Linux** | From source, below |
 
-Each of these keeps **its own catalog**. There is no server and nothing syncs, which
-is the point — the designs never leave the machine they were pasted on. To move a
-catalog between them, use **⬇** in the header to write a backup file and **⬆** on the
-other side to restore it.
+Each of these stores its catalog locally, in that browser profile or that user
+profile. Connect them to Google Drive (below) and they share one catalog; leave it
+switched off and nothing ever leaves the machine. Either way there is no server in
+the middle — the app talks to your Drive as you, or to nothing at all.
 
 ## Installing it
 
@@ -215,6 +215,60 @@ From a card, hover and hit the copy icon. From the detail drawer:
 Select several cards to copy or download one document covering all of them — useful
 for seeding a whole project with a reference set.
 
+## Sharing a catalog across devices
+
+The cloud button in the header keeps this catalog in step with a **Design Warehouse**
+folder in your own Google Drive, so the web app and the desktop app show the same
+designs. It is off until you set it up.
+
+**How it works.** Each design is stored as two files — its image and its spec — plus
+a small marker for each deletion. There is no shared index file, so two devices
+syncing at the same moment write different objects instead of racing over one.
+Every record carries the time it was last edited, and where the same design was
+edited in both places the more recent edit replaces the other. A deletion is
+recorded rather than just applied, so it sticks instead of being pulled back from
+the other device on the next sync.
+
+The app uses the `drive.file` scope: it can only see files it created itself, and
+has no access to anything else in your Drive. Images upload once; editing a spec
+afterwards only re-sends the small JSON file.
+
+### One-time Google setup
+
+There is no server, so the app signs in as you, and that needs an OAuth client from
+your own Google Cloud project. It is free, and the two builds need different client
+types.
+
+1. At [console.cloud.google.com](https://console.cloud.google.com/), create a project
+   (or pick one) and enable the **Google Drive API** under *APIs & Services →
+   Library*.
+2. Under *APIs & Services → OAuth consent screen*, choose **External**, fill in the
+   app name and your email, and add the scope
+   `https://www.googleapis.com/auth/drive.file`. Add yourself as a test user.
+   That scope is non-sensitive, so publishing the app needs no Google review — and
+   publishing is worth doing, because grants issued while the app is still in
+   *Testing* expire after a week.
+3. Under *APIs & Services → Credentials*, create the client you need:
+   - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
+     Copy the client ID and client secret into the app's sync panel. Google issues a
+     secret for desktop clients and documents it as not confidential; it is stored on
+     that computer only and never reaches the page.
+   - **For the web app** — *Create credentials → OAuth client ID → Web application*.
+     Add your Pages URL (and `http://localhost:5173` for development) as an
+     authorized JavaScript origin. Copy the client ID into the sync panel.
+4. Open the cloud button in either app, paste the client ID, and press **Connect
+   Google Drive**. The consent screen opens in your real browser, not an embedded
+   window.
+
+Do the same on the other device with the same Google account, and the two catalogs
+converge on the next sync.
+
+### If you would rather not use Drive
+
+Leave sync switched off and use **⬇** / **⬆** in the header, which write and restore
+a single backup file holding every design. That moves a catalog between machines by
+hand, with nothing leaving them in between.
+
 ## Backups
 
 The catalog lives in one place on one machine, and each way of running the app has
@@ -238,6 +292,11 @@ src/
     title.ts       decides whether a filename is worth keeping as a title
     naming.ts      names a design when it is not — evocative, and deterministic
     grouping.ts    the sort and group-by options behind the grid controls
+  lib/sync/
+    engine.ts      two-way reconciliation, last edit wins
+    drive.ts       Google Drive as the shared folder
+    auth.ts        signing in: loopback on the desktop, GIS in a browser
+    types.ts       the narrow interface the engine is written against
     spec.ts        markdown / prompt / token-JSON / CSS exporters
     db.ts          IndexedDB: metadata and blobs in separate stores
     ingest.ts      clipboard, file, folder and drag-drop intake
@@ -247,7 +306,8 @@ src/
   hooks/           object-URL management for thumbnails and full images
 electron/
   main.cjs         desktop shell: app:// protocol, window state, menu, clipboard
-  preload.cjs      the two calls exposed to the renderer
+  google-auth.cjs  the OAuth loopback flow, kept out of the renderer
+  preload.cjs      the calls exposed to the renderer
 scripts/
   make-icons.mjs   regenerates build/icon.ico and build/icon.png
   desktop-dev.mjs  runs the shell against the Vite dev server
