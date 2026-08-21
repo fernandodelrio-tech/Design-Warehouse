@@ -1,63 +1,10 @@
-import { describeColor } from './color';
-import type { AutoAnalysis, DesignSpec, PaletteColor } from './types';
-
 /**
- * Names a design after what it looks like.
+ * Decides whether a filename is worth keeping as a title.
  *
- * A catalog full of "Pasted design — Aug 21, 02:45" or
- * "Screenshot 2026-08-21 at 10.32.14" is unsearchable and unscannable, so a
- * title is built from the features the analyzer already measured: the colour
- * scheme, the kind of screen, and the accent colour that carries it.
+ * A name someone chose says more than anything generated; a camera-roll id or a
+ * timestamped screenshot says nothing, and those get named by `naming.ts`
+ * instead.
  */
-
-const CATEGORY_LABELS: Record<string, string> = {
-  'Web app / dashboard': 'dashboard',
-  'Web landing page': 'landing page',
-  'Marketing site': 'marketing site',
-  'Mobile app screen': 'mobile screen',
-  'Full-page web capture': 'page capture',
-  'UI component / detail': 'UI detail',
-};
-
-/** The colour a person would say the design "is" — its accent, not its background. */
-function signatureColor(palette: PaletteColor[]): PaletteColor | null {
-  const accent = palette.find((c) => c.role === 'accent');
-  if (accent) return accent;
-
-  // No assigned accent: fall back to the most chromatic swatch that covers
-  // enough of the canvas to have been a deliberate choice.
-  const chromatic = palette
-    .filter((c) => c.hsl[1] >= 25 && c.share >= 0.015 && c.hsl[2] > 10 && c.hsl[2] < 94)
-    .sort((a, b) => b.hsl[1] * Math.sqrt(b.share) - a.hsl[1] * Math.sqrt(a.share));
-  return chromatic[0] ?? null;
-}
-
-export function describeDesign(auto: AutoAnalysis, spec: DesignSpec): string {
-  const scheme =
-    auto.colorScheme === 'dark' ? 'Dark' : auto.colorScheme === 'light' ? 'Light' : '';
-  const kind =
-    CATEGORY_LABELS[spec.category] ?? spec.category.toLowerCase() ?? 'design';
-  const color = signatureColor(auto.palette);
-
-  const words = [scheme];
-  // "Dark greyscale dashboard" says more than "Dark dashboard" when the design
-  // genuinely has no colour in it.
-  if (!color) words.push('greyscale');
-  words.push(kind);
-
-  let title = words.filter(Boolean).join(' ');
-  if (color) {
-    // Avoid "Light mobile screen in light orange": the scheme word already
-    // said it, so drop the repeat from the colour's description.
-    const name = describeColor(color.hsl).replace(
-      new RegExp(`^${scheme.toLowerCase()} `),
-      '',
-    );
-    title += ` in ${name}`;
-  }
-
-  return title.charAt(0).toUpperCase() + title.slice(1);
-}
 
 /** Filename noise that says nothing about the design. */
 const NOISE =

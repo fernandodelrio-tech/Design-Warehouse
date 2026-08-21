@@ -1,7 +1,8 @@
 import { analyzeBlob, seedSpec } from './analyze';
 import { saveDesign } from './db';
 import { desktop, readDesktopClipboardImage } from './desktop';
-import { describeDesign, isGenericFileName, titleFromFileName, uniqueTitle } from './title';
+import { nameDesign } from './naming';
+import { isGenericFileName, titleFromFileName, uniqueTitle } from './title';
 import type { DesignBlobs, DesignRecord, IngestSource } from './types';
 
 export const SUPPORTED_TYPES = [
@@ -47,17 +48,17 @@ export async function ingestBlob(
   const taken = options.takenTitles ?? new Set<string>();
   // A name someone chose is worth keeping; a camera-roll id or a timestamped
   // screenshot is not, so those are named after what the design looks like.
-  const title =
+  const named =
     options.fileName && !isGenericFileName(options.fileName)
-      ? titleFromFileName(options.fileName)
-      : describeDesign(auto, spec);
+      ? uniqueTitle(titleFromFileName(options.fileName), taken)
+      : nameDesign(auto, spec, taken);
 
   const now = Date.now();
   const record: DesignRecord = {
     id: newId(),
     createdAt: now,
     updatedAt: now,
-    title: uniqueTitle(title, taken),
+    title: named,
     source: options.source,
     fileName: options.folderPath || options.fileName || '',
     sourceUrl: '',

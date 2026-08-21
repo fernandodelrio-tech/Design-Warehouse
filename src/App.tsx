@@ -9,6 +9,7 @@ import {
   requestPersistence,
   saveDesign,
 } from './lib/db';
+import { GROUPS, SORTS, groupRecords } from './lib/grouping';
 import { isDesktop, onMenuAction } from './lib/desktop';
 import type { MenuAction } from './lib/desktop';
 import { formatBytes } from './lib/image';
@@ -44,8 +45,16 @@ import {
   IconUpload,
 } from './components/Icons';
 
-type SortKey = 'newest' | 'oldest' | 'title' | 'largest';
 type SchemeFilter = 'all' | 'light' | 'dark' | 'mixed';
+
+/** Remembers how you last chose to look at the catalog. */
+function stored(key: string, fallback: string): string {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 const CARD_SIZES: Array<[string, number]> = [
   ['Compact', 220],
@@ -88,8 +97,9 @@ export default function App() {
   const [scheme, setScheme] = useState<SchemeFilter>('all');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [sort, setSort] = useState<SortKey>('newest');
-  const [cardMin, setCardMin] = useState(300);
+  const [sortKey, setSortKey] = useState(() => stored('dw-sort', 'newest'));
+  const [groupKey, setGroupKey] = useState(() => stored('dw-group', 'none'));
+  const [cardMin, setCardMin] = useState(() => Number(stored('dw-size', '300')));
   const [openId, setOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -118,6 +128,16 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('dw-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('dw-sort', sortKey);
+      localStorage.setItem('dw-group', groupKey);
+      localStorage.setItem('dw-size', String(cardMin));
+    } catch {
+      // Private browsing, or storage is full. The view still works.
+    }
+  }, [sortKey, groupKey, cardMin]);
 
   const refreshUsage = useCallback(async () => {
     const estimate = await estimateStorage();
@@ -366,6 +386,15 @@ export default function App() {
     return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }, [records]);
 
+  const sortOption = useMemo(
+    () => SORTS.find((option) => option.key === sortKey) ?? SORTS[0],
+    [sortKey],
+  );
+  const groupOption = useMemo(
+    () => GROUPS.find((option) => option.key === groupKey) ?? GROUPS[0],
+    [groupKey],
+  );
+
   const visible = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const filtered = records.filter((record) => {
@@ -379,22 +408,13 @@ export default function App() {
       return true;
     });
 
-    const sorted = [...filtered];
-    switch (sort) {
-      case 'oldest':
-        sorted.sort((a, b) => a.createdAt - b.createdAt);
-        break;
-      case 'title':
-        sorted.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case 'largest':
-        sorted.sort((a, b) => b.image.width * b.image.height - a.image.width * a.image.height);
-        break;
-      default:
-        sorted.sort((a, b) => b.createdAt - a.createdAt);
-    }
-    return sorted;
-  }, [activeTags, favoritesOnly, query, records, scheme, sort]);
+    return [...filtered].sort(sortOption.compare);
+  }, [activeTags, favoritesOnly, query, records, scheme, sortOption]);
+
+  const sections = useMemo(
+    () => groupRecords(visible, groupOption, sortOption),
+    [visible, groupOption, sortOption],
+  );
 
   const toggleTag = useCallback((tag: string) => {
     setActiveTags((current) =>
@@ -514,6 +534,19 @@ export default function App() {
 
   useEffect(() => onMenuAction((action) => menuDispatch.current(action)), []);
 
+  const renderCard = (record: DesignRecord) => (
+    <DesignCard
+      record={record}
+      selected={selected.has(record.id)}
+      onOpen={setOpenId}
+      onToggleSelect={toggleSelect}
+      onToggleFavorite={toggleFavorite}
+      onCopySpec={copySpec}
+      onDelete={removeRecord}
+      onTagClick={toggleTag}
+    />
+  );
+
   const openRecord = openId ? records.find((r) => r.id === openId) ?? null : null;
   const filtersActive =
     query.trim().length > 0 || scheme !== 'all' || favoritesOnly || activeTags.length > 0;
@@ -601,12 +634,30 @@ export default function App() {
             <option value="mixed">Mixed</option>
           </select>
 
-          <span className="filter-label">Sort</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="title">Title A–Z</option>
-            <option value="largest">Largest capture</option>
+          <span className="filter-label">Sort by</span>
+          <select
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value)}
+            aria-label="Sort the catalog"
+          >
+            {SORTS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <span className="filter-label">Group by</span>
+          <select
+            value={groupKey}
+            onChange={(e) => setGroupKey(e.target.value)}
+            aria-label="Group the catalog into sections"
+          >
+            {GROUPS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
           </select>
 
           <span className="filter-label">Size</span>
@@ -669,20 +720,25 @@ export default function App() {
             onPickFolder={() => folderInput.current?.click()}
             onPaste={pasteFromButton}
           />
+        ) : sections.length > 0 ? (
+          sections.map((section) => (
+            <section className="group" key={section.id}>
+              <h2 className="group-heading">
+                {section.label}
+                <span className="group-count">{section.records.length}</span>
+              </h2>
+              <MasonryGrid
+                items={section.records}
+                keyFor={(record) => record.id}
+                minWidth={cardMin}
+              >
+                {(record) => renderCard(record)}
+              </MasonryGrid>
+            </section>
+          ))
         ) : (
           <MasonryGrid items={visible} keyFor={(record) => record.id} minWidth={cardMin}>
-            {(record) => (
-              <DesignCard
-                record={record}
-                selected={selected.has(record.id)}
-                onOpen={setOpenId}
-                onToggleSelect={toggleSelect}
-                onToggleFavorite={toggleFavorite}
-                onCopySpec={copySpec}
-                onDelete={removeRecord}
-                onTagClick={toggleTag}
-              />
-            )}
+            {(record) => renderCard(record)}
           </MasonryGrid>
         )}
       </main>

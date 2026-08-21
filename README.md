@@ -130,18 +130,25 @@ skipped and reported rather than failing the import.
 ### How designs get named
 
 A filename you chose is kept — `stripe-pricing-page.png` becomes *Stripe pricing
-page*. A filename that says nothing is replaced by a description of the design
-itself, built from what the analyzer measured:
+page*. A filename that says nothing — a clipboard paste, `IMG_4471.PNG`,
+`Screenshot 2026-08-21 at 10.32.14.png`, `Untitled-1` — earns a name instead:
 
-| Pasted or imported as | Titled |
+| The design | Named |
 | --- | --- |
-| *(clipboard, no filename)* | Dark dashboard in vivid red |
-| `Screenshot 2026-08-21 at 10.32.14.png` | Light landing page in vivid blue |
-| `IMG_4471.PNG` | Light mobile screen in vivid orange |
-| `CleanShot 2026-08-21@2x.png` | Dark greyscale dashboard |
+| Dark dashboard, red accent | **Ember Console** |
+| Light landing page, blue accent | **Azure Overture** |
+| Warm mobile screen, orange accent | **Copper Handheld** |
+| Dark editor, teal accent | **Cypress Workbench** |
+| Dark dashboard, no colour in it | **Basalt Observatory** |
 
-Two designs that describe identically get numbered rather than repeated. Every title
-is editable in the detail drawer.
+The colour word comes from the accent's hue, the noun from the kind of screen, so
+the name still tells you something — and the factual line under it on the card keeps
+carrying the measurements. It is entirely deterministic: the same design always earns
+the same name, with no model call, so it works offline and in the packaged app.
+
+A second red dashboard becomes *Crimson Cockpit* rather than *Ember Console 2* —
+names are drawn from the whole vocabulary before numbering is used at all. Every
+title is editable in the detail drawer.
 
 ## What gets measured automatically
 
@@ -175,6 +182,23 @@ does not guess them — it leaves them blank and gives you a fast editor instead
 
 Empty fields are dropped from every export, so a short spec is always a fully
 populated one.
+
+## Arranging the grid
+
+Two controls in the filter bar, remembered between sessions.
+
+**Sort by** — date added (newest, oldest), recently edited, name A–Z or Z–A,
+category, style, light to dark, colour around the wheel, density sparse to dense,
+capture size, or favourites first.
+
+**Group by** — breaks the grid into labelled sections with counts: category, style
+keyword, tag, month added, colour scheme, colour family, platform, density,
+orientation, column count, or how it arrived. Sorting still applies inside each
+section.
+
+Grouping by tag or style keyword puts a design under *each* of the ones it carries,
+which is what makes it useful for classifying; anything with none lands in a
+remainder section at the end.
 
 ## Getting designs out
 
@@ -211,7 +235,9 @@ src/
     layout.ts      column, section, margin and density heuristics
     image.ts       decoding, thumbnailing, pixel sampling
     analyze.ts     orchestrates analysis and seeds a spec from it
-    title.ts       names a design from its features when the filename says nothing
+    title.ts       decides whether a filename is worth keeping as a title
+    naming.ts      names a design when it is not — evocative, and deterministic
+    grouping.ts    the sort and group-by options behind the grid controls
     spec.ts        markdown / prompt / token-JSON / CSS exporters
     db.ts          IndexedDB: metadata and blobs in separate stores
     ingest.ts      clipboard, file, folder and drag-drop intake

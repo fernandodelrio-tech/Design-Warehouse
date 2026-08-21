@@ -356,6 +356,41 @@ select {
   margin-bottom: 20px;
 }
 
+/* --- grouped sections ---------------------------------------------------- */
+
+.group {
+  margin-bottom: 28px;
+}
+
+.group:last-child {
+  margin-bottom: 0;
+}
+
+.group-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.group-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
 /* --- design card --------------------------------------------------------- */
 
 .card {
