@@ -8,6 +8,19 @@ back when building a prototype.
 Everything runs in the browser. Images and specs live in IndexedDB on the machine
 you use; nothing is uploaded anywhere and there is no server to run.
 
+## Where you can run it
+
+| | How to get it | Catalog lives in |
+| --- | --- | --- |
+| **Web** | [The hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) — nothing to install, works in any browser | That browser's storage, on that machine |
+| **Windows** | The installer, below | Your Windows user profile |
+| **macOS / Linux** | From source, below | That browser profile or user profile |
+
+Each of these keeps **its own catalog**. There is no server and nothing syncs, which
+is the point — the designs never leave the machine they were pasted on. To move a
+catalog between them, use **⬇** in the header to write a backup file and **⬆** on the
+other side to restore it.
+
 ## Installing it
 
 ### Windows
@@ -36,21 +49,31 @@ in place, so reinstalling picks up where you left off. Back it up first
 
 ### macOS and Linux
 
-Run it from source — there is no signed macOS build, and an unsigned one would be
-quarantined by Gatekeeper:
+Open [the hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) in a
+browser, or run the desktop window from source — there is no signed macOS build, and
+an unsigned one would be quarantined by Gatekeeper:
 
 ```bash
 npm install
 npm run desktop     # builds, then opens the desktop window
 ```
 
-Or use it as a plain web app in any browser:
+A Linux AppImage can be produced locally with `npm run dist:linux`.
 
-```bash
-npm run dev         # http://localhost:5173
+## The hosted web app
+
+`Deploy web app` publishes the built renderer to GitHub Pages on every push to the
+default branch, and can be run by hand from the Actions tab. The first run turns
+Pages on for the repository itself, so there is no setting to flip; afterwards the
+app is at:
+
+```
+https://fernandodelrio-tech.github.io/Design-Warehouse/
 ```
 
-A Linux AppImage can be produced locally with `npm run dist:linux`.
+It is a static bundle with relative asset paths, so it works from a repository
+subpath, and it can equally be dropped on any other static host. The app needs no
+network once loaded — everything it does happens in the browser.
 
 ## Building the Windows installer yourself
 
@@ -95,6 +118,22 @@ on any static host.
 
 PNG, JPEG, WebP, GIF, AVIF, BMP and SVG are accepted. Non-images in a folder are
 skipped and reported rather than failing the import.
+
+### How designs get named
+
+A filename you chose is kept — `stripe-pricing-page.png` becomes *Stripe pricing
+page*. A filename that says nothing is replaced by a description of the design
+itself, built from what the analyzer measured:
+
+| Pasted or imported as | Titled |
+| --- | --- |
+| *(clipboard, no filename)* | Dark dashboard in vivid red |
+| `Screenshot 2026-08-21 at 10.32.14.png` | Light landing page in vivid blue |
+| `IMG_4471.PNG` | Light mobile screen in vivid orange |
+| `CleanShot 2026-08-21@2x.png` | Dark greyscale dashboard |
+
+Two designs that describe identically get numbered rather than repeated. Every title
+is editable in the detail drawer.
 
 ## What gets measured automatically
 
@@ -146,9 +185,10 @@ for seeding a whole project with a reference set.
 
 ## Backups
 
-The catalog lives in one place on one machine: a browser profile on the web, or your
-user profile in the desktop app (**Help → Where is my catalog stored?** opens the
-exact folder). **⬇** in the header writes a single JSON file with the images inlined;
+The catalog lives in one place on one machine, and each way of running the app has
+its own (see the table at the top): a browser profile on the web, or your user
+profile in the desktop app (**Help → Where is my catalog stored?** opens the exact
+folder). **⬇** in the header writes a single JSON file with the images inlined;
 **⬆** restores one — that file is how a catalog moves between machines. The app also
 asks for persistent storage so the catalog is not evicted under storage pressure.
 
@@ -163,6 +203,7 @@ src/
     layout.ts      column, section, margin and density heuristics
     image.ts       decoding, thumbnailing, pixel sampling
     analyze.ts     orchestrates analysis and seeds a spec from it
+    title.ts       names a design from its features when the filename says nothing
     spec.ts        markdown / prompt / token-JSON / CSS exporters
     db.ts          IndexedDB: metadata and blobs in separate stores
     ingest.ts      clipboard, file, folder and drag-drop intake

@@ -1,0 +1,69 @@
+name: Deploy web app
+
+# Publishes the built renderer to GitHub Pages, so the catalog is reachable
+# from a browser on any machine as well as from the desktop app.
+on:
+  push:
+    # The repository's default branch today, plus main for after any merge.
+    branches:
+      - main
+      - claude/design-catalog-app-wgqj95
+    paths-ignore:
+      - '**.md'
+      - .github/workflows/build-desktop.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; the newest build is the one worth publishing.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check and build
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+        with:
+          # Turns Pages on for the repository the first time this runs, rather
+          # than requiring someone to flip it in Settings by hand.
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -99,6 +99,15 @@ export default function App() {
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
+  // Read by the ingest callbacks, which must stay referentially stable: they
+  // back the window-level paste and drop listeners.
+  const recordsRef = useRef<DesignRecord[]>([]);
+  recordsRef.current = records;
+  const takenTitles = useCallback(
+    () => new Set(recordsRef.current.map((record) => record.title)),
+    [],
+  );
+
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const importInput = useRef<HTMLInputElement>(null);
@@ -139,8 +148,11 @@ export default function App() {
       if (files.length === 0) return;
       setProgress({ done: 0, total: files.length });
       try {
-        const report = await ingestFiles(files, source, (done, total) =>
-          setProgress({ done, total }),
+        const report = await ingestFiles(
+          files,
+          source,
+          (done, total) => setProgress({ done, total }),
+          takenTitles(),
         );
         addRecords(report.added);
 
@@ -160,7 +172,7 @@ export default function App() {
         setProgress(null);
       }
     },
-    [addRecords, notify],
+    [addRecords, notify, takenTitles],
   );
 
   // --- clipboard -----------------------------------------------------------
@@ -185,8 +197,9 @@ export default function App() {
       }
       setProgress({ done: 0, total: blobs.length });
       const added: DesignRecord[] = [];
+      const taken = takenTitles();
       for (const [index, blob] of blobs.entries()) {
-        added.push(await ingestBlob(blob, { source: 'clipboard' }));
+        added.push(await ingestBlob(blob, { source: 'clipboard', takenTitles: taken }));
         setProgress({ done: index + 1, total: blobs.length });
       }
       addRecords(added);
@@ -196,7 +209,7 @@ export default function App() {
     } finally {
       setProgress(null);
     }
-  }, [addRecords, notify]);
+  }, [addRecords, notify, takenTitles]);
 
   // --- drag and drop -------------------------------------------------------
 

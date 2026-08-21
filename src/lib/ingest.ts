@@ -1,6 +1,7 @@
 import { analyzeBlob, seedSpec } from './analyze';
 import { saveDesign } from './db';
 import { desktop, readDesktopClipboardImage } from './desktop';
+import { describeDesign, isGenericFileName, titleFromFileName, uniqueTitle } from './title';
 import type { DesignBlobs, DesignRecord, IngestSource } from './types';
 
 export const SUPPORTED_TYPES = [
@@ -19,33 +20,9 @@ export function isSupportedImage(file: { type: string; name?: string }): boolean
   return !!file.name && /\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(file.name);
 }
 
-function titleFromFileName(name: string): string {
-  const base = name.replace(/\.[^.]+$/, '');
-  const cleaned = base
-    .replace(/[_-]+/g, ' ')
-    .replace(/\b(screen ?shot|screen capture|capture|image|img|pasted)\b/gi, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!cleaned || /^\d[\d\s.:-]*$/.test(cleaned)) {
-    return base.replace(/[_-]+/g, ' ').trim() || 'Untitled design';
-  }
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-}
-
 function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
   return `d_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function pastedTitle(): string {
-  const now = new Date();
-  const stamp = now.toLocaleString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  return `Pasted design — ${stamp}`;
 }
 
 export interface IngestOptions {
@@ -53,6 +30,12 @@ export interface IngestOptions {
   fileName?: string;
   /** Relative path when the file came from a folder pick. */
   folderPath?: string;
+  /**
+   * Titles already in the catalog, so a described title can be numbered rather
+   * than repeated. Mutated as titles are handed out, which also keeps a single
+   * batch of imports from colliding with itself.
+   */
+  takenTitles?: Set<string>;
 }
 
 export async function ingestBlob(
@@ -60,12 +43,21 @@ export async function ingestBlob(
   options: IngestOptions,
 ): Promise<DesignRecord> {
   const { image, auto, thumb } = await analyzeBlob(blob);
+  const spec = seedSpec(image, auto);
+  const taken = options.takenTitles ?? new Set<string>();
+  // A name someone chose is worth keeping; a camera-roll id or a timestamped
+  // screenshot is not, so those are named after what the design looks like.
+  const title =
+    options.fileName && !isGenericFileName(options.fileName)
+      ? titleFromFileName(options.fileName)
+      : describeDesign(auto, spec);
+
   const now = Date.now();
   const record: DesignRecord = {
     id: newId(),
     createdAt: now,
     updatedAt: now,
-    title: options.fileName ? titleFromFileName(options.fileName) : pastedTitle(),
+    title: uniqueTitle(title, taken),
     source: options.source,
     fileName: options.folderPath || options.fileName || '',
     sourceUrl: '',
@@ -74,7 +66,7 @@ export async function ingestBlob(
     favorite: false,
     image,
     auto,
-    spec: seedSpec(image, auto),
+    spec,
   };
   const blobs: DesignBlobs = { id: record.id, full: blob, thumb };
   await saveDesign(record, blobs);
@@ -91,8 +83,10 @@ export async function ingestFiles(
   files: File[],
   source: IngestSource,
   onProgress?: (done: number, total: number) => void,
+  takenTitles?: Set<string>,
 ): Promise<IngestReport> {
   const report: IngestReport = { added: [], skipped: [], failed: [] };
+  const taken = takenTitles ?? new Set<string>();
   const candidates = files.filter((f) => {
     if (isSupportedImage(f)) return true;
     report.skipped.push(f.name);
@@ -107,6 +101,7 @@ export async function ingestFiles(
         source,
         fileName: file.name,
         folderPath: relative || undefined,
+        takenTitles: taken,
       });
       report.added.push(record);
     } catch (err) {
