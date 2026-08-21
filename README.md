@@ -63,13 +63,21 @@ A Linux AppImage can be produced locally with `npm run dist:linux`.
 ## The hosted web app
 
 `Deploy web app` publishes the built renderer to GitHub Pages on every push to the
-default branch, and can be run by hand from the Actions tab. The first run turns
-Pages on for the repository itself, so there is no setting to flip; afterwards the
-app is at:
+default branch, and can be run by hand from the Actions tab.
+
+**One-time setup:** open **Settings → Pages**, and under *Build and deployment* set
+**Source** to **GitHub Actions**. The workflow tries to enable this itself, but the
+token it runs with is usually not permitted to, in which case it fails with those
+instructions in the run summary. Once the setting is on, re-run the workflow and the
+app is live at:
 
 ```
 https://fernandodelrio-tech.github.io/Design-Warehouse/
 ```
+
+The repository is public, so that page is reachable by anyone with the link. Only the
+app is published — every catalog lives in its own visitor's browser, so no designs
+are exposed by it.
 
 It is a static bundle with relative asset paths, so it works from a repository
 subpath, and it can equally be dropped on any other static host. The app needs no

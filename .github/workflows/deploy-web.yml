@@ -44,11 +44,38 @@ jobs:
         run: npm run build
 
       - name: Configure Pages
+        id: pages
         uses: actions/configure-pages@v5
+        continue-on-error: true
         with:
-          # Turns Pages on for the repository the first time this runs, rather
-          # than requiring someone to flip it in Settings by hand.
+          # Self-enables Pages where the workflow token is allowed to; on many
+          # repositories it is not, which the next step explains rather than
+          # leaving a bare "Resource not accessible by integration".
           enablement: true
+
+      - name: Explain how to switch Pages on
+        if: steps.pages.outcome == 'failure'
+        run: |
+          echo "::error title=GitHub Pages is not enabled::Enable it once, then re-run this workflow."
+          {
+            echo "## GitHub Pages needs turning on"
+            echo
+            echo "This workflow builds fine, but it cannot publish until Pages is enabled,"
+            echo "and the workflow token is not permitted to enable it for you."
+            echo
+            echo "One-time setup:"
+            echo
+            echo "1. Open **Settings -> Pages** in this repository."
+            echo "2. Under **Build and deployment**, set **Source** to **GitHub Actions**."
+            echo "3. Re-run this workflow."
+            echo
+            echo "The app will then be published to:"
+            echo
+            echo '```'
+            echo "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
