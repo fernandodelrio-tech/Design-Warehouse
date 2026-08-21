@@ -25,8 +25,6 @@ export interface GoogleSettings {
   webClientId: string;
   /** "Desktop app" client for the packaged app. */
   desktopClientId: string;
-  /** Google issues one for desktop clients; it is not treated as confidential. */
-  desktopClientSecret: string;
   autoSync: boolean;
   /** Delete this device's copy of the catalog when signing out. */
   forgetOnSignOut: boolean;
@@ -35,7 +33,6 @@ export interface GoogleSettings {
 export const DEFAULT_SETTINGS: GoogleSettings = {
   webClientId: '',
   desktopClientId: '',
-  desktopClientSecret: '',
   autoSync: true,
   forgetOnSignOut: false,
 };
@@ -225,11 +222,8 @@ export async function connect(): Promise<Account> {
   if (desktop) {
     const clientId = settings.desktopClientId;
     if (!clientId) throw new Error('Add a desktop client ID first.');
-    const result = await desktop.google.authorize({
-      clientId,
-      clientSecret: settings.desktopClientSecret,
-      scope: AUTH_SCOPES,
-    });
+    // No secret passed: the main process holds it and never gives it back.
+    const result = await desktop.google.authorize({ clientId, scope: AUTH_SCOPES });
     if (!result.profile) throw new Error('Google did not return an account.');
     // Checked after consent because the account is only known once it is given;
     // the grant is dropped again immediately if the client is someone else's.

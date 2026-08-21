@@ -1,4 +1,4 @@
-import { currentDatabase, moveCatalogTo, useDatabase } from './db';
+import { currentDatabase, listDesigns, moveCatalogTo, useDatabase } from './db';
 import { databaseFor } from './accounts';
 import type { Account } from './accounts';
 import { releaseAllImages } from '../hooks/useImageUrl';
@@ -55,7 +55,6 @@ export async function forgetCatalog(account: Account): Promise<boolean> {
 export async function countLocalCatalog(): Promise<number> {
   const previous = currentDatabase();
   await useDatabase(databaseFor(null));
-  const { listDesigns } = await import('./db');
   const count = (await listDesigns()).length;
   await useDatabase(previous);
   return count;

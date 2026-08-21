@@ -120,8 +120,28 @@ function cancel() {
   return { cancelled: true };
 }
 
+/**
+ * Records the OAuth client for this device, without a sign-in.
+ *
+ * The secret goes straight into the keychain store and is never handed back;
+ * the renderer can ask whether one is set, not what it is.
+ */
+function setCredentials({ clientId, clientSecret }) {
+  const store = readStore() ?? {};
+  writeStore({
+    ...store,
+    clientId: clientId ?? store.clientId ?? '',
+    clientSecret: clientSecret ?? store.clientSecret ?? '',
+  });
+  return { ok: true };
+}
+
 /** Runs the consent flow and stores the refresh token. */
 async function authorize({ clientId, clientSecret, scope }) {
+  const saved = readStore() ?? {};
+  clientId = clientId || saved.clientId;
+  // Prefer the stored secret so the renderer never has to hold one.
+  clientSecret = clientSecret || saved.clientSecret || '';
   if (!clientId) throw new Error('A Google client ID is required.');
   // Only one consent flow at a time; a second would strand the first server.
   cancel();
@@ -313,6 +333,8 @@ function status() {
   return {
     connected: !!store?.refreshToken,
     clientId: store?.clientId ?? '',
+    /** Whether a client secret is on file — never the secret itself. */
+    hasSecret: !!store?.clientSecret,
     profile: store?.profile ?? null,
     /** True only if the token really is in the keychain, not merely that one exists. */
     tokenEncrypted: fs.existsSync(encryptedFile()),
@@ -325,6 +347,7 @@ module.exports = {
   disconnect,
   status,
   cancel,
+  setCredentials,
   // Exposed so the storage layer can be tested against a real keyring without
   // standing up a whole OAuth round trip.
   _store: { readStore, writeStore, encryptionAvailable, encryptedFile, legacyFile },

@@ -276,8 +276,9 @@ types.
 3. Under *APIs & Services → Credentials*, create the client you need:
    - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
      Copy the client ID and client secret into the app's sync panel. Google issues a
-     secret for desktop clients and documents it as not confidential; it is stored on
-     that computer only and never reaches the page.
+     secret for desktop clients and documents it as not confidential; it is handed
+     straight to the keychain and never read back, so the field appears empty
+     afterwards.
    - **For the web app** — *Create credentials → OAuth client ID → Web application*.
      Add your Pages URL (and `http://localhost:5173` for development) as an
      authorized JavaScript origin. Copy the client ID into the sync panel.
@@ -291,10 +292,23 @@ step 3, in their own Google Cloud project.
 
 ### What this does and does not protect
 
-The Google sign-in itself is held in your operating system's keychain — DPAPI on
-Windows, Keychain on macOS, libsecret on Linux. On a system with no keyring available
-it falls back to a permission-restricted file and the sync panel says so plainly
-rather than implying protection it does not have.
+Neither build keeps a Google credential where the page can reach it, by different
+routes.
+
+In the **desktop app**, the refresh token and the client secret live in your
+operating system's keychain — DPAPI on Windows, Keychain on macOS, libsecret on
+Linux — held by the process outside the page. The renderer receives short-lived
+access tokens and nothing else; the secret field is write-only, which is why it shows
+no value once one is set. On a system with no keyring available it falls back to a
+permission-restricted file and the sync panel says so plainly rather than implying
+protection it does not have.
+
+In the **web app** there is no credential at rest at all: the access token is a
+variable in memory, so it is gone when the tab closes and there is no refresh token
+to store. Both builds run under the same content security policy — no inline scripts,
+and the only outbound connections permitted are to Google, and only if you sign in.
+Nothing else the app does touches the network, including the account avatar, which is
+drawn locally rather than fetched from Google.
 
 Your designs, though, are stored **unencrypted** in the browser's storage or your
 user profile. The separation between accounts keeps catalogs apart *in the app*; it

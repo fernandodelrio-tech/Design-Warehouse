@@ -43,16 +43,42 @@ export function SyncPanel({
   const [busy, setBusy] = useState(false);
   const [strayCount, setStrayCount] = useState(0);
   const [tokenEncrypted, setTokenEncrypted] = useState<boolean | null>(null);
+  const [hasSecret, setHasSecret] = useState(false);
+  const [secretDraft, setSecretDraft] = useState('');
 
   useEffect(() => {
     void readSettings().then(setSettings);
     void connectionStatus().then((status) => setConnected(status.connected));
     if (isDesktop) {
-      void window.designWarehouse?.google
-        .status()
-        .then((status) => setTokenEncrypted(status.tokenEncrypted));
+      void window.designWarehouse?.google.status().then((status) => {
+        setTokenEncrypted(status.tokenEncrypted);
+        setHasSecret(status.hasSecret);
+      });
+      // A secret stored by an earlier version sits in localStorage; move it into
+      // the keychain and take it out of the page.
+      void readSettings().then(async (stored) => {
+        const legacy = (stored as { desktopClientSecret?: string }).desktopClientSecret;
+        if (!legacy) return;
+        await window.designWarehouse?.google.setCredentials({ clientSecret: legacy });
+        const { desktopClientSecret, ...rest } = stored as GoogleSettings & {
+          desktopClientSecret?: string;
+        };
+        void desktopClientSecret;
+        await writeSettings(rest);
+        setHasSecret(true);
+      });
     }
   }, []);
+
+  const saveSecret = () => {
+    const value = secretDraft.trim();
+    if (!value) return;
+    void window.designWarehouse?.google.setCredentials({ clientSecret: value }).then(() => {
+      setSecretDraft('');
+      setHasSecret(true);
+      notify('Client secret stored in this computer\u2019s keychain.', 'success');
+    });
+  };
 
   // Designs catalogued before signing in sit in the signed-out catalog; offer
   // to bring them across rather than letting them look lost.
@@ -148,8 +174,10 @@ export function SyncPanel({
           </p>
 
           <div className="detail-actions">
-            {account?.picture ? (
-              <img className="account-avatar" src={account.picture} alt="" />
+            {account ? (
+              <span className="account-avatar account-initial">
+                {(account.email || account.name || '?').charAt(0).toUpperCase()}
+              </span>
             ) : (
               <span className={`sync-dot${connected ? ' on' : ''}`} />
             )}
@@ -245,17 +273,27 @@ export function SyncPanel({
                   label="Desktop client ID"
                   value={settings.desktopClientId}
                   placeholder="123456789-abc.apps.googleusercontent.com"
-                  onChange={(value) => update({ desktopClientId: value.trim() })}
+                  onChange={(value) => {
+                    const clientId = value.trim();
+                    update({ desktopClientId: clientId });
+                    void window.designWarehouse?.google.setCredentials({ clientId });
+                  }}
                 />
-                <TextField
-                  label="Desktop client secret"
-                  value={settings.desktopClientSecret}
-                  placeholder="GOCSPX-…"
-                  onChange={(value) => update({ desktopClientSecret: value.trim() })}
-                />
+                <Field label="Desktop client secret">
+                  <input
+                    type="password"
+                    value={secretDraft}
+                    placeholder={hasSecret ? '•••••••••• stored — type to replace' : 'GOCSPX-…'}
+                    onChange={(event) => setSecretDraft(event.target.value)}
+                    onBlur={saveSecret}
+                    autoComplete="off"
+                  />
+                </Field>
                 <p style={{ color: 'var(--text-faint)', fontSize: 11.5, margin: 0 }}>
                   Google issues a secret for desktop clients and documents it as not
-                  confidential. It is stored on this computer only and never reaches the page.
+                  confidential. It is handed straight to the part of the app outside the
+                  page, kept in this computer&rsquo;s keychain, and never read back — which
+                  is why the box above shows no value once one is set.
                 </p>
               </>
             ) : (

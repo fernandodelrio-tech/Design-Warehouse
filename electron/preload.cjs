@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('designWarehouse', {
     disconnect: () => ipcRenderer.invoke('google:disconnect'),
     status: () => ipcRenderer.invoke('google:status'),
     cancel: () => ipcRenderer.invoke('google:cancel'),
+    setCredentials: (options) => ipcRenderer.invoke('google:set-credentials', options),
   },
 
   /** Subscribe to the application menu. Returns an unsubscribe function. */

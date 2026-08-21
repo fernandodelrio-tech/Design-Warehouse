@@ -784,13 +784,12 @@ export default function App() {
               onClick={() => setSyncOpen(true)}
               title={`Signed in as ${account.email || account.name}`}
             >
-              {account.picture ? (
-                <img className="account-avatar" src={account.picture} alt="" />
-              ) : (
-                <span className="account-avatar account-initial">
-                  {(account.email || account.name || '?').charAt(0).toUpperCase()}
-                </span>
-              )}
+              {/* Drawn locally rather than fetched: a Google-hosted avatar would
+                  mean a request to Google on every launch, and nothing here
+                  otherwise touches the network unless you ask it to. */}
+              <span className="account-avatar account-initial">
+                {(account.email || account.name || '?').charAt(0).toUpperCase()}
+              </span>
             </button>
           )}
           <button

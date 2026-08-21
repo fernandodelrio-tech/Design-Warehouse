@@ -71,6 +71,8 @@ const CSP =
   "img-src 'self' data: blob:; " +
   "font-src 'self' data:; " +
   "connect-src 'self' data: blob: https://www.googleapis.com; " +
+  // No script-src exception for Google here: the desktop build signs in through
+  // the system browser, so it never loads Google's script into the page.
   "media-src 'self' blob:; " +
   "object-src 'none'; " +
   "base-uri 'none'; " +
@@ -360,6 +362,9 @@ ipcMain.handle('google:token', () => googleAuth.accessToken());
 ipcMain.handle('google:disconnect', () => googleAuth.disconnect());
 ipcMain.handle('google:status', () => googleAuth.status());
 ipcMain.handle('google:cancel', () => googleAuth.cancel());
+ipcMain.handle('google:set-credentials', (_event, options) =>
+  googleAuth.setCredentials(options ?? {}),
+);
 
 // --- lifecycle ------------------------------------------------------------
 

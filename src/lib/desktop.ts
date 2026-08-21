@@ -23,7 +23,6 @@ export interface GoogleProfile {
 export interface GoogleBridge {
   authorize(options: {
     clientId: string;
-    clientSecret: string;
     scope: string;
   }): Promise<{ connected: boolean; profile?: GoogleProfile }>;
   token(): Promise<string | null>;
@@ -31,10 +30,12 @@ export interface GoogleBridge {
   status(): Promise<{
     connected: boolean;
     clientId: string;
+    hasSecret: boolean;
     profile: GoogleProfile | null;
     tokenEncrypted: boolean;
   }>;
   cancel(): Promise<{ cancelled: boolean }>;
+  setCredentials(options: { clientId?: string; clientSecret?: string }): Promise<{ ok: boolean }>;
 }
 
 export interface DesktopBridge {
