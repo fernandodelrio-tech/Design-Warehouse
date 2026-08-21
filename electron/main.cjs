@@ -8,7 +8,17 @@
  * native clipboard.
  */
 
-const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, protocol, shell } = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  clipboard,
+  dialog,
+  ipcMain,
+  protocol,
+  screen,
+  shell,
+} = require('electron');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
@@ -94,14 +104,43 @@ function registerAppProtocol() {
 
 const stateFile = () => path.join(app.getPath('userData'), 'window-state.json');
 
+const DEFAULT_BOUNDS = { width: 1360, height: 900 };
+
+/**
+ * Remembered bounds are only reused if they still land on a monitor that is
+ * currently attached. Restoring a position from an unplugged second screen
+ * opens the window somewhere the user cannot see or reach it.
+ */
+function isOnAnAttachedDisplay(state) {
+  if (typeof state.x !== 'number' || typeof state.y !== 'number') return false;
+  return screen.getAllDisplays().some(({ workArea }) => {
+    const overlapX =
+      Math.min(state.x + state.width, workArea.x + workArea.width) - Math.max(state.x, workArea.x);
+    const overlapY =
+      Math.min(state.y + state.height, workArea.y + workArea.height) -
+      Math.max(state.y, workArea.y);
+    // Insist on enough of the title bar being reachable to drag the window.
+    return overlapX > 120 && overlapY > 40;
+  });
+}
+
 function readWindowState() {
   try {
     const state = JSON.parse(fs.readFileSync(stateFile(), 'utf8'));
-    if (typeof state.width === 'number' && typeof state.height === 'number') return state;
+    if (typeof state.width !== 'number' || typeof state.height !== 'number') {
+      return DEFAULT_BOUNDS;
+    }
+    const bounds = {
+      width: Math.max(480, state.width),
+      height: Math.max(420, state.height),
+      maximized: !!state.maximized,
+    };
+    // Let Electron centre the window when the old position is unusable.
+    return isOnAnAttachedDisplay(state) ? { ...bounds, x: state.x, y: state.y } : bounds;
   } catch {
     // First launch, or the file was removed. Fall through to the defaults.
   }
-  return { width: 1360, height: 900 };
+  return DEFAULT_BOUNDS;
 }
 
 function saveWindowState(window) {
