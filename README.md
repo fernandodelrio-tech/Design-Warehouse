@@ -273,7 +273,20 @@ types.
    That scope is non-sensitive, so publishing the app needs no Google review — and
    publishing is worth doing, because grants issued while the app is still in
    *Testing* expire after a week.
-3. Under *APIs & Services → Credentials*, create the client you need:
+3. To switch publishing status to **In production**, the Branding page also needs an
+   **Application home page** and an **Application privacy policy link** — those two are
+   optional while in Testing but required to publish. Once Pages is enabled they are:
+
+   ```
+   https://fernandodelrio-tech.github.io/Design-Warehouse/
+   https://fernandodelrio-tech.github.io/Design-Warehouse/privacy.html
+   ```
+
+   Using them means adding `fernandodelrio-tech.github.io` under *Authorized domains*,
+   which Google requires you to verify once in
+   [Search Console](https://search.google.com/search-console). Staying in *Testing* skips
+   all of this at the cost of reconnecting weekly.
+4. Under *APIs & Services → Credentials*, create the client you need:
    - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
      Copy the client ID and client secret into the app's sync panel. Google issues a
      secret for desktop clients and documents it as not confidential; it is handed
@@ -282,7 +295,7 @@ types.
    - **For the web app** — *Create credentials → OAuth client ID → Web application*.
      Add your Pages URL (and `http://localhost:5173` for development) as an
      authorized JavaScript origin. Copy the client ID into the sync panel.
-4. Open the cloud button in either app, paste the client ID, and press **Sign in
+5. Open the cloud button in either app, paste the client ID, and press **Sign in
    with Google**. The consent screen opens in your real browser, not an embedded
    window.
 
