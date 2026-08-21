@@ -215,11 +215,35 @@ From a card, hover and hit the copy icon. From the detail drawer:
 Select several cards to copy or download one document covering all of them — useful
 for seeding a whole project with a reference set.
 
-## Sharing a catalog across devices
+## Signing in, and sharing a catalog across devices
 
-The cloud button in the header keeps this catalog in step with a **Design Warehouse**
-folder in your own Google Drive, so the web app and the desktop app show the same
-designs. It is off until you set it up.
+Sign in with Google and this catalog becomes yours: it is kept in step with a
+**Design Warehouse** folder in your own Drive, so the web app and the desktop app
+show the same designs. Sign-in is optional — without it the app works exactly as
+before, storing everything locally and syncing nothing.
+
+### Each person gets their own catalog
+
+Signing in opens a catalog belonging to that Google account, keyed on the account's
+permanent Google id rather than its email address. Two people using the same
+computer, the same browser profile, or the same installed copy of the app see only
+their own designs; switching accounts swaps the whole catalog, and neither can reach
+the other's. Anything catalogued before you signed in stays in a signed-out catalog,
+and the sync panel offers to move it into your account the first time.
+
+### One OAuth client per person
+
+Each person signs in with their own OAuth client ID. The app claims a client ID for
+the account that first used it, and refuses to let a second account sign in with the
+same one — you get told to create your own instead.
+
+Worth knowing what that does and does not buy you. A Google client ID identifies an
+*application*, not a person: normally everyone using an app shares one, and what
+keeps users apart is the account they sign in as. That is what does the real work
+here — the account decides which catalog opens and whose Drive is written to. The
+client-ID rule is enforced per device, because without a server there is nowhere to
+keep a registry, so two people on two machines could still pick the same one. It
+would not let either read the other's designs.
 
 **How it works.** Each design is stored as two files — its image and its spec — plus
 a small marker for each deletion. There is no shared index file, so two devices
@@ -229,9 +253,10 @@ edited in both places the more recent edit replaces the other. A deletion is
 recorded rather than just applied, so it sticks instead of being pulled back from
 the other device on the next sync.
 
-The app uses the `drive.file` scope: it can only see files it created itself, and
-has no access to anything else in your Drive. Images upload once; editing a spec
-afterwards only re-sends the small JSON file.
+The app asks for `openid email profile` to know which account you are, and
+`drive.file` for storage — that one grants access only to files the app created
+itself, and none at all to the rest of your Drive. Images upload once; editing a
+spec afterwards only re-sends the small JSON file.
 
 ### One-time Google setup
 
@@ -243,7 +268,7 @@ types.
    (or pick one) and enable the **Google Drive API** under *APIs & Services →
    Library*.
 2. Under *APIs & Services → OAuth consent screen*, choose **External**, fill in the
-   app name and your email, and add the scope
+   app name and your email, and add the scopes `openid`, `email`, `profile` and
    `https://www.googleapis.com/auth/drive.file`. Add yourself as a test user.
    That scope is non-sensitive, so publishing the app needs no Google review — and
    publishing is worth doing, because grants issued while the app is still in
@@ -256,12 +281,13 @@ types.
    - **For the web app** — *Create credentials → OAuth client ID → Web application*.
      Add your Pages URL (and `http://localhost:5173` for development) as an
      authorized JavaScript origin. Copy the client ID into the sync panel.
-4. Open the cloud button in either app, paste the client ID, and press **Connect
-   Google Drive**. The consent screen opens in your real browser, not an embedded
+4. Open the cloud button in either app, paste the client ID, and press **Sign in
+   with Google**. The consent screen opens in your real browser, not an embedded
    window.
 
 Do the same on the other device with the same Google account, and the two catalogs
-converge on the next sync.
+converge on the next sync. Someone else using the app needs their own client ID from
+step 3, in their own Google Cloud project.
 
 ### If you would rather not use Drive
 
@@ -292,6 +318,8 @@ src/
     title.ts       decides whether a filename is worth keeping as a title
     naming.ts      names a design when it is not — evocative, and deterministic
     grouping.ts    the sort and group-by options behind the grid controls
+    accounts.ts    who is signed in, and which catalog is theirs
+    session.ts     switching accounts: swap catalogs, adopt a signed-out one
   lib/sync/
     engine.ts      two-way reconciliation, last edit wins
     drive.ts       Google Drive as the shared folder

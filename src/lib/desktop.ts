@@ -13,15 +13,22 @@ export type MenuAction =
   | 'restore'
   | 'search';
 
+export interface GoogleProfile {
+  sub: string;
+  email: string;
+  name: string;
+  picture: string;
+}
+
 export interface GoogleBridge {
   authorize(options: {
     clientId: string;
     clientSecret: string;
     scope: string;
-  }): Promise<{ connected: boolean }>;
+  }): Promise<{ connected: boolean; profile?: GoogleProfile }>;
   token(): Promise<string | null>;
   disconnect(): Promise<{ connected: boolean }>;
-  status(): Promise<{ connected: boolean; clientId: string }>;
+  status(): Promise<{ connected: boolean; clientId: string; profile: GoogleProfile | null }>;
   cancel(): Promise<{ cancelled: boolean }>;
 }
 

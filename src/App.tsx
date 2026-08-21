@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzeBlob, seedSpec } from './lib/analyze';
 import {
   clearCatalog,
+  currentDatabase,
   deleteDesign,
   estimateStorage,
   getBlobs,
@@ -29,6 +30,9 @@ import {
 import { copyText, downloadBlob, downloadText, exportCatalog, importCatalog } from './lib/transfer';
 import type { DesignRecord } from './lib/types';
 import { connectionStatus, lastSyncAt, readSettings, runSync } from './lib/sync';
+import { currentAccount, databaseFor } from './lib/accounts';
+import type { Account } from './lib/accounts';
+import { openCatalogFor } from './lib/session';
 import type { SyncSummary } from './lib/sync';
 import { releaseAllImages, releaseImage } from './hooks/useImageUrl';
 import { SyncPanel } from './components/SyncPanel';
@@ -114,6 +118,7 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
+  const [account, setAccount] = useState<Account | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
@@ -154,12 +159,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    listDesigns()
-      .then((loaded) => setRecords(loaded))
-      .catch(() => notify('Could not open the catalog database.', 'error'))
-      .finally(() => setLoading(false));
-    void refreshUsage();
-    void requestPersistence();
+    void (async () => {
+      try {
+        // Open the signed-in account's catalog before reading anything, or the
+        // first paint shows the wrong person's designs.
+        const signedIn = currentAccount();
+        setAccount(signedIn);
+        await openCatalogFor(signedIn);
+        setRecords(await listDesigns());
+      } catch {
+        notify('Could not open the catalog database.', 'error');
+      } finally {
+        setLoading(false);
+      }
+      void refreshUsage();
+      void requestPersistence();
+    })();
     return () => releaseAllImages();
   }, [notify, refreshUsage]);
 
@@ -210,7 +225,30 @@ export default function App() {
     const [status, when] = await Promise.all([connectionStatus(), lastSyncAt()]);
     setConnected(status.connected);
     setLastSync(when);
+    setAccount(status.account);
   }, []);
+
+  /** Called after a sign-in or sign-out: swap catalogs and re-read. */
+  const switchAccount = useCallback(
+    async (next: Account | null) => {
+      setLoading(true);
+      try {
+        await openCatalogFor(next);
+        setAccount(next);
+        setSelected(new Set());
+        setOpenId(null);
+        setRecords(await listDesigns());
+        setLastSummary(null);
+        setLastSync(await lastSyncAt());
+        void refreshUsage();
+      } catch {
+        notify('Could not open that account\u2019s catalog.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [notify, refreshUsage],
+  );
 
   const sync = useCallback(
     async (quiet = false) => {
@@ -251,8 +289,18 @@ export default function App() {
   // Sync once on launch when a connection is already set up.
   useEffect(() => {
     void (async () => {
-      await refreshConnection();
       const [status, settings] = await Promise.all([connectionStatus(), readSettings()]);
+      setConnected(status.connected);
+      setLastSync(await lastSyncAt());
+      // Checking the connection can decide the stored account is no longer
+      // signed in — a revoked grant, say — and the open catalog has to follow.
+      // Compare against the database actually open, not against the stored
+      // account: the check above may already have cleared that.
+      if (databaseFor(status.account) !== currentDatabase()) {
+        await switchAccount(status.account);
+      } else {
+        setAccount(status.account);
+      }
       if (status.connected && settings.autoSync) void sync(true);
     })();
     // Intentionally launch-only; later syncs are driven by edits or the button.
@@ -680,6 +728,22 @@ export default function App() {
           <button type="button" className="btn" onClick={() => folderInput.current?.click()}>
             <IconFolder /> Folder
           </button>
+          {account && (
+            <button
+              type="button"
+              className="btn btn-ghost account-chip"
+              onClick={() => setSyncOpen(true)}
+              title={`Signed in as ${account.email || account.name}`}
+            >
+              {account.picture ? (
+                <img className="account-avatar" src={account.picture} alt="" />
+              ) : (
+                <span className="account-avatar account-initial">
+                  {(account.email || account.name || '?').charAt(0).toUpperCase()}
+                </span>
+              )}
+            </button>
+          )}
           <button
             type="button"
             className={`btn btn-ghost btn-icon${syncing ? ' spinning' : ''}`}
@@ -872,6 +936,8 @@ export default function App() {
           syncing={syncing}
           lastSync={lastSync}
           lastSummary={lastSummary}
+          account={account}
+          onAccountChange={switchAccount}
           onConnectionChange={() => void refreshConnection()}
         />
       )}

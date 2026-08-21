@@ -19,6 +19,7 @@ const path = require('node:path');
 const AUTH_ENDPOINT = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
+const USERINFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const TIMEOUT_MS = 5 * 60 * 1000;
 
 const storeFile = () => path.join(app.getPath('userData'), 'google-auth.json');
@@ -170,14 +171,35 @@ async function authorize({ clientId, clientSecret, scope }) {
     throw new Error('Google did not return a refresh token; try removing the app under your Google account permissions and connecting again.');
   }
 
+  const profile = await fetchProfile(tokens.access_token);
+
   writeStore({
     clientId,
     clientSecret: clientSecret || '',
     refreshToken: tokens.refresh_token,
     accessToken: tokens.access_token,
     expiresAt: Date.now() + (tokens.expires_in ?? 3600) * 1000,
+    profile,
   });
-  return { connected: true };
+  return { connected: true, profile };
+}
+
+/** Who signed in. `sub` is Google's stable id for the account. */
+async function fetchProfile(accessToken) {
+  const response = await fetch(USERINFO_ENDPOINT, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error('Signed in, but Google would not say which account it was.');
+  }
+  const info = await response.json();
+  if (!info.sub) throw new Error('Google returned no account id.');
+  return {
+    sub: info.sub,
+    email: info.email ?? '',
+    name: info.name ?? info.email ?? '',
+    picture: info.picture ?? '',
+  };
 }
 
 /** A valid access token, refreshed when the stored one is close to expiring. */
@@ -233,7 +255,11 @@ async function disconnect() {
 
 function status() {
   const store = readStore();
-  return { connected: !!store?.refreshToken, clientId: store?.clientId ?? '' };
+  return {
+    connected: !!store?.refreshToken,
+    clientId: store?.clientId ?? '',
+    profile: store?.profile ?? null,
+  };
 }
 
 module.exports = { authorize, accessToken, disconnect, status, cancel };

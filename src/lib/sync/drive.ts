@@ -16,6 +16,8 @@ import type { RemoteEntry, RemoteKind, RemoteStore } from './types';
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
 export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+/** Identity as well as Drive: the app needs to know whose catalog this is. */
+export const AUTH_SCOPES = `openid email profile ${DRIVE_SCOPE}`;
 export const FOLDER_NAME = 'Design Warehouse';
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder';

@@ -5,19 +5,45 @@ import type { DesignBlobs, DesignRecord } from './types';
  * listing the catalog never pulls megabytes of image data into memory.
  */
 
-const DB_NAME = 'design-warehouse';
 const DB_VERSION = 2;
 const STORE_DESIGNS = 'designs';
 const STORE_BLOBS = 'blobs';
 const STORE_TOMBSTONES = 'tombstones';
 const STORE_META = 'meta';
 
+let dbName = 'design-warehouse';
 let dbPromise: Promise<IDBDatabase> | null = null;
+
+/**
+ * Points every later call at a different database.
+ *
+ * Each signed-in account gets its own, so switching accounts cannot leave one
+ * person looking at another's designs. The open connection is closed first —
+ * an old handle would keep serving the previous account's data.
+ */
+export async function useDatabase(name: string): Promise<void> {
+  if (name === dbName) return;
+  const previous = dbPromise;
+  dbName = name;
+  dbPromise = null;
+  if (previous) {
+    try {
+      (await previous).close();
+    } catch {
+      // Already closed, or it never opened. Either way it is not in use now.
+    }
+  }
+}
+
+export function currentDatabase(): string {
+  return dbName;
+}
 
 function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
+  const opening = dbName;
   dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request = indexedDB.open(opening, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_DESIGNS)) {
@@ -41,6 +67,48 @@ function openDb(): Promise<IDBDatabase> {
     request.onerror = () => reject(request.error ?? new Error('Could not open the catalog.'));
   });
   return dbPromise;
+}
+
+/** Empties a catalog outright. Unlike clearCatalog this leaves no tombstones. */
+async function wipeCatalogData(): Promise<void> {
+  await tx([STORE_DESIGNS, STORE_BLOBS], 'readwrite', (t) => {
+    t.objectStore(STORE_DESIGNS).clear();
+    t.objectStore(STORE_BLOBS).clear();
+  });
+}
+
+/**
+ * Moves an entire catalog into another database, for adopting a signed-out one
+ * on first sign-in.
+ *
+ * The source is emptied only once every record has landed in the target, and
+ * emptied it must be: designs left behind stay adoptable by whoever signs in
+ * next, which would hand one person's catalog to another.
+ */
+export async function moveCatalogTo(target: string): Promise<number> {
+  const records = await listDesigns();
+  if (records.length === 0) return 0;
+
+  const payload: Array<{ record: DesignRecord; blobs: DesignBlobs | undefined }> = [];
+  for (const record of records) {
+    payload.push({ record, blobs: await getBlobs(record.id) });
+  }
+
+  const source = dbName;
+  await useDatabase(target);
+  let written = 0;
+  try {
+    for (const { record, blobs } of payload) {
+      await saveDesign(record, blobs);
+      written++;
+    }
+  } finally {
+    await useDatabase(source);
+  }
+
+  // A partial copy is left alone rather than half-deleted.
+  if (written === payload.length) await wipeCatalogData();
+  return written;
 }
 
 function tx<T>(

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isDesktop } from '../lib/desktop';
+import { adoptLocalCatalog, countLocalCatalog } from '../lib/session';
+import type { Account } from '../lib/accounts';
 import {
   cancelConnect,
   connect,
@@ -19,6 +21,8 @@ interface Props {
   syncing: boolean;
   lastSync: number | null;
   lastSummary: SyncSummary | null;
+  account: Account | null;
+  onAccountChange: (account: Account | null) => Promise<void>;
   onConnectionChange: () => void;
 }
 
@@ -28,17 +32,30 @@ export function SyncPanel({
   syncing,
   lastSync,
   lastSummary,
+  account,
+  onAccountChange,
   onConnectionChange,
 }: Props) {
   const notify = useNotify();
   const [settings, setSettings] = useState<GoogleSettings | null>(null);
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [strayCount, setStrayCount] = useState(0);
 
   useEffect(() => {
     void readSettings().then(setSettings);
     void connectionStatus().then((status) => setConnected(status.connected));
   }, []);
+
+  // Designs catalogued before signing in sit in the signed-out catalog; offer
+  // to bring them across rather than letting them look lost.
+  useEffect(() => {
+    if (!account) {
+      setStrayCount(0);
+      return;
+    }
+    void countLocalCatalog().then(setStrayCount);
+  }, [account]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -59,12 +76,13 @@ export function SyncPanel({
   const handleConnect = async () => {
     setBusy(true);
     try {
-      await connect();
+      const signedIn = await connect();
       setConnected(true);
+      await onAccountChange(signedIn);
       onConnectionChange();
-      notify('Connected to Google Drive.', 'success');
+      notify(`Signed in as ${signedIn.email || signedIn.name}.`, 'success');
     } catch (error) {
-      notify(error instanceof Error ? error.message : 'Could not connect.', 'error');
+      notify(error instanceof Error ? error.message : 'Could not sign in.', 'error');
     } finally {
       setBusy(false);
     }
@@ -75,8 +93,24 @@ export function SyncPanel({
     try {
       await disconnect();
       setConnected(false);
+      await onAccountChange(null);
       onConnectionChange();
-      notify('Disconnected. The designs already in Drive were left there.', 'success');
+      notify('Signed out. Your designs stay in Drive and on this device.', 'success');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAdopt = async () => {
+    if (!account) return;
+    setBusy(true);
+    try {
+      const moved = await adoptLocalCatalog(account);
+      setStrayCount(0);
+      await onAccountChange(account);
+      notify(`Moved ${moved} design(s) into this account.`, 'success');
+    } catch {
+      notify('Could not move those designs.', 'error');
     } finally {
       setBusy(false);
     }
@@ -109,10 +143,20 @@ export function SyncPanel({
           </p>
 
           <div className="detail-actions">
-            <span className={`sync-dot${connected ? ' on' : ''}`} />
+            {account?.picture ? (
+              <img className="account-avatar" src={account.picture} alt="" />
+            ) : (
+              <span className={`sync-dot${connected ? ' on' : ''}`} />
+            )}
             <span style={{ fontSize: 13, marginRight: 'auto' }}>
-              {connected ? 'Connected' : 'Not connected'}
-              {lastSync ? ` · last synced ${new Date(lastSync).toLocaleString()}` : ''}
+              {account ? (
+                <>
+                  <strong>{account.email || account.name}</strong>
+                  {lastSync ? ` · last synced ${new Date(lastSync).toLocaleString()}` : ''}
+                </>
+              ) : (
+                'Not signed in'
+              )}
             </span>
             {connected ? (
               <>
@@ -120,7 +164,7 @@ export function SyncPanel({
                   <IconRefresh /> {syncing ? 'Syncing…' : 'Sync now'}
                 </button>
                 <button type="button" className="btn" onClick={handleDisconnect} disabled={busy}>
-                  Disconnect
+                  Sign out
                 </button>
               </>
             ) : busy ? (
@@ -141,10 +185,27 @@ export function SyncPanel({
               </>
             ) : (
               <button type="button" className="btn btn-primary" onClick={handleConnect}>
-                Connect Google Drive
+                Sign in with Google
               </button>
             )}
           </div>
+
+          {strayCount > 0 && (
+            <div className="sync-summary">
+              {strayCount} design{strayCount === 1 ? '' : 's'} catalogued before you signed in
+              {' '}
+              {strayCount === 1 ? 'is' : 'are'} still in the signed-out catalog.{' '}
+              <button
+                type="button"
+                className="btn"
+                style={{ marginLeft: 4 }}
+                onClick={handleAdopt}
+                disabled={busy}
+              >
+                Move into this account
+              </button>
+            </div>
+          )}
 
           {lastSummary && (
             <div className="sync-summary">

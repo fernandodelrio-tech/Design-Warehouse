@@ -1,6 +1,13 @@
 import { desktop } from '../desktop';
 import { readMeta, writeMeta, clearMeta } from '../db';
-import { DRIVE_SCOPE } from './drive';
+import {
+  assertClientNotShared,
+  bindClientId,
+  currentAccount,
+  setCurrentAccount,
+} from '../accounts';
+import type { Account } from '../accounts';
+import { AUTH_SCOPES } from './drive';
 
 /**
  * Signing in to Google, by whichever route the platform allows.
@@ -104,7 +111,7 @@ function requestWebToken(clientId: string, prompt: string): Promise<string> {
       new Promise<string>((resolve, reject) => {
         const client = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: DRIVE_SCOPE,
+          scope: AUTH_SCOPES,
           callback: (response) => {
             if (response.error || !response.access_token) {
               reject(new Error(response.error ?? 'Google did not return a token.'));
@@ -126,36 +133,115 @@ function requestWebToken(clientId: string, prompt: string): Promise<string> {
 
 // --- shared surface --------------------------------------------------------
 
+const USERINFO = 'https://www.googleapis.com/oauth2/v3/userinfo';
+
+/** Reads the signed-in identity from an access token. */
+async function fetchProfile(token: string): Promise<Omit<Account, 'clientId'>> {
+  const response = await fetch(USERINFO, { headers: { Authorization: `Bearer ${token}` } });
+  if (!response.ok) {
+    throw new Error('Signed in, but Google would not say which account it was.');
+  }
+  const info = (await response.json()) as {
+    sub?: string;
+    email?: string;
+    name?: string;
+    picture?: string;
+  };
+  if (!info.sub) throw new Error('Google returned no account id.');
+  return {
+    sub: info.sub,
+    email: info.email ?? '',
+    name: info.name ?? info.email ?? '',
+    picture: info.picture ?? '',
+  };
+}
+
 export interface ConnectionStatus {
   connected: boolean;
   /** Set when the platform has no client ID configured yet. */
   needsSetup: boolean;
+  account: Account | null;
 }
 
 export async function connectionStatus(): Promise<ConnectionStatus> {
   const settings = await readSettings();
+  let account = currentAccount();
   if (desktop) {
     const status = await desktop.google.status();
-    return { connected: status.connected, needsSetup: !settings.desktopClientId };
+    // The grant lives in the main process and the account in localStorage; if
+    // the latter is lost, recover it from the former rather than showing a
+    // signed-out app that still holds a live Google session.
+    if (status.connected && status.profile && !account) {
+      account = { ...status.profile, clientId: status.clientId };
+      setCurrentAccount(account);
+    }
+    if (!status.connected && account) {
+      setCurrentAccount(null);
+      account = null;
+    }
+    return {
+      connected: status.connected && account !== null,
+      needsSetup: !settings.desktopClientId,
+      account,
+    };
   }
-  return { connected: webToken !== null, needsSetup: !settings.webClientId };
+  // In a browser the token lives in memory, so there is none at launch even
+  // though the account is still signed in. Identity and "has a usable token
+  // right now" are different questions, and only the second gates syncing.
+  return {
+    connected: webToken !== null && account !== null,
+    needsSetup: !settings.webClientId,
+    account,
+  };
 }
 
-/** Opens the consent screen. Resolves once the account is connected. */
-export async function connect(): Promise<void> {
+/**
+ * Signs in with Google. Resolves with the account once consent is granted.
+ *
+ * The client ID is claimed for that account: a different person signing in on
+ * this device has to bring their own, rather than reusing the first person's.
+ */
+export async function connect(): Promise<Account> {
   const settings = await readSettings();
+
   if (desktop) {
-    if (!settings.desktopClientId) throw new Error('Add a desktop client ID first.');
-    await desktop.google.authorize({
-      clientId: settings.desktopClientId,
+    const clientId = settings.desktopClientId;
+    if (!clientId) throw new Error('Add a desktop client ID first.');
+    const result = await desktop.google.authorize({
+      clientId,
       clientSecret: settings.desktopClientSecret,
-      scope: DRIVE_SCOPE,
+      scope: AUTH_SCOPES,
     });
-    return;
+    if (!result.profile) throw new Error('Google did not return an account.');
+    // Checked after consent because the account is only known once it is given;
+    // the grant is dropped again immediately if the client is someone else's.
+    try {
+      assertClientNotShared(clientId, result.profile.sub);
+    } catch (error) {
+      await desktop.google.disconnect();
+      throw error;
+    }
+    const account: Account = { ...result.profile, clientId };
+    bindClientId(clientId, account.sub);
+    setCurrentAccount(account);
+    return account;
   }
-  if (!settings.webClientId) throw new Error('Add a web client ID first.');
+
+  const clientId = settings.webClientId;
+  if (!clientId) throw new Error('Add a web client ID first.');
   // 'consent' the first time so the user sees exactly what is being granted.
-  await requestWebToken(settings.webClientId, 'consent');
+  const token = await requestWebToken(clientId, 'consent');
+  const profile = await fetchProfile(token);
+  try {
+    assertClientNotShared(clientId, profile.sub);
+  } catch (error) {
+    webToken = null;
+    throw error;
+  }
+  const account: Account = { ...profile, clientId };
+  bindClientId(clientId, account.sub);
+  setCurrentAccount(account);
+  return account;
 }
 
 /** Abandons a consent flow that is still waiting on the browser. */
@@ -164,6 +250,7 @@ export async function cancelConnect(): Promise<void> {
 }
 
 export async function disconnect(): Promise<void> {
+  setCurrentAccount(null);
   if (desktop) {
     await desktop.google.disconnect();
     return;
@@ -183,14 +270,39 @@ export async function disconnect(): Promise<void> {
 export async function accessToken(): Promise<string> {
   if (desktop) {
     const token = await desktop.google.token();
-    if (!token) throw new Error('Not connected to Google Drive.');
+    if (!token) throw new Error('Not signed in to Google.');
+    // Guard the same way as the browser: never write into one account's Drive
+    // with another account's token.
+    const account = currentAccount();
+    const status = await desktop.google.status();
+    if (account && status.profile && status.profile.sub !== account.sub) {
+      throw new Error(
+        `The stored Google session is ${status.profile.email || 'a different account'}. Sign in again.`,
+      );
+    }
     return token;
   }
   if (webToken && webToken.expiresAt - 60_000 > Date.now()) return webToken.value;
 
+  const account = currentAccount();
   const settings = await readSettings();
-  if (!settings.webClientId) throw new Error('Not connected to Google Drive.');
-  return requestWebToken(settings.webClientId, '');
+  const clientId = account?.clientId || settings.webClientId;
+  if (!clientId) throw new Error('Not signed in to Google.');
+  const token = await requestWebToken(clientId, '');
+
+  // A silent renewal can come back for a different Google account if the
+  // browser session changed underneath us; that must not write into this
+  // catalog or this Drive folder.
+  if (account) {
+    const profile = await fetchProfile(token);
+    if (profile.sub !== account.sub) {
+      webToken = null;
+      throw new Error(
+        `The Google session is now ${profile.email || 'a different account'}. Sign in again.`,
+      );
+    }
+  }
+  return token;
 }
 
 export async function forgetFolder(): Promise<void> {

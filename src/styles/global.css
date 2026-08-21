@@ -670,6 +670,28 @@ kbd {
   box-shadow: var(--shadow-lg);
 }
 
+.account-chip {
+  padding: 3px;
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.account-initial {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .sync-dot {
   width: 8px;
   height: 8px;
