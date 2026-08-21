@@ -19,11 +19,12 @@ jobs:
   windows:
     name: Windows installer
     runs-on: windows-latest
+    timeout-minutes: 45
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -38,9 +39,12 @@ jobs:
         run: npx electron-builder --win --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # There is no certificate here, and leaving discovery on makes
+          # electron-builder fetch a large signing toolchain it will not use.
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: design-warehouse-windows
           path: |
