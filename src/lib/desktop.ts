@@ -28,7 +28,12 @@ export interface GoogleBridge {
   }): Promise<{ connected: boolean; profile?: GoogleProfile }>;
   token(): Promise<string | null>;
   disconnect(): Promise<{ connected: boolean }>;
-  status(): Promise<{ connected: boolean; clientId: string; profile: GoogleProfile | null }>;
+  status(): Promise<{
+    connected: boolean;
+    clientId: string;
+    profile: GoogleProfile | null;
+    tokenEncrypted: boolean;
+  }>;
   cancel(): Promise<{ cancelled: boolean }>;
 }
 

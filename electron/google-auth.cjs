@@ -10,7 +10,7 @@
  * they are trusting.
  */
 
-const { app, shell } = require('electron');
+const { app, safeStorage, shell } = require('electron');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const http = require('node:http');
@@ -22,27 +22,82 @@ const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
 const USERINFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const TIMEOUT_MS = 5 * 60 * 1000;
 
-const storeFile = () => path.join(app.getPath('userData'), 'google-auth.json');
+/**
+ * The refresh token is held in the OS keychain — DPAPI on Windows, Keychain on
+ * macOS, libsecret on Linux — rather than as readable JSON. File permissions
+ * alone would leave it in the clear to anything running as this user.
+ */
+const encryptedFile = () => path.join(app.getPath('userData'), 'google-auth.bin');
+const legacyFile = () => path.join(app.getPath('userData'), 'google-auth.json');
+
+function encryptionAvailable() {
+  try {
+    return safeStorage.isEncryptionAvailable();
+  } catch {
+    // Called before the app is ready, or no keyring on this system.
+    return false;
+  }
+}
 
 function readStore() {
+  if (encryptionAvailable()) {
+    try {
+      const decrypted = safeStorage.decryptString(fs.readFileSync(encryptedFile()));
+      return JSON.parse(decrypted);
+    } catch {
+      // Not written yet, or written by a different OS user or machine, in
+      // which case it is unreadable here and a fresh sign-in is the fix.
+    }
+  }
+  // A store from before this was encrypted, or a system with no keyring.
+  let legacy = null;
   try {
-    return JSON.parse(fs.readFileSync(storeFile(), 'utf8'));
+    legacy = JSON.parse(fs.readFileSync(legacyFile(), 'utf8'));
   } catch {
     return null;
+  }
+
+  // Re-home it into the keychain and take the plaintext off disk. Deliberately
+  // not by re-reading afterwards: if the keyring reports itself available but
+  // then fails to encrypt, writeStore falls back to the same legacy file and a
+  // recursive read would loop forever. The value is already in hand.
+  if (legacy && encryptionAvailable()) writeStore(legacy);
+  return legacy;
+}
+
+function removeQuietly(file) {
+  try {
+    fs.unlinkSync(file);
+  } catch {
+    // Not there. Nothing to remove.
   }
 }
 
 function writeStore(value) {
-  const file = storeFile();
   if (value === null) {
-    try {
-      fs.unlinkSync(file);
-    } catch {
-      // Nothing stored; disconnecting is already done.
-    }
+    removeQuietly(encryptedFile());
+    removeQuietly(legacyFile());
     return;
   }
-  fs.writeFileSync(file, JSON.stringify(value), { mode: 0o600 });
+
+  if (encryptionAvailable()) {
+    try {
+      fs.writeFileSync(encryptedFile(), safeStorage.encryptString(JSON.stringify(value)), {
+        mode: 0o600,
+      });
+      // Never leave the old readable copy behind once an encrypted one exists.
+      removeQuietly(legacyFile());
+      return;
+    } catch {
+      // A keyring that reports itself available can still fail to serve a key —
+      // a locked login keyring, say. Falling back beats refusing to sign in.
+    }
+  }
+
+  // No keyring, or it would not encrypt. Say so through status() so the app can
+  // be honest about it rather than implying protection it does not have.
+  fs.writeFileSync(legacyFile(), JSON.stringify(value), { mode: 0o600 });
+  removeQuietly(encryptedFile());
 }
 
 const base64url = (buffer) => buffer.toString('base64url');
@@ -259,7 +314,18 @@ function status() {
     connected: !!store?.refreshToken,
     clientId: store?.clientId ?? '',
     profile: store?.profile ?? null,
+    /** True only if the token really is in the keychain, not merely that one exists. */
+    tokenEncrypted: fs.existsSync(encryptedFile()),
   };
 }
 
-module.exports = { authorize, accessToken, disconnect, status, cancel };
+module.exports = {
+  authorize,
+  accessToken,
+  disconnect,
+  status,
+  cancel,
+  // Exposed so the storage layer can be tested against a real keyring without
+  // standing up a whole OAuth round trip.
+  _store: { readStore, writeStore, encryptionAvailable, encryptedFile, legacyFile },
+};

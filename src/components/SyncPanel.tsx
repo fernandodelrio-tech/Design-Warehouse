@@ -6,7 +6,6 @@ import {
   cancelConnect,
   connect,
   connectionStatus,
-  disconnect,
   readSettings,
   writeSettings,
 } from '../lib/sync';
@@ -23,6 +22,7 @@ interface Props {
   lastSummary: SyncSummary | null;
   account: Account | null;
   onAccountChange: (account: Account | null) => Promise<void>;
+  onSignOut: () => Promise<void>;
   onConnectionChange: () => void;
 }
 
@@ -34,6 +34,7 @@ export function SyncPanel({
   lastSummary,
   account,
   onAccountChange,
+  onSignOut,
   onConnectionChange,
 }: Props) {
   const notify = useNotify();
@@ -41,10 +42,16 @@ export function SyncPanel({
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [strayCount, setStrayCount] = useState(0);
+  const [tokenEncrypted, setTokenEncrypted] = useState<boolean | null>(null);
 
   useEffect(() => {
     void readSettings().then(setSettings);
     void connectionStatus().then((status) => setConnected(status.connected));
+    if (isDesktop) {
+      void window.designWarehouse?.google
+        .status()
+        .then((status) => setTokenEncrypted(status.tokenEncrypted));
+    }
   }, []);
 
   // Designs catalogued before signing in sit in the signed-out catalog; offer
@@ -91,11 +98,9 @@ export function SyncPanel({
   const handleDisconnect = async () => {
     setBusy(true);
     try {
-      await disconnect();
+      await onSignOut();
       setConnected(false);
-      await onAccountChange(null);
       onConnectionChange();
-      notify('Signed out. Your designs stay in Drive and on this device.', 'success');
     } finally {
       setBusy(false);
     }
@@ -158,7 +163,12 @@ export function SyncPanel({
                 'Not signed in'
               )}
             </span>
-            {connected ? (
+            {/*
+              Keyed on the account, not on holding a live token: in a browser the
+              token lives in memory, so after a reload you are signed in with no
+              token yet — and gating this on `connected` left no way to sign out.
+            */}
+            {account ? (
               <>
                 <button type="button" className="btn btn-primary" onClick={onSync} disabled={syncing}>
                   <IconRefresh /> {syncing ? 'Syncing…' : 'Sync now'}
@@ -257,6 +267,32 @@ export function SyncPanel({
               />
             )}
 
+            <Field label="This device">
+              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={settings.forgetOnSignOut}
+                  onChange={(event) => update({ forgetOnSignOut: event.target.checked })}
+                  style={{ width: 16, height: 16, marginTop: 2, accentColor: 'var(--accent-strong)' }}
+                />
+                <span>
+                  Delete this device&rsquo;s copy when I sign out
+                  <span style={{ display: 'block', color: 'var(--text-faint)', fontSize: 11.5 }}>
+                    Your designs stay in Drive and come back when you sign in again. Anything
+                    unsynced is pushed first, and sign-out is abandoned if that fails.
+                  </span>
+                </span>
+              </label>
+            </Field>
+
+            {isDesktop && tokenEncrypted === false && (
+              <p style={{ color: 'var(--warning)', fontSize: 11.5, margin: 0 }}>
+                This system has no keyring available, so the Google sign-in is kept in a
+                permission-restricted file rather than encrypted. Installing a keyring
+                (gnome-keyring or kwallet) will secure it.
+              </p>
+            )}
+
             <Field label="Automatic sync">
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
                 <input
@@ -282,6 +318,13 @@ export function SyncPanel({
               <dd>One image and one spec file per design, plus a marker per deletion.</dd>
               <dt>Conflicts</dt>
               <dd>The most recently edited copy replaces the other.</dd>
+              <dt>On this device</dt>
+              <dd>
+                Designs are stored unencrypted in {isDesktop ? 'your user profile' : "this browser's storage"}.
+                Anyone who can use this {isDesktop ? 'computer account' : 'browser profile'} can
+                read them; the separation between accounts keeps catalogs apart in the app, not
+                from someone inspecting storage directly.
+              </dd>
             </div>
           </Section>
         </div>

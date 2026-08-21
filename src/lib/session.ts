@@ -32,6 +32,26 @@ export async function adoptLocalCatalog(account: Account): Promise<number> {
   return moved;
 }
 
+/**
+ * Deletes this device's copy of an account's catalog.
+ *
+ * The database is closed first — IndexedDB will not delete one that is still
+ * open, and a blocked delete reports success while leaving the data behind.
+ */
+export async function forgetCatalog(account: Account): Promise<boolean> {
+  const name = databaseFor(account);
+  if (currentDatabase() === name) await useDatabase(databaseFor(null));
+  releaseAllImages();
+
+  return new Promise<boolean>((resolve) => {
+    const request = indexedDB.deleteDatabase(name);
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => resolve(false);
+    // Another tab still holds it open, so nothing was removed.
+    request.onblocked = () => resolve(false);
+  });
+}
+
 export async function countLocalCatalog(): Promise<number> {
   const previous = currentDatabase();
   await useDatabase(databaseFor(null));

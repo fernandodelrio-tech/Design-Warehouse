@@ -1,5 +1,5 @@
 import { desktop } from '../desktop';
-import { readMeta, writeMeta, clearMeta } from '../db';
+import { clearMeta } from '../db';
 import {
   assertClientNotShared,
   bindClientId,
@@ -28,6 +28,8 @@ export interface GoogleSettings {
   /** Google issues one for desktop clients; it is not treated as confidential. */
   desktopClientSecret: string;
   autoSync: boolean;
+  /** Delete this device's copy of the catalog when signing out. */
+  forgetOnSignOut: boolean;
 }
 
 export const DEFAULT_SETTINGS: GoogleSettings = {
@@ -35,17 +37,33 @@ export const DEFAULT_SETTINGS: GoogleSettings = {
   desktopClientId: '',
   desktopClientSecret: '',
   autoSync: true,
+  forgetOnSignOut: false,
 };
 
-const SETTINGS_KEY = 'google-settings';
+const SETTINGS_KEY = 'dw-google-settings';
 
+/**
+ * Settings live in localStorage, not in the catalog database.
+ *
+ * They describe this device — which OAuth client it uses, whether it syncs —
+ * not the catalog. Held per catalog, the client ID typed while signed out would
+ * vanish the moment signing in swapped the database underneath it.
+ */
 export async function readSettings(): Promise<GoogleSettings> {
-  const stored = await readMeta<Partial<GoogleSettings>>(SETTINGS_KEY);
-  return { ...DEFAULT_SETTINGS, ...stored };
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    return { ...DEFAULT_SETTINGS, ...(raw ? (JSON.parse(raw) as Partial<GoogleSettings>) : {}) };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
 }
 
 export async function writeSettings(settings: GoogleSettings): Promise<void> {
-  await writeMeta(SETTINGS_KEY, settings);
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // Private browsing or a full quota; the session keeps working regardless.
+  }
 }
 
 // --- browser: Google Identity Services ------------------------------------

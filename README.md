@@ -289,6 +289,31 @@ Do the same on the other device with the same Google account, and the two catalo
 converge on the next sync. Someone else using the app needs their own client ID from
 step 3, in their own Google Cloud project.
 
+### What this does and does not protect
+
+The Google sign-in itself is held in your operating system's keychain — DPAPI on
+Windows, Keychain on macOS, libsecret on Linux. On a system with no keyring available
+it falls back to a permission-restricted file and the sync panel says so plainly
+rather than implying protection it does not have.
+
+Your designs, though, are stored **unencrypted** in the browser's storage or your
+user profile. The separation between accounts keeps catalogs apart *in the app*; it
+is not a security boundary. Anyone who can use that browser profile or that computer
+account can read any catalog on it by inspecting storage directly. On a machine only
+you use, that is the same exposure as any other local file. On a shared one, separate
+operating system accounts or browser profiles are the real answer — no app-level
+scheme beats them.
+
+If you want the local copy gone when you walk away, turn on **Delete this device's
+copy when I sign out** in the sync panel. Anything unsynced is pushed to Drive first,
+and sign-out is abandoned if that push fails, so the option can never be the thing
+that loses a design. If the device has never synced at all, it warns before deleting
+anything.
+
+Designs in Drive are stored unencrypted too — readable by Google and by anyone with
+access to that Google account. End-to-end encryption would change that, at the cost
+of a passphrase on every device and a catalog that is unrecoverable if you forget it.
+
 ### If you would rather not use Drive
 
 Leave sync switched off and use **⬇** / **⬆** in the header, which write and restore

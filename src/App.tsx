@@ -29,10 +29,10 @@ import {
 } from './lib/spec';
 import { copyText, downloadBlob, downloadText, exportCatalog, importCatalog } from './lib/transfer';
 import type { DesignRecord } from './lib/types';
-import { connectionStatus, lastSyncAt, readSettings, runSync } from './lib/sync';
+import { connectionStatus, disconnect, lastSyncAt, readSettings, runSync } from './lib/sync';
 import { currentAccount, databaseFor } from './lib/accounts';
 import type { Account } from './lib/accounts';
-import { openCatalogFor } from './lib/session';
+import { forgetCatalog, openCatalogFor } from './lib/session';
 import type { SyncSummary } from './lib/sync';
 import { releaseAllImages, releaseImage } from './hooks/useImageUrl';
 import { SyncPanel } from './components/SyncPanel';
@@ -665,6 +665,55 @@ export default function App() {
 
   useEffect(() => onMenuAction((action) => menuDispatch.current(action)), []);
 
+  /**
+   * Signing out, optionally taking this device's copy of the catalog with it.
+   *
+   * Anything unsynced is pushed first and the wipe abandoned if that fails —
+   * "forget this device" must never be the thing that loses a design.
+   */
+  const signOut = useCallback(async (): Promise<void> => {
+    const settings = await readSettings();
+    const leaving = account;
+    const forgetting = settings.forgetOnSignOut && leaving !== null;
+
+    if (forgetting) {
+      if (connected) {
+        try {
+          await runSync();
+        } catch (error) {
+          notify(
+            `Not signing out: this device's designs could not be saved to Drive first (${
+              error instanceof Error ? error.message : 'sync failed'
+            }).`,
+            'error',
+          );
+          return;
+        }
+      } else if (
+        !confirm(
+          'This device has never synced to Drive, so deleting its copy would lose these designs for good.\n\nSign out and delete anyway?',
+        )
+      ) {
+        return;
+      }
+    }
+
+    await disconnect();
+    await switchAccount(null);
+
+    if (forgetting && leaving) {
+      const removed = await forgetCatalog(leaving);
+      notify(
+        removed
+          ? 'Signed out, and this device\u2019s copy was deleted.'
+          : 'Signed out, but the local copy could not be deleted \u2014 close other tabs and try again.',
+        removed ? 'success' : 'error',
+      );
+      return;
+    }
+    notify('Signed out. Your designs stay in Drive and on this device.', 'success');
+  }, [account, connected, notify, switchAccount]);
+
   const renderCard = (record: DesignRecord) => (
     <DesignCard
       record={record}
@@ -938,6 +987,7 @@ export default function App() {
           lastSummary={lastSummary}
           account={account}
           onAccountChange={switchAccount}
+          onSignOut={signOut}
           onConnectionChange={() => void refreshConnection()}
         />
       )}
