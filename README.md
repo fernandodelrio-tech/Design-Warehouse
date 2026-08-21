@@ -304,6 +304,16 @@ types.
    > on an old run. A re-run rebuilds that old commit and republishes it, which can
    > silently overwrite a newer deploy — that is what breaks verification most often.
 
+4. Under *APIs & Services → Credentials*, create the OAuth client you need:
+   - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
+     Copy the client ID and client secret into the app's sync panel. Google issues a
+     secret for desktop clients and documents it as not confidential; it is handed
+     straight to the keychain and never read back, so the field appears empty
+     afterwards. There is no redirect URI to configure — desktop clients use a
+     loopback redirect, which the app serves on `http://127.0.0.1:<random port>`.
+   - **For the web app** — *Create credentials → OAuth client ID → Web application*.
+     Add your Pages URL (and `http://localhost:5173` for development) as an
+     authorized JavaScript origin. Copy the client ID into the sync panel.
 5. Open the cloud button in either app, paste the client ID, and press **Sign in
    with Google**. The consent screen opens in your real browser, not an embedded
    window.
