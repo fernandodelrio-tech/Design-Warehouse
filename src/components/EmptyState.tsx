@@ -5,6 +5,7 @@ interface Props {
   onPickFolder: () => void;
   onPaste: () => void;
   filtered: boolean;
+  desktop: boolean;
   onClearFilters: () => void;
 }
 
@@ -13,6 +14,7 @@ export function EmptyState({
   onPickFolder,
   onPaste,
   filtered,
+  desktop,
   onClearFilters,
 }: Props) {
   if (filtered) {
@@ -58,8 +60,9 @@ export function EmptyState({
           image inside it is catalogued, subfolders included.
         </div>
         <div>
-          <strong>Everything stays local.</strong> Images and specs live in this browser's
-          storage. Nothing is uploaded anywhere.
+          <strong>Everything stays local.</strong> Images and specs are stored{' '}
+          {desktop ? 'on this computer' : "in this browser's storage"}. Nothing is uploaded
+          anywhere.
         </div>
       </div>
     </div>

@@ -8,22 +8,73 @@ back when building a prototype.
 Everything runs in the browser. Images and specs live in IndexedDB on the machine
 you use; nothing is uploaded anywhere and there is no server to run.
 
-## Running it
+## Installing it
+
+### Windows
+
+Download **`Design Warehouse <version> Setup.exe`** from the
+[Releases page](../../releases) and run it.
+
+It installs per-user, so Windows never asks for an administrator password, and the
+catalog stays with the account that created it. The installer lets you choose the
+folder, and adds Start menu and desktop shortcuts. A **Portable** `.exe` is published
+alongside it if you would rather run it from a USB stick without installing —
+note that a portable copy keeps its catalog in your Windows user profile, not next
+to the executable.
+
+To uninstall: Settings → Apps → Design Warehouse. Your catalog is deliberately left
+in place, so reinstalling picks up where you left off. Back it up first
+(**File → Back up the catalog…**) if you want it gone or moved.
+
+### macOS and Linux
+
+Run it from source — there is no signed macOS build, and an unsigned one would be
+quarantined by Gatekeeper:
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run desktop     # builds, then opens the desktop window
 ```
 
-For a production build:
+Or use it as a plain web app in any browser:
 
 ```bash
-npm run build    # emits dist/
-npm run preview  # serves dist/ locally
+npm run dev         # http://localhost:5173
 ```
 
-`dist/` is a plain static bundle with relative asset paths, so it can be dropped on
-any static host or opened through a local file server.
+A Linux AppImage can be produced locally with `npm run dist:linux`.
+
+## Building the Windows installer yourself
+
+On Windows:
+
+```bash
+npm ci
+npm run dist:win    # writes release/Design Warehouse <version> Setup.exe
+```
+
+NSIS packaging needs a Windows toolchain, so this does not cross-compile from macOS
+or Linux. The repository's `Build desktop installer` workflow runs it on a
+`windows-latest` runner instead: trigger it by hand from the Actions tab, or push a
+`v*` tag to build and attach the installer to a release.
+
+The installer is unsigned. Windows SmartScreen will show a "Windows protected your
+PC" warning on first run — *More info* → *Run anyway*. Signing it needs a code
+signing certificate; once you have one, set `CSC_LINK` and `CSC_KEY_PASSWORD` as
+repository secrets and pass them to the packaging step.
+
+## Running from source
+
+```bash
+npm install
+npm run dev         # web app with hot reload
+npm run desktop:dev # desktop window against the dev server, with hot reload
+npm run build       # emits dist/
+npm run preview     # serves dist/ locally
+```
+
+`dist/` is a plain static bundle with relative asset paths, so it can also be dropped
+on any static host.
 
 ## Getting designs in
 
@@ -87,9 +138,11 @@ for seeding a whole project with a reference set.
 
 ## Backups
 
-The catalog lives in one browser profile. **⬇** in the header writes a single JSON
-file with the images inlined; **⬆** restores one. The app also asks the browser for
-persistent storage so the catalog is not evicted under storage pressure.
+The catalog lives in one place on one machine: a browser profile on the web, or your
+user profile in the desktop app (**Help → Where is my catalog stored?** opens the
+exact folder). **⬇** in the header writes a single JSON file with the images inlined;
+**⬆** restores one — that file is how a catalog moves between machines. The app also
+asks for persistent storage so the catalog is not evicted under storage pressure.
 
 ## Layout of the code
 
@@ -106,6 +159,32 @@ src/
     db.ts          IndexedDB: metadata and blobs in separate stores
     ingest.ts      clipboard, file, folder and drag-drop intake
     transfer.ts    clipboard writes, downloads, catalog backup and restore
+    desktop.ts     the Electron bridge, absent and unused in a browser
   components/      the shell, masonry grid, card, and spec editor
   hooks/           object-URL management for thumbnails and full images
+electron/
+  main.cjs         desktop shell: app:// protocol, window state, menu, clipboard
+  preload.cjs      the two calls exposed to the renderer
+scripts/
+  make-icons.mjs   regenerates build/icon.ico and build/icon.png
+  desktop-dev.mjs  runs the shell against the Vite dev server
 ```
+
+## Notes on the desktop build
+
+The renderer is the same bundle the web build produces. The shell adds four things:
+
+- It serves the app over an `app://` scheme registered as standard and secure.
+  A `file://` page gets an opaque origin and Chromium refuses to open IndexedDB on
+  one, which would leave the catalog unable to store anything.
+- **Paste** reads the clipboard through Electron rather than `navigator.clipboard`,
+  which needs a permission grant and misses bitmaps put there by screenshot tools.
+  <kbd>Ctrl</kbd>+<kbd>V</kbd> remains the native paste, so it still works inside the
+  spec editor's text fields; the menu item is <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.
+- The window remembers its size, position and maximised state between launches, and
+  a second launch focuses the running window rather than opening a rival copy of the
+  catalog.
+- The renderer is sandboxed with context isolation on and node integration off, under
+  a content security policy that permits no network access at all. The preload
+  exposes exactly two functions.
+

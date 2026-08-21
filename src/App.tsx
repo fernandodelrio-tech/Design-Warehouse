@@ -9,6 +9,8 @@ import {
   requestPersistence,
   saveDesign,
 } from './lib/db';
+import { isDesktop, onMenuAction } from './lib/desktop';
+import type { MenuAction } from './lib/desktop';
 import { formatBytes } from './lib/image';
 import {
   filesFromDataTransfer,
@@ -100,6 +102,7 @@ export default function App() {
   const fileInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const importInput = useRef<HTMLInputElement>(null);
+  const searchInput = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
 
   useEffect(() => {
@@ -467,6 +470,37 @@ export default function App() {
     notify('Catalog cleared.', 'success');
   };
 
+  // --- desktop application menu -------------------------------------------
+
+  // Held in a ref so the subscription is made once, while the handlers it calls
+  // are always the current render's — several of them close over `records`.
+  const menuDispatch = useRef<(action: MenuAction) => void>(() => {});
+  menuDispatch.current = (action) => {
+    switch (action) {
+      case 'paste':
+        void pasteFromButton();
+        break;
+      case 'add-files':
+        fileInput.current?.click();
+        break;
+      case 'add-folder':
+        folderInput.current?.click();
+        break;
+      case 'backup':
+        void backupCatalog();
+        break;
+      case 'restore':
+        importInput.current?.click();
+        break;
+      case 'search':
+        searchInput.current?.focus();
+        searchInput.current?.select();
+        break;
+    }
+  };
+
+  useEffect(() => onMenuAction((action) => menuDispatch.current(action)), []);
+
   const openRecord = openId ? records.find((r) => r.id === openId) ?? null : null;
   const filtersActive =
     query.trim().length > 0 || scheme !== 'all' || favoritesOnly || activeTags.length > 0;
@@ -499,6 +533,7 @@ export default function App() {
             <IconSearch />
           </span>
           <input
+            ref={searchInput}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search titles, tags, hex values, fonts, components…"
@@ -610,6 +645,7 @@ export default function App() {
         ) : visible.length === 0 ? (
           <EmptyState
             filtered={filtersActive}
+            desktop={isDesktop}
             onClearFilters={() => {
               setQuery('');
               setScheme('all');
