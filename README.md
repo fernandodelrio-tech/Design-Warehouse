@@ -12,15 +12,23 @@ you use; nothing is uploaded anywhere and there is no server to run.
 
 ### Windows
 
-Download **`Design Warehouse <version> Setup.exe`** from the
-[Releases page](../../releases) and run it.
+Get **`Design Warehouse <version> Setup.exe`** and run it. It is built by the
+`Build desktop installer` workflow, and there are two places to get it:
 
-It installs per-user, so Windows never asks for an administrator password, and the
-catalog stays with the account that created it. The installer lets you choose the
-folder, and adds Start menu and desktop shortcuts. A **Portable** `.exe` is published
-alongside it if you would rather run it from a USB stick without installing —
-note that a portable copy keeps its catalog in your Windows user profile, not next
-to the executable.
+- **From a release** — the [Releases page](../../releases), once a `v*` tag has been
+  pushed. `git tag v0.1.0 && git push origin v0.1.0` builds the installer and attaches
+  it to a new release.
+- **From a build** — the [Actions tab](../../actions/workflows/build-desktop.yml):
+  open the most recent run and download the `design-warehouse-windows` artifact. This
+  works with no tag, and is the quickest way to get an installer right now. Artifacts
+  are a zip and expire after 30 days.
+
+One installer covers both x64 and ARM64 machines. It installs per-user, so Windows
+never asks for an administrator password and the catalog stays with the account that
+created it; you can choose the folder, and it adds Start menu and desktop shortcuts.
+A **Portable** `.exe` is built alongside it if you would rather run it from a USB
+stick without installing — note that a portable copy still keeps its catalog in your
+Windows user profile, not next to the executable.
 
 To uninstall: Settings → Apps → Design Warehouse. Your catalog is deliberately left
 in place, so reinstalling picks up where you left off. Back it up first
