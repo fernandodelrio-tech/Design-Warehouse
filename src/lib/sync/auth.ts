@@ -7,7 +7,29 @@ import {
   setCurrentAccount,
 } from '../accounts';
 import type { Account } from '../accounts';
-import { AUTH_SCOPES } from './drive';
+import { AUTH_SCOPES, DRIVE_SCOPE } from './drive';
+
+/**
+ * Google lets people approve scopes individually, and the Drive checkbox is not
+ * ticked by default. Sign-in then succeeds with identity alone and the first
+ * Drive call fails with "insufficient authentication scopes", which says
+ * nothing about what to do. Checking the granted scopes here turns that into an
+ * error naming the box that needs ticking.
+ */
+class MissingDriveScopeError extends Error {
+  constructor() {
+    super(
+      'Signed in, but Drive access was not granted. Google asks for it as a separate ' +
+        'tick box on the consent screen — sign in again and allow the app to see and ' +
+        'manage the files it creates in your Drive.',
+    );
+    this.name = 'MissingDriveScopeError';
+  }
+}
+
+function grantsDrive(granted: string | undefined): boolean {
+  return (granted ?? '').split(/\s+/).includes(DRIVE_SCOPE);
+}
 
 /**
  * Signing in to Google, by whichever route the platform allows.
@@ -76,7 +98,13 @@ interface GoogleIdentity {
         client_id: string;
         scope: string;
         prompt?: string;
-        callback: (response: { access_token?: string; expires_in?: number; error?: string }) => void;
+        callback: (response: {
+          access_token?: string;
+          expires_in?: number;
+          /** Space-delimited list of the scopes actually granted. */
+          scope?: string;
+          error?: string;
+        }) => void;
         error_callback?: (error: { type?: string; message?: string }) => void;
       }): TokenClient;
       revoke(token: string, done: () => void): void;
@@ -130,6 +158,10 @@ function requestWebToken(clientId: string, prompt: string): Promise<string> {
           callback: (response) => {
             if (response.error || !response.access_token) {
               reject(new Error(response.error ?? 'Google did not return a token.'));
+              return;
+            }
+            if (!grantsDrive(response.scope)) {
+              reject(new MissingDriveScopeError());
               return;
             }
             webToken = {
@@ -300,7 +332,15 @@ export async function accessToken(): Promise<string> {
   const settings = await readSettings();
   const clientId = account?.clientId || settings.webClientId;
   if (!clientId) throw new Error('Not signed in to Google.');
-  const token = await requestWebToken(clientId, '');
+  let token: string;
+  try {
+    token = await requestWebToken(clientId, '');
+  } catch (error) {
+    // A silent renewal returns only what was granted before, so a missing Drive
+    // scope has to be asked for explicitly rather than retried quietly.
+    if (error instanceof MissingDriveScopeError) token = await requestWebToken(clientId, 'consent');
+    else throw error;
+  }
 
   // A silent renewal can come back for a different Google account if the
   // browser session changed underneath us; that must not write into this

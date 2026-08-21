@@ -52,6 +52,13 @@ async function call(
     } catch {
       // Not a JSON error body; the status text will have to do.
     }
+    if (/insufficient authentication scopes/i.test(detail)) {
+      throw new DriveError(
+        'Google Drive access was not granted to this sign-in. Sign out, sign in again, ' +
+          'and make sure the Drive tick box on the consent screen is ticked.',
+        response.status,
+      );
+    }
     if (response.status === 401 || response.status === 403) {
       throw new DriveError(`Google Drive refused the request: ${detail}`, response.status);
     }

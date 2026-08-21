@@ -21,6 +21,7 @@ const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
 const USERINFO_ENDPOINT = 'https://www.googleapis.com/oauth2/v3/userinfo';
 const TIMEOUT_MS = 5 * 60 * 1000;
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 /**
  * The refresh token is held in the OS keychain — DPAPI on Windows, Keychain on
@@ -244,6 +245,18 @@ async function authorize({ clientId, clientSecret, scope }) {
   }
   if (!tokens.refresh_token) {
     throw new Error('Google did not return a refresh token; try removing the app under your Google account permissions and connecting again.');
+  }
+
+  // Google grants scopes individually, and the Drive tick box is not on by
+  // default. Catch a short grant here rather than letting the first sync fail
+  // with "insufficient authentication scopes", which explains nothing.
+  const granted = String(tokens.scope || '').split(/\s+/);
+  if (!granted.includes(DRIVE_SCOPE)) {
+    throw new Error(
+      'Signed in, but Drive access was not granted. Google asks for it as a separate ' +
+        'tick box on the consent screen — connect again and allow the app to see and ' +
+        'manage the files it creates in your Drive.',
+    );
   }
 
   const profile = await fetchProfile(tokens.access_token);

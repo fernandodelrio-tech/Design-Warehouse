@@ -318,6 +318,12 @@ types.
    with Google**. The consent screen opens in your real browser, not an embedded
    window.
 
+   **Tick the Drive box.** Google asks for each permission separately and the Drive
+   one is not ticked by default, so it is easy to approve identity alone. Sign-in then
+   succeeds and the first sync fails on *insufficient authentication scopes*. The app
+   now catches a short grant at sign-in and says so; if you see it, sign in again and
+   allow the app to see and manage the files it creates in your Drive.
+
 Do the same on the other device with the same Google account, and the two catalogs
 converge on the next sync. Someone else using the app needs their own client ID from
 step 3, in their own Google Cloud project.
