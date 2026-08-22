@@ -47,6 +47,39 @@ The repository is public, so that page is reachable by anyone with the link. Onl
 app is published — every catalog lives in its own visitor's browser, so no designs
 are exposed by it.
 
+## Look and feel
+
+The app wears **Ochre Broadsheet**, a design catalogued in the app itself and then
+applied back to it. Its measurements drive the interface directly:
+
+| | |
+| --- | --- |
+| **Colour** | Eight measured tokens, exact — ground `#faf0e6`, panel `#ece4da`, ink `#171616`, slate `#a7c5d7`, fire `#e77843`, rule `#708188`, lime `#bff365`, umber `#47413c` |
+| **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between |
+| **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale so both land on one grid |
+| **Corners** | Zero, everywhere |
+| **Faces** | Fraunces for the wordmark and headings, Newsreader for anything you read, Archivo Narrow for every control and label |
+
+The accent measures **2.61:1** on the page ground, which fails at every size, so it is
+never type on the page: it is a fill, and buttons, chips and the account mark are ink
+knocked out of it at 6.16:1. Interaction states the design never had — a hover, a third
+text level, a destructive colour — are derived from the measured tokens with
+`color-mix` rather than invented, and each one says in the stylesheet what it measures
+against the surface it sits on.
+
+**The night edition.** The design measured a light scheme, so light *is* the design and
+the dark toggle is the one part of the skin that is not. Rather than invent eight dark
+values it re-casts the same measured tokens around the ink ground — ink becomes the
+page, ground becomes the type, umber becomes the panel — and derives only the two levels
+ink leaves no room for.
+
+Every text pair in both themes is checked against its WCAG threshold by walking the real
+DOM, across the empty state, the catalog, the detail drawer and the sync panel.
+
+The three faces are self-hosted from `src/styles/fonts/` — 126 KB of latin-subset woff2,
+seven static instances. The app has to work with the network switched off, and opening it
+should not tell a font CDN that you did.
+
 ## Getting designs in
 
 | Method | How |

@@ -124,7 +124,13 @@ export function isLight(hex: string): boolean {
   return luminance(...hexToRgb(hex)) > 0.45;
 }
 
-/** Black or white, whichever reads better on the given background. */
+/**
+ * Black or white, whichever actually reads better on this colour.
+ *
+ * A luminance threshold gets mid-tones wrong: a mid green sits just under the
+ * midpoint, so it was handed white at 2.28:1 when black would have given 7.6:1.
+ * Comparing the two ratios is the same cost and never picks the worse one.
+ */
 export function readableOn(hex: string): string {
-  return isLight(hex) ? '#111111' : '#ffffff';
+  return contrastRatio(hex, '#111111') >= contrastRatio(hex, '#ffffff') ? '#111111' : '#ffffff';
 }

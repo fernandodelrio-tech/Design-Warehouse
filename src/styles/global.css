@@ -1,69 +1,154 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell styles.
-   Local fonts only: the app has to work with the network switched off.
+   Design Warehouse — application shell, wearing "Ochre Broadsheet".
+
+   The palette, spacing scale and radius below are measurements taken from the
+   original 1024x6073 capture, not preferences. Anything the spec did not carry
+   — a hover state, a third text level, a destructive colour — is DERIVED from
+   those measurements with color-mix rather than invented, and every derivation
+   says what it is and what it measures against the ground it sits on.
+
+   Fonts are self-hosted (./type.css): the app has to work with the network off.
    --------------------------------------------------------------------------- */
 
+@import './type.css';
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #0b0d12;
-  --bg-elevated: #12151d;
-  --surface: #171b25;
-  --surface-hover: #1d2230;
-  --border: #262c3a;
-  --border-strong: #333b4d;
+  /* --- measured, exact ---------------------------------------------------
+     ground  #faf0e6 64%   panel #ece4da 10%   ink   #171616 10%
+     slate   #a7c5d7  5%   fire  #e77843  3%   rule  #708188  2%
+     lime    #bff365  2%   umber #47413c  2%                          */
 
-  --text: #e8ecf5;
-  --text-muted: #99a3b8;
-  --text-faint: #6a748a;
+  --bg: #faf0e6;
+  /* Panels sit on the same ground as the page. In this design elevation is a
+     rule, not a shade — which is why there is no lighter "raised" tone. */
+  --bg-elevated: #faf0e6;
+  --surface: #ece4da;
+  /* Derived: panel carried 10% toward ink. Ink on it reads 11.75:1. */
+  --surface-hover: color-mix(in srgb, #ece4da 90%, #171616);
 
-  --accent: #6ea8fe;
-  --accent-strong: #3d85fb;
-  --accent-soft: rgba(110, 168, 254, 0.14);
-  --danger: #f4776a;
-  --success: #59d19a;
-  --warning: #f5c86b;
+  --border: #708188;
+  /* The heavy divider in the design is a 3px ink rule, so "strong" is ink. */
+  --border-strong: #171616;
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 16px;
+  --text: #171616;         /* 16.06:1 on the ground — AAA */
+  --text-muted: #47413c;   /*  8.94:1 — AAA */
+  /* Derived: umber 84% toward the ground. Measured against the card panel, not
+     the page — the panel is the darker ground and so the binding constraint:
+     5.76:1 on the page, 5.14:1 on a card. The border token would have been
+     3.60:1 and is therefore never used for type, only for hairlines. */
+  --text-faint: color-mix(in srgb, #47413c 84%, #faf0e6);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+  /* The accent measures 2.61:1 on the ground and fails at every size, so it is
+     a FILL here, never type on the page ground: buttons, chips and marks are
+     ink knocked out of it at 6.16:1. */
+  --accent: #e77843;
+  /* Derived: fire 82% toward ink, for the pressed and hover states. Ink on it
+     still reads 4.52:1. */
+  --accent-strong: color-mix(in srgb, #e77843 82%, #171616);
+  /* Derived: fire 22% into the ground — a tint that carries ink at 13.13:1. */
+  --accent-soft: color-mix(in srgb, #e77843 22%, #faf0e6);
 
-  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
-    Arial, sans-serif;
+  --muted-fill: #a7c5d7;   /* slate, exact — carries ink at 9.99:1 */
+  /* Ink, in both themes: the accent, lime and fire fills do not change with
+     the scheme, so neither can the colour knocked out of them. */
+  --on-fill: #171616;
+  --success: #bff365;      /* lime, exact — a fill carrying ink at 13.95:1 */
+  --warning: #e77843;      /* fire, exact */
+  /* Derived: fire 55% toward ink — hematite. Heating yellow ochre drives off
+     its water and turns it red, which is the one colour transformation this
+     palette has a claim on; 5.94:1 on the ground. */
+  --danger: color-mix(in srgb, #e77843 55%, #171616);
+
+  /* --- measured: corners --------------------------------------------------
+     The spec was silent. Zero everywhere: a broadsheet is rules and boxes, and
+     a rounded corner is the single thing that would make this read as software
+     rather than as a sheet. */
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
+
+  /* No shadow anywhere. The design has no elevation to cast one; overlaid
+     surfaces are separated by a heavy ink rule instead. */
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: none;
+
+  /* --- measured: spacing scale ------------------------------------------- */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 48px;
+  --s8: 64px;
+
+  /* --- chosen: type scale -------------------------------------------------
+     12 / 14 / 16 / 20 / 24 / 32, sharing 12, 16, 24 and 32 with the spacing
+     scale so type and space land on one grid. The app had twelve ad-hoc sizes
+     between 10.5 and 24 before this. */
+  --t-label: 12px;
+  --t-small: 14px;
+  --t-body: 16px;
+  --t-lede: 20px;
+  --t-sub: 24px;
+  --t-head: 32px;
+
+  /* --- chosen: the three roles -------------------------------------------
+     Fraunces (soft and wonk axes at full) is the identity and is spent only on
+     the wordmark and the big headings. Newsreader reads — titles, prose, spec
+     values. Archivo Narrow is the furniture: every control, label and chip,
+     where a condensed grotesque is both denser and clearer than a serif. */
+  --font: 'Newsreader', Charter, 'Bitstream Charter', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Archivo Narrow', 'Helvetica Neue', 'Arial Narrow', system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Hoefler Text', 'Iowan Old Style', Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
   --topbar-height: 60px;
 }
 
-:root[data-theme='light'] {
-  color-scheme: light;
+/* --- the night edition ------------------------------------------------------
+   The design measured a light scheme, so light is the design and this is the
+   only part of the skin that is not it. Rather than invent eight dark values,
+   the night edition re-casts the SAME measured tokens around the ink ground —
+   ink becomes the page, ground becomes the type, umber becomes the panel — and
+   derives only the two levels that ink leaves no room for. */
 
-  --bg: #f6f7f9;
-  --bg-elevated: #ffffff;
-  --surface: #ffffff;
-  --surface-hover: #f1f3f7;
-  --border: #e2e6ee;
-  --border-strong: #cdd4e0;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-  --text: #12151d;
-  --text-muted: #5c6577;
-  --text-faint: #8a93a6;
+  --bg: #171616;
+  --bg-elevated: #171616;
+  --surface: #47413c;      /* umber, exact — ground reads 8.94:1 on it */
+  --surface-hover: color-mix(in srgb, #47413c 84%, #faf0e6);
 
-  --accent: #2563eb;
-  --accent-strong: #1d4ed8;
-  --accent-soft: rgba(37, 99, 235, 0.1);
-  --danger: #d64545;
-  --success: #17835a;
-  --warning: #a4730a;
+  --border: #47413c;
+  --border-strong: #708188;
 
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow: 0 8px 24px rgba(16, 24, 40, 0.1);
-  --shadow-lg: 0 24px 64px rgba(16, 24, 40, 0.18);
+  --text: #faf0e6;         /* 16.06:1 on ink — AAA */
+  --text-muted: #a7c5d7;   /*  9.99:1 — AAA */
+  /* Derived: slate carried 15% toward the rule token. The rule alone is 4.46:1
+     on ink and only 2.4:1 on an umber card; this clears both at 8.96:1 and
+     4.99:1 while staying a step below the muted level. */
+  --text-faint: color-mix(in srgb, #a7c5d7 85%, #708188);
+
+  /* On ink the accent measures 6.16:1 and becomes legible as type — the one
+     ground where this palette lets it be read rather than seen. */
+  --accent: #e77843;
+  --accent-strong: color-mix(in srgb, #e77843 82%, #faf0e6);
+  --accent-soft: color-mix(in srgb, #e77843 26%, #171616);
+
+  --muted-fill: #a7c5d7;   /* slate, exact */
+  /* Ink, in both themes: the accent, lime and fire fills do not change with
+     the scheme, so neither can the colour knocked out of them. */
+  --on-fill: #171616;
+  --success: #bff365;      /* 13.95:1 on ink */
+  --warning: #e77843;
+  /* Hematite lifted toward the ground so it still reads on ink. */
+  --danger: color-mix(in srgb, #e77843 62%, #faf0e6);
 }
 
 * {
@@ -81,9 +166,33 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--t-body);
+  line-height: var(--s5);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Controls, labels and chips take the condensed grotesque; running text and
+   anything the user typed keeps the serif. */
+button,
+select,
+.filter-label,
+.chip,
+.badge,
+.group-heading,
+.card-spec-line dt,
+.readout dt,
+.field label,
+.scale-head,
+.selection-bar,
+.brand-count {
+  font-family: var(--font-ui);
+}
+
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
 
 button {
@@ -108,13 +217,14 @@ select {
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 12px;
+  gap: var(--s2);
+  padding: 6px var(--s3);
+  letter-spacing: 0.04em;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--t-small);
   font-weight: 500;
   white-space: nowrap;
   transition: background 0.12s ease, border-color 0.12s ease, transform 0.06s ease;
@@ -135,14 +245,15 @@ select {
 }
 
 .btn-primary {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--on-fill);
+  font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-strong);
+  border-color: var(--border-strong);
 }
 
 .btn-ghost {
@@ -166,23 +277,27 @@ select {
 }
 
 .chip {
+  font-family: var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--t-label);
   line-height: 18px;
   white-space: nowrap;
 }
 
 .chip-accent {
-  border-color: transparent;
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: var(--border-strong);
+  background: var(--accent);
+  color: var(--on-fill);
+  font-weight: 700;
 }
 
 .chip button {
@@ -191,7 +306,7 @@ select {
   padding: 0;
   color: inherit;
   opacity: 0.6;
-  font-size: 13px;
+  font-size: var(--t-small);
   line-height: 1;
 }
 
@@ -201,7 +316,7 @@ select {
 
 .mono {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .visually-hidden {
@@ -230,18 +345,21 @@ select {
   align-items: center;
   gap: 12px;
   padding: 0 20px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 3px solid var(--border-strong);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  margin-right: 4px;
+  gap: var(--s2);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: var(--t-lede);
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin-right: var(--s1);
 }
 
 .brand-mark {
@@ -253,13 +371,13 @@ select {
 }
 
 .brand-mark span {
-  border-radius: 3px;
+  border-radius: var(--radius);
 }
 
 .brand-count {
   color: var(--text-faint);
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .search {
@@ -308,9 +426,9 @@ select {
 .filters {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--s2);
   flex-wrap: wrap;
-  padding: 12px 20px;
+  padding: var(--s3) var(--s5);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
@@ -324,8 +442,11 @@ select {
 }
 
 .filter-label {
-  color: var(--text-faint);
-  font-size: 12px;
+  color: var(--text-muted);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
 }
 
 .tag-filter {
@@ -335,6 +456,9 @@ select {
 }
 
 .tag-filter .chip {
+  font-family: var(--font-ui);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -363,7 +487,7 @@ select {
   grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 300px), 100%), 1fr));
   gap: 20px;
   align-items: stretch;
-  --card-height: calc(var(--card-min, 300px) * 0.62 + 215px);
+  --card-height: calc(var(--card-min, 300px) * 0.62 + 245px);
 }
 
 .catalog-cell {
@@ -385,23 +509,23 @@ select {
   display: flex;
   align-items: center;
   gap: 9px;
-  margin: 0 0 14px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.07em;
+  margin: 0 0 var(--s3);
+  padding-bottom: var(--s2);
+  border-bottom: 3px solid var(--border-strong);
+  font-size: var(--t-label);
+  font-weight: 700;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text);
 }
 
 .group-count {
   padding: 1px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-faint);
-  font-size: 11px;
+  font-size: var(--t-label);
   font-weight: 500;
   letter-spacing: 0;
 }
@@ -470,12 +594,12 @@ select {
   left: 8px;
   bottom: 8px;
   padding: 2px 7px;
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: color-mix(in srgb, var(--bg) 76%, transparent);
   backdrop-filter: blur(6px);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: var(--t-label);
   line-height: 1.5;
   letter-spacing: 0.01em;
   pointer-events: none;
@@ -543,18 +667,21 @@ select {
 
 .card-footer {
   flex: 0 0 auto;
-  padding: 12px 14px 14px;
+  padding: var(--s3) var(--s3) var(--s4);
   border-top: 1px solid var(--border);
+  line-height: 20px;
 }
 
 .card-title {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--s2);
+  font-family: var(--font);
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: var(--t-body);
+  line-height: var(--s5);
   letter-spacing: -0.005em;
-  margin-bottom: 4px;
+  margin-bottom: var(--s1);
 }
 
 .card-title span {
@@ -565,7 +692,7 @@ select {
 
 .card-subtitle {
   color: var(--text-faint);
-  font-size: 11.5px;
+  font-size: var(--t-label);
   margin-bottom: 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -589,7 +716,7 @@ select {
 .card-spec-line {
   display: flex;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: var(--t-label);
   color: var(--text-muted);
   margin-top: 8px;
 }
@@ -642,7 +769,10 @@ select {
 }
 
 .empty h1 {
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  font-size: var(--t-head);
   letter-spacing: -0.02em;
   margin: 0 0 8px;
 }
@@ -669,7 +799,7 @@ select {
   border-radius: var(--radius);
   padding: 18px 20px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--t-small);
 }
 
 .empty-hints strong {
@@ -685,7 +815,7 @@ kbd {
   border-radius: 5px;
   background: var(--bg-elevated);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--t-label);
   color: var(--text);
 }
 
@@ -711,7 +841,7 @@ kbd {
 
 .dropzone-inner h2 {
   margin: 0 0 6px;
-  font-size: 18px;
+  font-size: var(--t-lede);
 }
 
 .dropzone-inner p {
@@ -743,23 +873,25 @@ kbd {
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--radius);
   border: 1px solid var(--border-strong);
   object-fit: cover;
   flex: 0 0 auto;
 }
 
+/* The same move as the masthead word: ink knocked out of the accent. */
 .account-initial {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
+  background: var(--accent);
+  color: var(--on-fill);
+  font-family: var(--font-display);
+  font-size: var(--t-label);
+  font-weight: 900;
 }
 
 .sync-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: var(--radius);
   background: var(--text-faint);
   flex: 0 0 auto;
 }
@@ -776,7 +908,7 @@ kbd {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .btn.spinning svg {
@@ -829,7 +961,7 @@ kbd {
   border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow);
-  font-size: 13px;
+  font-size: var(--t-small);
   animation: toast-in 0.18s ease;
 }
 
@@ -919,14 +1051,16 @@ kbd {
 
 .detail-title {
   flex: 1;
-  padding: 4px 6px;
+  min-width: 0;
+  padding: var(--s1) 6px;
   margin-left: -6px;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.015em;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: var(--t-lede);
+  font-weight: 900;
+  letter-spacing: -0.02em;
   outline: none;
 }
 
@@ -968,7 +1102,7 @@ kbd {
   cursor: pointer;
   list-style: none;
   font-weight: 600;
-  font-size: 12px;
+  font-size: var(--t-label);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -1000,7 +1134,7 @@ kbd {
 }
 
 .field label {
-  font-size: 11.5px;
+  font-size: var(--t-label);
   color: var(--text-faint);
 }
 
@@ -1076,7 +1210,7 @@ kbd {
   display: grid;
   grid-template-columns: 84px repeat(4, 1fr);
   gap: 6px;
-  font-size: 10.5px;
+  font-size: var(--t-label);
   color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1086,7 +1220,7 @@ kbd {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 4px 12px;
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .readout dt {
@@ -1102,36 +1236,36 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .contrast-sample {
   padding: 2px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  font-size: 12px;
+  font-size: var(--t-label);
 }
 
 .badge {
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size: var(--t-label);
   font-weight: 600;
 }
 
 .badge.pass {
-  background: color-mix(in srgb, var(--success) 20%, transparent);
-  color: var(--success);
+  background: var(--success);
+  color: var(--on-fill);
 }
 
 .badge.warn {
-  background: color-mix(in srgb, var(--warning) 22%, transparent);
-  color: var(--warning);
+  background: var(--warning);
+  color: var(--on-fill);
 }
 
 .badge.fail {
-  background: color-mix(in srgb, var(--danger) 20%, transparent);
-  color: var(--danger);
+  background: var(--text);
+  color: var(--bg);
 }
 
 .list-editor {
@@ -1163,14 +1297,15 @@ kbd {
   border: 1px dashed var(--border-strong);
   background: transparent;
   color: var(--text-faint);
-  border-radius: 999px;
+  border-radius: var(--radius);
   padding: 1px 8px;
-  font-size: 11px;
+  font-size: var(--t-label);
 }
 
 .suggestions button:hover {
-  color: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--on-fill);
 }
 
 .selection-bar {
@@ -1185,9 +1320,9 @@ kbd {
   padding: 8px 10px 8px 16px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
-  font-size: 13px;
+  font-size: var(--t-small);
 }
 
 /* --- touch --------------------------------------------------------------- */
@@ -1287,7 +1422,7 @@ kbd {
   }
 
   .brand {
-    font-size: 15px;
+    font-size: var(--t-body);
     min-width: 0;
   }
 
@@ -1412,7 +1547,7 @@ kbd {
      the catalog goes to one tile per row whatever size is chosen. */
   .catalog-grid {
     grid-template-columns: 1fr;
-    --card-height: 360px;
+    --card-height: 400px;
   }
 
   .brand-count {
