@@ -217,6 +217,14 @@ From a card, hover and hit the copy icon. From the detail drawer:
   mixing the measured colours rather than inventing new ones, and to keep a measured
   hex even where its contrast fails while never using that pair for text.
 
+  It also names its own gaps. Colours, contrast and layout figures are measured off the
+  pixels and are always there; typography, corner radius, borders, effects and
+  components are fields *you* fill in, and a design you never annotated exports without
+  them. Since the exporter drops empty fields, the prompt would otherwise read as though
+  the design had no typography rather than as though nobody wrote it down — so it lists
+  what was never recorded and says plainly that absence is not a claim about the design.
+  Fill those fields in and the list shrinks; fill them all and it disappears.
+
 - **Spec** — the same spec as plain markdown
 - **JSON** — a design-token document (color, typography, layout, effects, plus the
   measured layout figures)

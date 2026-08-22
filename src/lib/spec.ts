@@ -196,6 +196,34 @@ export function toMarkdownSpec(record: DesignRecord): string {
  * target named in the message wins, and so does one typed into the drawer.
  * Asking is kept only for a conversation with nothing in it yet.
  */
+/**
+ * The parts of a spec that are recorded by hand rather than measured off the
+ * pixels, and whether this record actually carries each of them.
+ *
+ * The exporter drops empty fields, which is right for a document but leaves the
+ * reader unable to tell "the design has no border style" from "nobody wrote one
+ * down". Naming the gaps closes that, and stops the instructions claiming a
+ * measurement that is not in the file.
+ */
+function unrecorded(record: DesignRecord): string[] {
+  const { typography: type, layout, effects, components, interactions } = record.spec;
+  const gaps: string[] = [];
+  const anyType =
+    has(type.headingFamily) || has(type.bodyFamily) || has(type.monoFamily) ||
+    has(type.baseSize) || has(type.notes) ||
+    type.scale.some((step) => has(step.size) || has(step.weight) || has(step.lineHeight));
+  if (!anyType) gaps.push('a type scale or any font');
+  if (!has(layout.radius)) gaps.push('corner radii');
+  if (!has(layout.borders)) gaps.push('border styles');
+  if (!has(layout.maxWidth) && !has(layout.gutter) && !has(layout.breakpoints)) {
+    gaps.push('max width, gutter and breakpoints');
+  }
+  if (!Object.values(effects).some(has)) gaps.push('shadows, gradients, blur, motion or imagery');
+  if (components.length === 0) gaps.push('a component inventory');
+  if (!has(interactions)) gaps.push('interaction notes');
+  return gaps;
+}
+
 export function toClaudePrompt(record: DesignRecord, target = ''): string {
   const named = target.trim();
   return [
@@ -227,8 +255,11 @@ export function toClaudePrompt(record: DesignRecord, target = ''): string {
     '',
     '- **Restyle, do not re-architect.** Keep the structure, components and behaviour the',
     '  target already has. You are changing how it looks, not what it is or what it does.',
-    '- **Honour the measured values exactly.** Hex values, the type scale, the spacing',
-    '  scale and the corner radii are measurements from the original, not suggestions.',
+    '- **Honour what the spec carries, exactly.** Two kinds of thing are in it and both',
+    '  bind. The colours, the contrast ratios and the layout figures are measured off the',
+    '  pixels. Anything under Typography, Corner radius, Borders, Effects or Components',
+    '  was recorded by hand. Neither is a suggestion; a section simply missing means it',
+    '  was never recorded, not that the design has none of it.',
     '- **Map onto what is already there.** If the target has its own tokens, theme or',
     '  variables, redefine those rather than bolting a second system alongside them.',
     '- **Where the spec is silent, choose** something consistent with the style keywords,',
@@ -244,11 +275,30 @@ export function toClaudePrompt(record: DesignRecord, target = ''): string {
     '- **Verify on the result, not in your head.** Re-check contrast against the surface a',
     '  colour actually lands on, which is often a card rather than the page.',
     '- **Say what you could not honour**, and why, rather than dropping it quietly.',
+    ...gapLines(record),
     '',
     '---',
     '',
     toMarkdownSpec(record),
   ].join('\n');
+}
+
+/** The caveat that follows the instructions, when there is one to give. */
+function gapLines(record: DesignRecord): string[] {
+  const gaps = unrecorded(record);
+  if (gaps.length === 0) return [];
+  return [
+    '',
+    '## What this one does not carry',
+    '',
+    'Nothing was recorded for:',
+    '',
+    ...gaps.map((gap) => `- ${gap}`),
+    '',
+    'Those are fields somebody fills in, not things the app measures. Their absence says',
+    'this design was never annotated — it is not a claim that the design lacks them.',
+    'Choose what suits the style keywords, and say what you chose.',
+  ];
 }
 
 export function toTokens(record: DesignRecord): Record<string, unknown> {
