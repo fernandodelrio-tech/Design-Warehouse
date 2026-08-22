@@ -79,8 +79,21 @@ export interface DetailMeasurement {
    * the ratios between them carry more than the absolute figures do.
    */
   text: {
-    /** One entry per distinct row height, with how many rows had it. */
-    steps: Array<{ px: number; rows: number }>;
+    /**
+     * One entry per distinct row height, with how many rows had it and what it
+     * is set in: the stem width (which is the weight), the gap between glyphs
+     * (which is the tracking), the ink's own colour, whether it is capitals,
+     * and how the rows are ranged.
+     */
+    steps: Array<{
+      px: number;
+      rows: number;
+      stem: number;
+      tracking: number;
+      hex: string;
+      caps: boolean;
+      align: 'left' | 'centre' | 'right' | 'mixed';
+    }>;
     leading: number[];
     samples: number;
   } | null;
@@ -96,7 +109,7 @@ export interface DetailMeasurement {
     /** How many of them are filled with a ramp rather than a flat colour. */
     withGradient: number;
     border: { px: number; hex: string } | null;
-    shadow: { spread: number; strength: number } | null;
+    shadow: { spread: number; strength: number; dx: number; dy: number } | null;
     gradient: { axis: string; from: string; to: string; span: number } | null;
   } | null;
 }
@@ -131,6 +144,9 @@ export interface StructureMeasurement {
   blocks: number;
   /** Small square shapes: the icon set. */
   icons: { count: number; px: number } | null;
+  /** High-frequency noise laid over the fills, where there is any. */
+  grain: { coverage: number; amplitude: number } | null;
+
 }
 
 export interface AutoAnalysis {

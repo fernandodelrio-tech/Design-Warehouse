@@ -1,6 +1,6 @@
 import { describeAspect, loadBitmap, makeThumbnail, sampleDetail, samplePixels } from './image';
 import { estimateLayout } from './layout';
-import { findBlocks, findGradientBlocks, measureDetail } from './measure';
+import { findBlocks, findGradientBlocks, measureDetail, solidBlocks } from './measure';
 import { measureStructure } from './structure';
 import { extractPalette } from './palette';
 import type {
@@ -11,7 +11,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 4;
+export const ANALYZER_VERSION = 5;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -38,7 +38,35 @@ export async function analyzeBlob(blob: Blob): Promise<AnalysisResult> {
     // element in one piece rather than in stripes. The second runs on a coarser
     // sample: a ramp is large and smooth, and at native resolution that flood
     // cost more than the rest of the analyzer together.
-    const flat = findBlocks(fine.data, fine.width, fine.height, maxRadius, 10);
+    let flat = findBlocks(fine.data, fine.width, fine.height, maxRadius, 10);
+    /*
+       Grain defeats the flood fill. It measures each neighbour against the
+       seed, and under noise every neighbour differs, so a grained capture came
+       back with no blocks at all — and no blocks means no borders, no
+       elevation, no components and no ramps, all reported as measured facts
+       rather than as a pass that found nothing.
+
+       Halving the sample averages four pixels into one and takes the grain
+       with it, so the retry sees the shapes underneath. It costs a pass only
+       on captures where the first one found nothing.
+    */
+    if (solidBlocks(flat, fine.width, fine.height).length === 0) {
+      const smooth = sampleDetail(bitmap, 250_000);
+      const toFine = smooth.scale / fine.scale;
+      flat = findBlocks(
+        smooth.data, smooth.width, smooth.height,
+        Math.max(4, Math.round(maxRadius / toFine)), 10,
+      ).map((b) => ({
+        ...b,
+        x: Math.round(b.x * toFine),
+        y: Math.round(b.y * toFine),
+        w: Math.round(b.w * toFine),
+        h: Math.round(b.h * toFine),
+        area: Math.round(b.area * toFine * toFine),
+        radius: b.radius === null ? null : b.radius * toFine,
+        corners: b.corners.map((c) => c * toFine),
+      }));
+    }
     const broad = sampleDetail(bitmap, 1_000_000);
     const blocks = findGradientBlocks(
       broad.data, broad.width, broad.height, maxRadius, flat, broad.scale / fine.scale,
@@ -157,10 +185,25 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
      stated rather than inferred from a field that simply says nothing.
   */
   const e = detail?.edges ?? null;
+  /*
+     Grain is the case where absence must not be asserted. It defeats the flood
+     fill — every neighbour differs, so regions never form — and a grained
+     capture can come back with no blocks at all. Saying "None. All 0 measured
+     blocks are borderless" out of that is a measurement claim about a pass
+     that measured nothing, which is the one kind of wrong this file is meant
+     not to be.
+  */
+  const blind = !e || e.blocks === 0;
+  const unmeasured = (what: string) =>
+    `Not measured. The elements this reads ${what} from are found by flooding regions of ` +
+    'one colour, and nothing here formed one — a grained or photographic capture defeats ' +
+    'that. Treat this as unknown rather than as absent, and match what you can see.';
   const rest = (n: number) => (e ? e.blocks - n : 0);
   const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
-  const borders = e
+  const borders = blind
+    ? unmeasured('borders')
+    : e
     ? e.border && e.withBorder
       ? `${e.border.px}px ${e.border.hex}, on ${e.withBorder} of the ${e.blocks} blocks ` +
         `measured` +
@@ -174,10 +217,19 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
       ? `${detail.border.px}px ${detail.border.hex}`
       : '';
 
-  const shadows = e
+  const shadows = blind
+    ? unmeasured('elevation')
+    : e
     ? e.shadow && e.withShadow
       ? `Soft elevation, about ${e.shadow.spread}px of falloff reaching ${e.shadow.strength}/255 ` +
-        `at its darkest, on ${e.withShadow} of the ${e.blocks} blocks measured` +
+        `at its darkest, ` +
+        (Math.abs(e.shadow.dy) >= 2 || Math.abs(e.shadow.dx) >= 2
+          ? `offset ${e.shadow.dx ? `${Math.abs(e.shadow.dx)}px ${e.shadow.dx > 0 ? 'right' : 'left'}` : ''}` +
+            `${e.shadow.dx && e.shadow.dy ? ' and ' : ''}` +
+            `${e.shadow.dy ? `${Math.abs(e.shadow.dy)}px ${e.shadow.dy > 0 ? 'down' : 'up'}` : ''} — ` +
+            'it is a lifted shadow, not a symmetric glow, '
+          : 'reaching the same distance on every side — a glow rather than a lift, ') +
+        `on ${e.withShadow} of the ${e.blocks} blocks measured` +
         (rest(e.withShadow) > 0
           ? `. The other ${rest(e.withShadow)} ${plural(rest(e.withShadow), 'sits', 'sit')} ` +
             'flat on the page.'
@@ -196,6 +248,34 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
      be placed by what the page mostly is, and the row height occurring on the
      most lines is the body.
   */
+  /*
+     Weight, from the stem's width against the ink's height. The ratio splits
+     cleanly at the two ends — a regular face measures 0.15-0.18 and a bold one
+     0.22-0.27 — but it does not separate a 600 from a 700, so what is reported
+     is a band and the measured stem beside it, not a number pretending to be a
+     CSS weight.
+  */
+  const weightOf = (stem: number, ink: number): string => {
+    if (!stem || !ink) return '';
+    const r = stem / ink;
+    const name =
+      r < 0.12 ? 'light' : r < 0.175 ? 'regular' : r < 0.21 ? 'medium'
+      : r < 0.26 ? 'semibold' : 'bold';
+    return `${name} (${stem}px stem)`;
+  };
+  /*
+     Tracking, as the gap between glyphs against the ink height. A face at its
+     natural fit sits near 0.15; every pixel of added letter-spacing moves it by
+     about a fortieth. The px figure is the excess over that natural fit, which
+     is the number somebody types into CSS.
+  */
+  const trackingOf = (gap: number, ink: number): string => {
+    if (!gap || !ink) return '';
+    const added = Math.round(gap - ink * 0.155);
+    if (added <= 0) return `normal (~${gap}px between glyphs)`;
+    return `~+${added}px (${gap}px between glyphs)`;
+  };
+
   const steps = (detail?.text?.steps ?? []).slice().sort((a, b) => b.px - a.px);
   const leading = (detail?.text?.leading ?? []).slice().sort((a, b) => b - a);
   const bodyIndex = TYPE_STEPS.indexOf('Body');
@@ -210,18 +290,35 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
     return {
       name,
       size: step ? `~${step.px}px` : '',
-      weight: '',
+      weight: step ? weightOf(step.stem, step.px) : '',
       lineHeight: step && leading[i - offset] !== undefined ? `~${leading[i - offset]}px` : '',
-      letterSpacing: '',
+      letterSpacing: step ? trackingOf(step.tracking, step.px) : '',
     };
   });
+
+  // What the table has no column for: the ink each step is set in, whether it
+  // is capitals, and how the rows are ranged.
+  const setIn = steps
+    .map((step, i) => {
+      const name = TYPE_STEPS[i + offset] ?? `~${step.px}px`;
+      const bits = [step.hex ? `set in ${step.hex}` : ''];
+      if (step.caps) bits.push('in capitals');
+      if (step.align !== 'mixed') bits.push(`ranged ${step.align}`);
+      const said = bits.filter(Boolean).join(', ');
+      return said ? `${name} is ${said}` : '';
+    })
+    .filter(Boolean);
 
   const notes = detail?.text
     ? `${detail.text.samples} text rows measured, the most common one taken as Body. ` +
       'The sizes above are ink heights — the height of the glyphs themselves — which ' +
       'understates font size, since a line with no ascenders has none to measure. Treat ' +
       'the ratios between the steps as firmer than the absolute figures. Font families ' +
-      'cannot be read off a bitmap and are not guessed.'
+      'cannot be read off a bitmap and are not guessed. ' +
+      (setIn.length ? `${setIn.join('; ')}. ` : '') +
+      'Weight is read from the stem against the ink height, which separates a ' +
+      'regular from a bold but not a 600 from a 700, and is not attempted at ' +
+      'all below 10px of ink, where a stem is one pixel whatever the weight is.'
     : '';
 
   return { radius, borders, shadows, scale, notes };
@@ -283,8 +380,11 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
     ? `The page carries a ${s.gradient.axis} ramp from ${s.gradient.from} to ` +
       `${s.gradient.to}, holding across ${Math.round(s.gradient.coverage * 100)}% of the scan lines.`
     : null;
-  const elementRamp =
-    e && e.withGradient && e.gradient
+  const blindToBlocks = !e || e.blocks === 0;
+  const elementRamp = blindToBlocks
+    ? 'No element could be measured for one — nothing on this capture formed a solid region, ' +
+      'which a grained or photographic page does. Unknown, not absent.'
+    : e && e.withGradient && e.gradient
       ? `${e.withGradient} of the ${e.blocks} blocks measured ` +
         `${e.withGradient === 1 ? 'is' : 'are'} filled with a ramp rather than a flat colour — ` +
         `the ${e.withGradient === 1 ? 'ramp is a' : 'strongest a'} ${e.gradient.axis} one ` +
@@ -305,12 +405,32 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
       ? 'None. Neither the page nor any element ramps; every fill is flat colour.'
       : '';
 
-  const imagery = s?.imagery
-    ? s.imagery.coverage > 0 && s.imagery.box
-      ? `Photographic content over ~${Math.round(s.imagery.coverage * 100)}% of the canvas, ` +
-        `concentrated in a ${s.imagery.box.w}×${s.imagery.box.h}px region at ` +
-        `${s.imagery.box.x},${s.imagery.box.y}`
-      : 'No photographic regions — the page is flat colour and type throughout'
+  /*
+     Texture used to go unreported entirely: a page with grain over it and a
+     page of clean fills exported the same words, and so did a page with a
+     stripe or dot pattern behind its content. Both are in the pixels and both
+     belong here, next to the photography, because they are the same question —
+     what is the surface actually made of.
+  */
+  const texture = [
+    s?.grain
+      ? `Grain over ${Math.round(s.grain.coverage * 100)}% of the flat area, about ` +
+        `${s.grain.amplitude}/255 of high-frequency noise — a laid texture, not a flat fill; ` +
+        'reproduce it or the surfaces will read cleaner than the original.'
+      : s
+        ? 'No grain — the flat areas are flat to the pixel.'
+        : '',
+  ].filter(Boolean);
+
+  const imagery = s
+    ? [
+        s.imagery && s.imagery.coverage > 0 && s.imagery.box
+          ? `Photographic content over ~${Math.round(s.imagery.coverage * 100)}% of the canvas, ` +
+            `concentrated in a ${s.imagery.box.w}×${s.imagery.box.h}px region at ` +
+            `${s.imagery.box.x},${s.imagery.box.y}.`
+          : 'No photographic regions — the page is flat colour and type throughout.',
+        ...texture,
+      ].join(' ')
     : '';
 
   const iconography = s?.icons

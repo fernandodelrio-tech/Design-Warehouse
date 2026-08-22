@@ -386,7 +386,7 @@ export function findBlocks(
  */
 export interface BlockEdge {
   border: { px: number; hex: string } | null;
-  shadow: { spread: number; strength: number } | null;
+  shadow: { spread: number; strength: number; dx: number; dy: number } | null;
   /** Share of edge samples that agreed on the verdict, 0..1. */
   confidence: number;
 }
@@ -408,6 +408,14 @@ export function measureBlockEdge(
   const colours: string[] = [];
   const spreads: number[] = [];
   const strengths: number[] = [];
+  /*
+     Kept per edge, not pooled. A shadow offset downward reaches further below a
+     block than above it, and that difference is the whole reason something
+     reads as lifted rather than as glowing — pooling the four edges and taking
+     the median threw it away and reported every shadow as symmetric.
+  */
+  const byEdge: Record<string, number[]> = { top: [], bottom: [], left: [], right: [] };
+  let edgeName = 'top';
   let samples = 0;
 
   // Corners round off, so they are skipped: only the straight part of an edge
@@ -458,7 +466,14 @@ export function measureBlockEdge(
       if (profile.length < 10) continue;
       const settled = profile[profile.length - 1];
       const rise = settled - profile[0];
-      if (rise <= 5) continue;
+      /*
+         Fifteen levels, not five. A card on a striped background produces a
+         real ramp outward — the stripe under it is darker than the one beyond
+         — and at a floor of five that reported 13/255 of elevation on a design
+         with none. Every genuine shadow measured across these captures came in
+         at 20, 32 and 35, so the gap is wide and the floor sits in it.
+      */
+      if (rise <= 15) continue;
       // A falloff asymptotes rather than stopping, so "settled" is judged
       // against the size of the drop rather than against a fixed two levels.
       const tolerance = Math.max(2, rise * 0.08);
@@ -471,11 +486,19 @@ export function measureBlockEdge(
       for (let k = 0; k < profile.length; k++) {
         if (settled - profile[k] > rise * 0.1) reach = k + 1;
       }
+      /*
+         Reversals are counted over the WHOLE profile, not just as far as the
+         falloff reaches. A card sitting on a striped background produces a
+         perfectly good ramp for the first dozen pixels and then crosses a
+         stripe, and checking only up to the reach never saw that — a page with
+         no elevation on it at all reported a 20px shadow.
+      */
       let backwards = 0;
-      for (let k = 1; k < reach; k++) if (profile[k] < profile[k - 1] - 1) backwards++;
-      if (reach >= 6 && reach < profile.length - 1 && backwards <= 1 && rise < 110) {
+      for (let k = 1; k < profile.length; k++) if (profile[k] < profile[k - 1] - 2) backwards++;
+      if (reach >= 6 && reach < profile.length - 1 && backwards <= 2 && rise < 110) {
         spreads.push(reach);
         strengths.push(rise);
+        byEdge[edgeName].push(reach);
       }
     }
   };
@@ -483,10 +506,14 @@ export function measureBlockEdge(
   const { x, y, w: bw, h: bh } = b;
   const inBounds = (px: number, py: number) =>
     px >= 0 && px < w && py >= 0 && py < h ? py * w + px : -1;
-  walk(bw, (o, k) => inBounds(x + o, y - k));              // above
-  walk(bw, (o, k) => inBounds(x + o, y + bh - 1 + k));     // below
-  walk(bh, (o, k) => inBounds(x - k, y + o));              // left
-  walk(bh, (o, k) => inBounds(x + bw - 1 + k, y + o));     // right
+  edgeName = 'top';
+  walk(bw, (o, k) => inBounds(x + o, y - k));
+  edgeName = 'bottom';
+  walk(bw, (o, k) => inBounds(x + o, y + bh - 1 + k));
+  edgeName = 'left';
+  walk(bh, (o, k) => inBounds(x - k, y + o));
+  edgeName = 'right';
+  walk(bh, (o, k) => inBounds(x + bw - 1 + k, y + o));
   if (samples === 0) return { border: null, shadow: null, confidence: 0 };
 
   const agree = (n: number) => (samples ? n / samples : 0);
@@ -494,9 +521,16 @@ export function measureBlockEdge(
     agree(widths.length) >= 0.5
       ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
       : null;
+  const reachOn = (edge: string) => (byEdge[edge].length ? median(byEdge[edge]) : 0);
   const shadow =
     agree(spreads.length) >= 0.4
-      ? { spread: Math.round(median(spreads)), strength: Math.round(median(strengths)) }
+      ? {
+          spread: Math.round(median(spreads)),
+          strength: Math.round(median(strengths)),
+          // Positive dy means it falls further below than above.
+          dx: Math.round(reachOn('right') - reachOn('left')),
+          dy: Math.round(reachOn('bottom') - reachOn('top')),
+        }
       : null;
   return {
     border,
@@ -839,7 +873,164 @@ function measureTextRows(d: Uint8ClampedArray, w: number, h: number) {
     const gap = rows[i].start - rows[i - 1].start;
     if (gap > 0 && gap < h * 0.08) leading.push(gap);
   }
-  return { heights, leading, samples: rows.length };
+  const styles = rows.map((b) => measureRowStyle(d, w, h, b));
+  return { heights, leading, styles, samples: rows.length };
+}
+
+/** What one row of text is made of, beyond how tall it is. */
+export interface RowStyle {
+  /** Modal ink-run width along the row — the stem, which is the weight. */
+  stem: number;
+  /** Modal small gap between ink runs — the tracking. */
+  gap: number;
+  /** The ink's own colour. */
+  hex: string;
+  /** Where the row's ink starts and ends, for working out alignment. */
+  from: number;
+  to: number;
+  /**
+   * Share of inked columns whose ink starts at the row's top, 0..1. Capitals
+   * start every column there; mixed case starts only its ascenders.
+   */
+  fullHeight: number;
+}
+
+/**
+ * The weight, the tracking, the ink colour and the case of one row.
+ *
+ * All four are in the pixels and none of them was being read: the exported type
+ * table had a Weight column and a Letter spacing column that were always a
+ * dash, which reads as "this design has no opinion about weight" rather than
+ * "nothing measured it".
+ *
+ * Two different scans, because they answer different questions. The stem is
+ * the commonest run of ink along a SINGLE scan line — a vertical stroke gives
+ * the same short run on nearly every line it crosses, so the mode over all of
+ * them is the stem. Asking instead whether a column holds ink anywhere in the
+ * band, which is the natural way to write it, measures whole words: the gap
+ * between the two stems of an H is bridged by its crossbar, so the first
+ * version of this reported a stem of 17px for a 22px row.
+ *
+ * The column-occupancy scan is still what finds the glyphs themselves, and
+ * their boxes give the tracking, the case and where the row is ranged.
+ */
+function measureRowStyle(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  input: { start: number; end: number },
+): RowStyle {
+  const band = { ...input };
+  // The ground is whatever the row's margins are made of; sampling the first
+  // and last few columns finds it without needing to know the design.
+  const edge: Array<[number, number, number]> = [];
+  const mid = Math.round((band.start + band.end) / 2);
+  for (let x = 0; x < Math.min(6, w); x++) edge.push(rgbAt(d, (mid * w + x) * 4));
+  for (let x = Math.max(0, w - 6); x < w; x++) edge.push(rgbAt(d, (mid * w + x) * 4));
+  const ground: [number, number, number] = [
+    median(edge.map((c) => c[0])),
+    median(edge.map((c) => c[1])),
+    median(edge.map((c) => c[2])),
+  ];
+  const inked = (x: number, y: number) => dist2(rgbAt(d, (y * w + x) * 4), ground) > DIFFERENT;
+
+  /*
+     The band arrives clipped. It comes from where horizontal-delta energy
+     crosses a threshold, and that energy lives in the x-height, where most of
+     the ink is — so an ascender or a descender, being a few thin columns,
+     falls below it and is cut off. Every column then spans the whole band and
+     looks the same height, which is why the first attempt at reading the case
+     off column heights called lowercase capitals.
+
+     Expanding to the true ink extent first is what makes the top edge mean
+     something: in capitals nearly every column starts at it, in mixed case
+     only the ascenders do.
+  */
+  const rowHasInk = (y: number) => {
+    for (let x = 0; x < w; x++) if (inked(x, y)) return true;
+    return false;
+  };
+  while (band.start > 0 && band.start > input.start - 12 && rowHasInk(band.start - 1)) band.start--;
+  while (band.end < h - 1 && band.end < input.end + 12 && rowHasInk(band.end + 1)) band.end++;
+  const height = band.end - band.start + 1;
+
+  // --- stems, from runs along individual scan lines
+  const stems: number[] = [];
+  const lines = Math.min(8, Math.max(3, height - 2));
+  for (let i = 0; i < lines; i++) {
+    const y = band.start + 1 + Math.round((i * (height - 3)) / Math.max(1, lines - 1));
+    let run = 0;
+    for (let x = 0; x < w; x++) {
+      if (inked(x, y)) run++;
+      else {
+        if (run > 0 && run <= height) stems.push(run);
+        run = 0;
+      }
+    }
+    if (run > 0 && run <= height) stems.push(run);
+  }
+
+  // --- glyphs, from whether a column holds ink anywhere in the band
+  const boxes: Array<{ from: number; to: number; top: number; bottom: number }> = [];
+  let open: { from: number; to: number; top: number; bottom: number } | null = null;
+  const strong: Array<[number, number, number]> = [];
+  const columnTops: number[] = [];
+  for (let x = 0; x < w; x++) {
+    let top = -1;
+    let bottom = -1;
+    let best = 0;
+    let bestColour: [number, number, number] | null = null;
+    for (let y = band.start; y <= band.end; y++) {
+      const c = rgbAt(d, (y * w + x) * 4);
+      const away = dist2(c, ground);
+      if (away > DIFFERENT) {
+        if (top === -1) top = y;
+        bottom = y;
+        // The most extreme pixel in the column is the ink itself; the ones
+        // beside it are the antialiasing, and averaging those in was reporting
+        // a #101010 body text as #606060.
+        if (away > best) ((best = away), (bestColour = c));
+      }
+    }
+    if (top !== -1) {
+      columnTops.push(top);
+      if (bestColour) strong.push(bestColour);
+      if (open) ((open.to = x), (open.top = Math.min(open.top, top)), (open.bottom = Math.max(open.bottom, bottom)));
+      else open = { from: x, to: x, top, bottom };
+    } else if (open) {
+      boxes.push(open);
+      open = null;
+    }
+  }
+  if (open) boxes.push(open);
+
+  const gaps: number[] = [];
+  for (let i = 1; i < boxes.length; i++) {
+    const gap = boxes[i].from - boxes[i - 1].to - 1;
+    // Inter-letter, not inter-word: a word space is several times a letter gap.
+    if (gap > 0 && gap <= Math.max(2, height * 0.5)) gaps.push(gap);
+  }
+
+  // Capitals start every column at the row's top; mixed case starts only its
+  // ascenders and caps there.
+  const uniform = columnTops.length
+    ? columnTops.filter((t) => t <= band.start + 2).length / columnTops.length
+    : 0;
+
+  return {
+    stem: stems.length ? (modal(stems) ?? Math.round(median(stems))) : 0,
+    gap: gaps.length ? (modal(gaps) ?? Math.round(median(gaps))) : 0,
+    hex: strong.length
+      ? hex([
+          median(strong.map((c) => c[0])),
+          median(strong.map((c) => c[1])),
+          median(strong.map((c) => c[2])),
+        ])
+      : '',
+    from: boxes.length ? boxes[0].from : -1,
+    to: boxes.length ? boxes[boxes.length - 1].to : -1,
+    fullHeight: uniform,
+  };
 }
 
 // --- assembly -----------------------------------------------------------------
@@ -856,6 +1047,101 @@ function cluster(values: number[], scale: number): Array<{ px: number; rows: num
   return groups
     .filter((g) => g.length >= Math.max(2, sorted.length * 0.06))
     .map((g) => ({ px: Math.round(median(g)), rows: g.length }))
+    .filter((v, i, a) => a.findIndex((o) => o.px === v.px) === i);
+}
+
+/**
+ * The same clustering, but carrying each row's style along with its height, so
+ * a step can report what it is set in and not only how big it is.
+ */
+function clusterStyled(
+  heights: number[],
+  styles: RowStyle[],
+  scale: number,
+  width: number,
+): Array<{
+  px: number;
+  rows: number;
+  stem: number;
+  tracking: number;
+  hex: string;
+  caps: boolean;
+  align: 'left' | 'centre' | 'right' | 'mixed';
+}> {
+  const paired = heights
+    .map((v, i) => ({ px: v * scale, style: styles[i] }))
+    .filter((p) => p.style)
+    .sort((a, b) => a.px - b.px);
+  const groups: Array<typeof paired> = [];
+  for (const item of paired) {
+    const last = groups[groups.length - 1];
+    if (last && item.px <= last[last.length - 1].px * 1.15) last.push(item);
+    else groups.push([item]);
+  }
+  return groups
+    .filter((g) => g.length >= Math.max(2, paired.length * 0.06))
+    .map((g) => {
+      const stems = g.map((p) => p.style.stem).filter((v) => v > 0);
+      const gaps = g.map((p) => p.style.gap).filter((v) => v > 0);
+      const colours = g.map((p) => p.style.hex).filter(Boolean);
+      /*
+         Capitals put 56-68% of their columns at the row's top; mixed case puts
+         5-12% there. A third is nowhere near either, which is the kind of
+         margin a test wants.
+      */
+      const caps = median(g.map((p) => p.style.fullHeight)) >= 0.35;
+      /*
+         Alignment, from the margin each row leaves on either side of the block
+         the rows share. Ranged left means no left margin and a ragged right;
+         centred means the two margins match on every row.
+
+         The width test comes first and is the important one: rows that are all
+         the same length satisfy every rule at once — no left margin, no right
+         margin, matching centres — so alignment is not determinable from them
+         and is reported as unknown rather than guessed. The first version had
+         no such test and called centred text left-ranged, because it happened
+         to check left first.
+      */
+      const spread = (values: number[]) => {
+        const m = median(values);
+        return values.length ? median(values.map((v) => Math.abs(v - m))) : 0;
+      };
+      const tolerance = Math.max(2, width * 0.012);
+      const boxLeft = Math.min(...g.map((p) => p.style.from));
+      const boxRight = Math.max(...g.map((p) => p.style.to));
+      const widths = g.map((p) => p.style.to - p.style.from);
+      const lefts = g.map((p) => p.style.from - boxLeft);
+      const rights = g.map((p) => boxRight - p.style.to);
+      const ragged = spread(widths) > tolerance;
+      const align: 'left' | 'centre' | 'right' | 'mixed' = !ragged
+        ? 'mixed'
+        : median(lefts) <= tolerance && median(rights) <= tolerance
+          ? 'left'
+          : median(lefts) <= tolerance
+            ? 'left'
+            : median(rights) <= tolerance
+              ? 'right'
+              : spread(lefts.map((v, i) => v - rights[i])) <= tolerance
+                ? 'centre'
+                : 'mixed';
+      const px = Math.round(median(g.map((p) => p.px)));
+      /*
+         Below about ten pixels of ink a stem is one or two pixels whatever the
+         weight is, and the glyph boxes that decide the case stop being
+         reliable. Reporting either at that size is reporting the antialiasing:
+         a 7px row of light lowercase came back bold and capitalised.
+      */
+      const resolved = px >= 10;
+      return {
+        px,
+        rows: g.length,
+        stem: resolved ? Math.round((modal(stems) ?? median(stems)) * scale * 10) / 10 : 0,
+        tracking: Math.round((modal(gaps) ?? median(gaps)) * scale * 10) / 10,
+        hex: modal(colours) ?? colours[0] ?? '',
+        caps: resolved ? caps : false,
+        align,
+      };
+    })
     .filter((v, i, a) => a.findIndex((o) => o.px === v.px) === i);
 }
 
@@ -881,6 +1167,8 @@ export function measureEdges(
   const colours: string[] = [];
   const spreads: number[] = [];
   const strengths: number[] = [];
+  const offsetsX: number[] = [];
+  const offsetsY: number[] = [];
   for (const b of blocks) {
     b.edge = measureBlockEdge(d, w, h, b);
     // A reassembled element already knows its ramp; anything else is asked.
@@ -894,6 +1182,8 @@ export function measureEdges(
       withShadow++;
       spreads.push(b.edge.shadow.spread);
       strengths.push(b.edge.shadow.strength);
+      offsetsX.push(b.edge.shadow.dx);
+      offsetsY.push(b.edge.shadow.dy);
     }
     if (b.gradient) {
       withGradient++;
@@ -910,7 +1200,12 @@ export function measureEdges(
       ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
       : null,
     shadow: spreads.length
-      ? { spread: Math.round(median(spreads)), strength: Math.round(median(strengths)) }
+      ? {
+          spread: Math.round(median(spreads)),
+          strength: Math.round(median(strengths)),
+          dx: Math.round(median(offsetsX)),
+          dy: Math.round(median(offsetsY)),
+        }
       : null,
   };
 }
@@ -936,7 +1231,7 @@ export function measureDetail(
       : null,
     text: text
       ? {
-          steps: cluster(text.heights, scale),
+          steps: clusterStyled(text.heights, text.styles, scale, w),
           leading: cluster(text.leading, scale).map((c) => c.px),
           samples: text.samples,
         }
@@ -950,7 +1245,12 @@ export function measureDetail(
             ? { px: Math.max(1, px(edges.border.px)), hex: edges.border.hex }
             : null,
           shadow: edges.shadow
-            ? { spread: px(edges.shadow.spread), strength: Math.round(edges.shadow.strength) }
+            ? {
+                spread: px(edges.shadow.spread),
+                strength: Math.round(edges.shadow.strength),
+                dx: px(edges.shadow.dx),
+                dy: px(edges.shadow.dy),
+              }
             : null,
           withGradient: edges.withGradient,
           gradient: edges.gradient,

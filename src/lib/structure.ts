@@ -204,6 +204,78 @@ function measureImagery(d: Uint8ClampedArray, w: number, h: number, scale: numbe
   };
 }
 
+// --- texture -----------------------------------------------------------------
+
+/**
+ * Grain: the texture a flat capture can actually hold, and it was not being
+ * read at all. A page with film grain over it and a page of clean flat fills
+ * exported the same words.
+ *
+ * Grain is high-frequency — every pixel differs a little from its neighbours,
+ * everywhere, by about the same amount. It is told from photography by having
+ * no structure: a photograph varies at every scale, grain only at the finest.
+ * So the test is a large residual against a 3x3 mean while the tile's own
+ * colour range stays narrow.
+ */
+function measureTexture(d: Uint8ClampedArray, w: number, h: number) {
+  // --- grain
+  const tile = 16;
+  let grainy = 0;
+  let flat = 0;
+  const amplitudes: number[] = [];
+  const stepY = Math.max(tile, Math.floor(h / 60));
+  const stepX = Math.max(tile, Math.floor(w / 60));
+  for (let ty = 1; ty + tile < h - 1; ty += stepY) {
+    for (let tx = 1; tx + tile < w - 1; tx += stepX) {
+      let residual = 0;
+      let n = 0;
+      let lo = 255;
+      let hi = 0;
+      for (let y = ty; y < ty + tile; y++) {
+        for (let x = tx; x < tx + tile; x++) {
+          const here = luma(d[(y * w + x) * 4], d[(y * w + x) * 4 + 1], d[(y * w + x) * 4 + 2]);
+          let mean = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const q = ((y + dy) * w + (x + dx)) * 4;
+              mean += luma(d[q], d[q + 1], d[q + 2]);
+            }
+          }
+          residual += Math.abs(here - mean / 9);
+          n++;
+          if (here < lo) lo = here;
+          if (here > hi) hi = here;
+        }
+      }
+      if (!n) continue;
+      const amplitude = residual / n;
+      // A tile with a hard edge or a photograph in it has a wide range; grain
+      // has a large residual inside a narrow one.
+      if (hi - lo > 60) continue;
+      if (amplitude >= 1.2) {
+        grainy++;
+        amplitudes.push(amplitude);
+      } else flat++;
+    }
+  }
+  const tiles = grainy + flat;
+  const grain =
+    tiles >= 12 && grainy / tiles >= 0.5
+      ? { coverage: Math.round((grainy / tiles) * 100) / 100, amplitude: Math.round(median(amplitudes) * 10) / 10 }
+      : null;
+
+  /*
+     No pattern detection here, and that is deliberate rather than unfinished.
+     An autocorrelation of the edge profile does find a strong, confident period
+     on almost every page — and the period it finds is the LEADING, because
+     evenly spaced rows of prose are the most periodic thing on a page. It
+     reported a 26px stripe pattern on a capture with no pattern in it at all.
+     A detector that calls body text a texture is worse than no detector, so
+     until it can be told from text it is not shipped.
+  */
+  return { grain };
+}
+
 // --- what repeats ------------------------------------------------------------
 
 /** Blocks of near-identical size, which is what makes a grid a grid. */
@@ -421,8 +493,10 @@ export function measureStructure(
 ): StructureMeasurement {
   const { data, width: w, height: h, scale } = sample;
   const components = measureComponents(blocks, w, h, scale);
+  const texture = measureTexture(data, w, h);
   return {
     frame: measureFrame(data, w, h, scale),
+    grain: texture.grain,
     gradient: measureGradient(data, w, h),
     imagery: measureImagery(data, w, h, scale),
     components: components.found,
