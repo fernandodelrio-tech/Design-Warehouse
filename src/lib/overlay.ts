@@ -19,41 +19,36 @@ import type { RefObject } from 'react';
  */
 
 /*
-   `overflow: hidden` on the body is not enough on iOS — Safari scrolls the
-   document anyway — so the body is taken out of flow at its current offset and
-   put back afterwards. Counted rather than boolean, because the sync panel can
-   open over the detail drawer and the inner one closing must not unlock the
-   page under the outer one.
+   Hidden, NOT taken out of flow.
+
+   The first version set `position: fixed` on the body, which is the usual
+   recipe and is the one thing here that must not be done: on iOS Safari a
+   fixed body stops `overflow: auto` scrolling inside a fixed overlay as well.
+   The lock takes the drawer's own scrolling with it, and the result is a modal
+   that cannot be scrolled at all — the background stops moving and so does
+   everything else, which is worse than what it fixed.
+
+   So the page is held by `overflow: hidden` on the root and the body, and the
+   chaining a fixed body was there to stop is stopped by
+   `overscroll-behavior: contain` on the overlay instead. That is what the
+   property is for, and no scroller inside the overlay is affected by it.
+
+   Counted rather than boolean, because the sync panel can open over the detail
+   drawer and the inner one closing must not unlock the page under the outer.
 */
 let locks = 0;
-let savedScroll = 0;
 
 function lockScroll() {
   if (locks++ > 0) return;
-  savedScroll = window.scrollY;
-  const { style } = document.body;
-  style.position = 'fixed';
-  style.top = `-${savedScroll}px`;
-  style.left = '0';
-  style.right = '0';
-  style.width = '100%';
-  style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
 }
 
 function unlockScroll() {
   if (locks > 0) locks--;
   if (locks > 0) return;
-  const { style } = document.body;
-  style.position = '';
-  style.top = '';
-  style.left = '';
-  style.right = '';
-  style.width = '';
-  style.overflow = '';
-  // Taking the body out of flow loses the scroll position; putting it back
-  // without this drops the reader at the top of a catalog they had scrolled
-  // halfway down.
-  window.scrollTo(0, savedScroll);
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
 }
 
 const FOCUSABLE =

@@ -1197,6 +1197,14 @@ kbd {
   bottom: var(--s5);
   right: var(--s5);
   z-index: 300;
+  /*
+     A toast reports; it never intercepts. This container sits above the
+     overlay and, on a narrow screen, spans the full width of the bottom of
+     the display — which is exactly where a thumb lands. While three of them
+     were stacked there, a swipe that started on one did nothing at all: the
+     gesture was landing on a message rather than on the drawer behind it.
+  */
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   gap: var(--s2);
@@ -1666,22 +1674,25 @@ kbd {
    which is a better reason than a ladder derived from a capture width.
    -------------------------------------------------------------------------- */
 
-@media (max-width: 900px) {
-  /*
-     One scroller, not three.
-     
-     Stacking the two columns kept the desktop arrangement underneath: a fixed
-     preview, a fixed head, and the spec scrolling in whatever was left. On a
-     phone what was left measured 131 pixels. The head alone — title, target
-     field and seven wrapped action buttons — took 320 of the 727 available,
-     so the drawer was mostly furniture with a letterbox at the bottom of it,
-     and every part a thumb naturally lands on was one of the parts that do
-     not move.
+/*
+   One scroller, not three — on a narrow screen OR under any thumb.
 
-     So on a narrow screen the whole drawer scrolls as one column and nothing
-     inside it scrolls separately. The preview scrolls away, the head scrolls
-     away, and the spec runs to the bottom.
-  */
+   Stacking the two columns kept the desktop arrangement underneath: a fixed
+   preview, a fixed head, and the spec scrolling in whatever was left. On a
+   phone what was left measured 131 pixels. The head alone — title, target
+   field and seven wrapped action buttons — took 320 of the 727 available, so
+   the drawer was mostly furniture with a letterbox at the bottom of it, and
+   every part a thumb naturally lands on was one of the parts that do not move.
+
+   The width alone is the wrong test, though, and that is what left a tablet
+   broken after the phone was fixed. At 1180px a tablet in landscape keeps the
+   two columns, and the left one is the preview: it scrolls only when the
+   image overflows it, so half the drawer answers a drag with nothing. A mouse
+   copes — it can find the right column — but a thumb lands where it lands.
+   So the pointer decides as well as the width: coarse gets one scroller at
+   any size.
+*/
+@media (max-width: 900px), (pointer: coarse) {
   .detail {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
@@ -1710,6 +1721,9 @@ kbd {
     width: auto;
     object-fit: contain;
   }
+}
+
+@media (max-width: 900px) {
 
   .search {
     max-width: none;
