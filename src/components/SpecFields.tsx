@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { cloneElement, isValidElement, useId } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 interface FieldProps {
   label: string;
@@ -7,12 +8,38 @@ interface FieldProps {
 }
 
 export function Field({ label, children, hint }: FieldProps) {
+  // The control is a sibling of the label, not a child, so the association has
+  // to be made explicitly — otherwise a screen reader announces an unnamed
+  // input and clicking the label does nothing. Some fields hold a group of
+  // controls or a read-only table rather than one input; <label> cannot name
+  // those, so they become a labelled group instead.
+  const id = useId();
+  // Only a real control can carry the id a <label> points at. A component —
+  // ListEditor, a readout table — swallows the prop, leaving a label pointing
+  // at nothing, which is worse than no label at all.
+  const single =
+    isValidElement(children) &&
+    typeof children.type === 'string' &&
+    ['input', 'textarea', 'select'].includes(children.type);
+  const text = (
+    <>
+      {label}
+      {hint ? <span style={{ color: 'var(--text-faint)' }}> — {hint}</span> : null}
+    </>
+  );
+  if (single) {
+    return (
+      <div className="field">
+        <label htmlFor={id}>{text}</label>
+        {cloneElement(children as ReactElement<{ id?: string }>, { id })}
+      </div>
+    );
+  }
   return (
-    <div className="field">
-      <label>
-        {label}
-        {hint ? <span style={{ color: 'var(--text-faint)' }}> — {hint}</span> : null}
-      </label>
+    <div className="field" role="group" aria-labelledby={`${id}-label`}>
+      <span className="field-label" id={`${id}-label`}>
+        {text}
+      </span>
       {children}
     </div>
   );

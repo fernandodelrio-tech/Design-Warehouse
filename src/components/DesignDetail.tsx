@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useFullImageUrl } from '../hooks/useImageUrl';
+import { ANALYZER_VERSION } from '../lib/analyze';
 import { readableOn } from '../lib/color';
 import { describeAspect, formatBytes } from '../lib/image';
 import {
@@ -60,6 +61,10 @@ export function DesignDetail({
   const [recent] = useState(recentTargets);
   const draftRef = useRef(draft);
   draftRef.current = draft;
+  // Catalogued before the analyzer measured radius, borders, elevation and type
+  // sizes: those fields are blank and stay out of the exported prompt until the
+  // pixels are read again.
+  const stale = draft.auto.version < ANALYZER_VERSION;
   // Tracks whether the user has actually changed something, so closing an
   // untouched drawer never writes a pointless revision to the database.
   const dirty = useRef(false);
@@ -265,11 +270,15 @@ export function DesignDetail({
               </button>
               <button
                 type="button"
-                className="btn"
-                title="Run the analyzer again over the pixels"
+                className={stale ? 'btn btn-primary' : 'btn'}
+                title={
+                  stale
+                    ? 'Catalogued by an older analyzer. Re-run it to measure the corner radius, hairlines, elevation and type sizes this design is missing.'
+                    : 'Run the analyzer again over the pixels'
+                }
                 onClick={() => onReanalyze(draft.id)}
               >
-                <IconRefresh /> Re-analyze
+                <IconRefresh /> Re-analyze{stale ? ' ·' : ''}
               </button>
               <button
                 type="button"
@@ -741,6 +750,16 @@ export function DesignDetail({
                 <dt>Analyzer</dt>
                 <dd>
                   v{draft.auto.version} · {new Date(draft.auto.extractedAt).toLocaleString()}
+                  {stale ? (
+                    <>
+                      <br />
+                      <span className="apply-hint">
+                        Older than v{ANALYZER_VERSION}, so the radius, borders, elevation and type
+                        sizes were never measured and the exported prompt leaves them out.
+                        Re-analyze fills them in.
+                      </span>
+                    </>
+                  ) : null}
                 </dd>
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

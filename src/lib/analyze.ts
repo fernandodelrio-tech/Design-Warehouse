@@ -228,3 +228,46 @@ export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
     replicationNotes: '',
   };
 }
+
+/**
+ * Merge a fresh analysis into a spec that already exists.
+ *
+ * Re-analysis has to bring in what the analyzer now measures without throwing
+ * away what somebody typed. A field is refreshed when it is still exactly what
+ * the previous analysis put there, or when it is empty; anything else is an
+ * edit and survives. Only the analyzer-derived fields are considered — the
+ * families, the component inventory and the rest are yours alone.
+ */
+export function reseedSpec(spec: DesignSpec, previous: DesignSpec, next: DesignSpec): DesignSpec {
+  return {
+    ...spec,
+    colorTokens: adopt(spec.colorTokens, previous.colorTokens, next.colorTokens),
+    typography: {
+      ...spec.typography,
+      scale: adopt(spec.typography.scale, previous.typography.scale, next.typography.scale),
+      notes: adopt(spec.typography.notes, previous.typography.notes, next.typography.notes),
+    },
+    layout: {
+      ...spec.layout,
+      radius: adopt(spec.layout.radius, previous.layout.radius, next.layout.radius),
+      borders: adopt(spec.layout.borders, previous.layout.borders, next.layout.borders),
+      notes: adopt(spec.layout.notes, previous.layout.notes, next.layout.notes),
+    },
+    effects: {
+      ...spec.effects,
+      shadows: adopt(spec.effects.shadows, previous.effects.shadows, next.effects.shadows),
+    },
+  };
+}
+
+function adopt<T>(current: T, previous: T, next: T): T {
+  if (blank(current)) return next;
+  return JSON.stringify(current) === JSON.stringify(previous) ? next : current;
+}
+
+/** Empty enough that filling it in takes nothing away. */
+function blank(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim() === '';
+  if (Array.isArray(value)) return value.length === 0;
+  return value === undefined || value === null;
+}

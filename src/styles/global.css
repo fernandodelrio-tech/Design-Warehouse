@@ -187,6 +187,7 @@ select,
 .card-spec-line dt,
 .readout dt,
 .field label,
+.field-label,
 .scale-head,
 .selection-bar,
 .brand-count {
@@ -1191,7 +1192,8 @@ kbd {
   gap: var(--s1);
 }
 
-.field label {
+.field label,
+.field-label {
   font-size: var(--t-label);
   color: var(--text-faint);
 }

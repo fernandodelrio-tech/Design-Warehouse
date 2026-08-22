@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { analyzeBlob, seedSpec } from './lib/analyze';
+import { analyzeBlob, reseedSpec, seedSpec } from './lib/analyze';
 import {
   clearCatalog,
   currentDatabase,
@@ -488,26 +488,27 @@ export default function App() {
       }
       try {
         const { image, auto, thumb } = await analyzeBlob(blobs.full);
-        // Only re-seed the tokens if they are still exactly what the last
-        // analysis produced — an edited token list is the user's work.
-        const previousSeed = seedSpec(record.image, record.auto).colorTokens;
-        const untouched =
-          JSON.stringify(previousSeed) === JSON.stringify(record.spec.colorTokens);
+        // Re-seed field by field: a value still holding exactly what the last
+        // analysis produced gets the new measurement, an edited one is kept.
+        // The version matters here — a design catalogued before the analyzer
+        // measured radii, hairlines, elevation and type sizes carries blanks
+        // that only re-analysis can fill.
+        const previousSpec = seedSpec(record.image, record.auto);
+        const spec = reseedSpec(record.spec, previousSpec, seedSpec(image, auto));
+        const kept = JSON.stringify(spec) === JSON.stringify(record.spec);
         const next: DesignRecord = {
           ...record,
           image,
           auto,
           updatedAt: Date.now(),
-          spec: untouched
-            ? { ...record.spec, colorTokens: seedSpec(image, auto).colorTokens }
-            : record.spec,
+          spec,
         };
         await saveDesign(next, { id, full: blobs.full, thumb });
         releaseImage(id);
         setRecords((current) => current.map((r) => (r.id === id ? next : r)));
         markChanged();
         notify(
-          untouched ? 'Re-analysed and tokens refreshed.' : 'Re-analysed; your edited tokens were kept.',
+          kept ? 'Re-analysed; your edited spec was kept as it stands.' : 'Re-analysed and the measured fields refreshed.',
           'success',
         );
       } catch (err) {
