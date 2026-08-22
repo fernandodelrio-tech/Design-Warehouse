@@ -793,13 +793,12 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* The design's one hue, walked down: #d2dbd7, #9bb7a7, #4f705d,
-                #1e3929. The two lightest measured fills are left out — on the
-                bar's own ground they are invisible, which is a mark that does
-                not mark. */}
+            {/* The cool axis and the one warm note: #c0cbd5, #a1afb8, #718998
+                and the accent. On the bar's dark ground all four read, which
+                is where the accent finally does. */}
+            <span style={{ background: 'var(--muted-fill-2)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
             <span style={{ background: 'var(--muted-fill-3)' }} />
-            <span style={{ background: 'var(--text-faint)' }} />
             <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
