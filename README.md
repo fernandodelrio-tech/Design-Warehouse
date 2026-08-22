@@ -49,40 +49,41 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Scarlet Threshold**, a design catalogued in the app itself and then
+The app wears **Vermilion Frontispiece**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#555358` `#817879` `#313235` `#ae564c` `#1b1b1d` `#010101` `#d2d1d2` `#c82c2f` |
+| **Colour** | Eight measured tokens, exact — `#fdf1ee` `#ffffff` `#8f40c5` `#e37658` `#9c515b` `#9b4a96` `#2b1b21` `#c67080` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
-| **Page inset** | 11% left and right, taken literally on a wide screen |
+| **Page inset** | 5% left and right |
 | **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale |
-| **Corners** | 4px — enough to soften an edge, not enough to make a ruled block a card |
-| **Faces** | Bricolage Grotesque for the wordmark and headings, Familjen Grotesk for everything else |
+| **Corners** | 8px — a frontispiece is a plate, and this design is panels on a ground rather than rules |
+| **Faces** | Young Serif for the wordmark and headings, Hanken Grotesk for everything else |
 
-**This is the first of these designs that measured dark**, so for the first time the
-dark theme *is* the design and the light one is derived. The app opens dark to match.
+A generous palette: **10 of the 28 pairs clear 4.5:1**. Two things about it shape the
+whole skin.
 
-Two measurements shape the rest. **Only `#d2d1d2` can be type** — it is the sole token
-clearing 4.5:1 on any ground — and the palette's four darks make a proper ladder beneath
-it: 13.71:1 on the black, 11.29 on the near-black, 8.42 on the slate, and 4.99 on the
-measured background, which is the weakest ground of the four despite being 35% of the
-canvas.
+**Three of the tokens sit within 0.006 of one another in luminance** — the purple, the
+maroon and the magenta — so they cannot stack into a hierarchy, but they all clear AA on
+both light grounds. They are spent on *hue* rather than on level: the maroon is the
+faintest text, the purple is what focus looks like, and the magenta is a mark. A coloured
+secondary tier is something this palette can afford and none of the previous four could.
 
-**And nothing at all reads on the scarlet.** The best the palette manages against
-`#c82c2f` is 3.58:1, so it is never a filled button here: it is the *line* around one, at
-3.16:1 on the page, with a dark tint of itself inside carrying the pale label. The
-measured hex stays exactly what it is and does the work a 4% accent should.
+**And the vermilion carries the ink at 5.46:1** while failing at 2.71 as type on the
+page. That is the ordinary shape of an accent, and it means the primary button is a
+filled one again rather than the outlined one Scarlet Threshold had to settle for.
 
-**The daylight edition.** The palette has nothing lighter than `#d2d1d2`, so daylight
-grounds on that and lifts its panels *up* to it rather than above it. It is a warm grey
-interface rather than a white one, which is the only direction the measurements allow.
+**The evening edition.** The three mid tokens that carry the light theme's colour all die
+on the ink — 2.89, 2.92 and 2.98 — so none survives the inversion, and each is lifted
+toward the blush until it reads. The vermilion needs no help: it clears 5.46 on the ink
+as type *and* still carries the ink as a fill, the one token that means the same thing in
+both themes.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
 
-The two faces are self-hosted from `src/styles/fonts/` — 68 KB of latin-subset woff2,
+The two faces are self-hosted from `src/styles/fonts/` — 80 KB of latin-subset woff2,
 five static instances. The app has to work with the network switched off, and opening it
 should not tell a font CDN that you did.
 
