@@ -180,8 +180,27 @@ remainder section at the end.
 
 From a card, hover and hit the copy icon. From the detail drawer:
 
-- **Copy prompt for Claude** — the spec wrapped in a build instruction, ready to paste
-  into Claude Code or Claude Design
+- **Copy prompt for Claude** — the spec wrapped in instructions for *applying* it to
+  something. Paste it into Claude Code or Claude Design and say what the target is —
+  your app, a page, a component, a deck. The prompt opens with a line to replace:
+
+  ```
+  ## Apply it to
+
+  > **[ REPLACE THIS LINE — what should this design be applied to? ]**
+  ```
+
+  Naming the target in your own message works just as well; the prompt says to use
+  that and ignore the placeholder, and to ask rather than guess if neither is there.
+
+  The rest of it is the part worth having. It establishes that a catalogued design is
+  a visual *language* and not a page to reproduce — the screenshot's own content is
+  explicitly out of scope — then says to restyle rather than re-architect, to redefine
+  the target's existing tokens rather than bolt a second system alongside them, to
+  derive the states a screenshot never had (hover, focus, disabled, a second theme) by
+  mixing the measured colours rather than inventing new ones, and to keep a measured
+  hex even where its contrast fails while never using that pair for text.
+
 - **Spec** — the same spec as plain markdown
 - **JSON** — a design-token document (color, typography, layout, effects, plus the
   measured layout figures)
@@ -189,7 +208,8 @@ From a card, hover and hit the copy icon. From the detail drawer:
 - **.md / Image** — download the spec or the original screenshot
 
 Select several cards to copy or download one document covering all of them — useful
-for seeding a whole project with a reference set.
+for seeding a whole project with a reference set. That export carries the same framing:
+these are languages to apply to something, not pages to rebuild.
 
 ## Signing in, and sharing a catalog across devices
 

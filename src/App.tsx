@@ -533,7 +533,10 @@ export default function App() {
     async (record: DesignRecord) => {
       try {
         await copyText(toClaudePrompt(record));
-        notify(`Build prompt for "${record.title}" copied.`, 'success');
+        notify(
+          `Prompt for "${record.title}" copied — say what to apply it to.`,
+          'success',
+        );
       } catch {
         notify('The browser blocked the clipboard write.', 'error');
       }

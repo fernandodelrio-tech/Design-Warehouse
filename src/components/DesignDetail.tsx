@@ -176,7 +176,8 @@ export function DesignDetail({
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => copy('Build prompt', toClaudePrompt(draft))}
+                onClick={() => copy('Prompt', toClaudePrompt(draft))}
+                title="Copies a prompt that applies this design to whatever you name — an app, a page, a deck"
               >
                 <IconSparkle /> Copy prompt for Claude
               </button>

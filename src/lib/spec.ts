@@ -180,13 +180,54 @@ export function toMarkdownSpec(record: DesignRecord): string {
 }
 
 /** A build instruction wrapped around the spec. */
+/**
+ * The prompt behind "Copy prompt for Claude".
+ *
+ * Its whole job is to establish that what follows is a design *language* to be
+ * applied to something the reader names — not a page to rebuild. The earlier
+ * wording opened with "Build a faithful implementation of the design below",
+ * and that reliably produced a standalone reproduction of the screenshot when
+ * what was wanted was an existing app restyled. The target is now the first
+ * thing in the prompt and the prompt says to ask when it is missing.
+ */
 export function toClaudePrompt(record: DesignRecord): string {
   return [
-    `Build a faithful implementation of the design below, "${record.title}".`,
+    `Apply the design language below — "${record.title}" — to the target named in the`,
+    'next section.',
     '',
-    'Honour the tokens exactly — the hex values, the type scale, the spacing scale and the',
-    'corner radii are measurements from the original, not suggestions. Where the spec is',
-    'silent, choose something consistent with the style keywords and say what you chose.',
+    '## Apply it to',
+    '',
+    '> **[ REPLACE THIS LINE — what should this design be applied to? ]**',
+    '>',
+    '> An app, a page, a component, a document, a deck, a repository. If I named a',
+    '> target elsewhere in my message, use that and ignore this line. If neither is',
+    '> true, ask me what the target is before building anything.',
+    '',
+    '## How to use what follows',
+    '',
+    'It is a visual system measured from one screenshot, not a page to reproduce. The',
+    "screenshot's own content — its words, its sections, whatever it happened to show —",
+    'is not part of the brief. What transfers is colour, type, spacing, shape and density.',
+    '',
+    '- **Restyle, do not re-architect.** Keep the structure, components and behaviour the',
+    '  target already has. You are changing how it looks, not what it is or what it does.',
+    '- **Honour the measured values exactly.** Hex values, the type scale, the spacing',
+    '  scale and the corner radii are measurements from the original, not suggestions.',
+    '- **Map onto what is already there.** If the target has its own tokens, theme or',
+    '  variables, redefine those rather than bolting a second system alongside them.',
+    '- **Where the spec is silent, choose** something consistent with the style keywords,',
+    '  and say what you chose.',
+    '- **Derive rather than invent.** A working interface needs what a screenshot never',
+    '  had — hover, focus and disabled states, error styling, a second theme. Build those',
+    '  by mixing the measured colours toward the darkest or lightest of them, and say what',
+    '  you derived and what it measures.',
+    '- **Check contrast before spending a colour.** The ratios below include any that fail.',
+    '  Keep the hex, because it is what the design is, but do not use a failing pair for',
+    '  text: a colour that fails on the page background can still be a fill, a rule or a',
+    '  mark, and usually reads well with the darkest colour knocked out of it.',
+    '- **Verify on the result, not in your head.** Re-check contrast against the surface a',
+    '  colour actually lands on, which is often a card rather than the page.',
+    '- **Say what you could not honour**, and why, rather than dropping it quietly.',
     '',
     '---',
     '',
@@ -295,9 +336,11 @@ export function toCatalogMarkdown(records: DesignRecord[]): string {
     '',
     `${records.length} design${records.length === 1 ? '' : 's'} · exported ${fmtDate(Date.now())}`,
     '',
-    'Each section below is a self-contained design spec: colors, typography, layout and',
-    'effects measured or recorded from a screenshot. Use them as the reference when',
-    'building or restyling a prototype.',
+    'Each section below is a self-contained design language: colours, typography, layout',
+    'and effects measured from one screenshot. They are references to apply to something',
+    'you already have or are about to build — name the target, then say which of these to',
+    'apply to it. The measured values are exact; anything a spec leaves silent is yours to',
+    'choose, and worth saying out loud when you do.',
     '',
     '---',
     '',
