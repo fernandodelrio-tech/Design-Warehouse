@@ -84,6 +84,18 @@ export interface DetailMeasurement {
     leading: number[];
     samples: number;
   } | null;
+  /**
+   * Edges, per element rather than per page: how many of the measured blocks
+   * carry a border and how many carry a shadow, so the export can say that a
+   * card is borderless instead of leaving its absence to be inferred.
+   */
+  edges: {
+    blocks: number;
+    withBorder: number;
+    withShadow: number;
+    border: { px: number; hex: string } | null;
+    shadow: { spread: number; strength: number } | null;
+  } | null;
 }
 
 /** Structure measured off the same near-native sample: see lib/structure.ts. */

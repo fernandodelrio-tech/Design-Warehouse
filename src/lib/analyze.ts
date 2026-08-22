@@ -141,12 +141,47 @@ function guessStyleKeywords(auto: AutoAnalysis): string[] {
  */
 function seedFromDetail(detail: AutoAnalysis['detail']) {
   const radius = detail?.radius ? `${detail.radius.px}px` : '';
-  const borders = detail?.border ? `${detail.border.px}px ${detail.border.hex}` : '';
-  const shadows = detail?.shadow
-    ? `Soft elevation, about ${detail.shadow.spread}px of falloff at ${detail.shadow.strength}/255 at its darkest`
-    : detail
-      ? 'No elevation measured — blocks step straight to the page'
+
+  /*
+     Both of these used to be page-wide statistics — one hairline, one
+     elevation, attributed to nothing. A borderless card with a soft shadow and
+     a hairlined card with none exported identically, and the design that had
+     four bordered elements out of eleven read as though everything were
+     bordered. The counts are the fix: absence is measured here, so it can be
+     stated rather than inferred from a field that simply says nothing.
+  */
+  const e = detail?.edges ?? null;
+  const rest = (n: number) => (e ? e.blocks - n : 0);
+  const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+  const borders = e
+    ? e.border && e.withBorder
+      ? `${e.border.px}px ${e.border.hex}, on ${e.withBorder} of the ${e.blocks} blocks ` +
+        `measured` +
+        (rest(e.withBorder) > 0
+          ? `. The other ${rest(e.withBorder)} ${plural(rest(e.withBorder), 'is', 'are')} ` +
+            `borderless — do not add a rule to them.`
+          : ' — every one of them carries it.')
+      : `None. All ${e.blocks} measured blocks are borderless; the design separates ` +
+        'elements by fill and space, not by rules.'
+    : detail?.border
+      ? `${detail.border.px}px ${detail.border.hex}`
       : '';
+
+  const shadows = e
+    ? e.shadow && e.withShadow
+      ? `Soft elevation, about ${e.shadow.spread}px of falloff reaching ${e.shadow.strength}/255 ` +
+        `at its darkest, on ${e.withShadow} of the ${e.blocks} blocks measured` +
+        (rest(e.withShadow) > 0
+          ? `. The other ${rest(e.withShadow)} ${plural(rest(e.withShadow), 'sits', 'sit')} ` +
+            'flat on the page.'
+          : ' — every one of them casts.')
+      : `None. All ${e.blocks} measured blocks step straight to the page with no falloff.`
+    : detail?.shadow
+      ? `Soft elevation, about ${detail.shadow.spread}px of falloff at ${detail.shadow.strength}/255 at its darkest`
+      : detail
+        ? 'No elevation measured — blocks step straight to the page'
+        : '';
 
   /*
      The named steps are anchored on the body, not on the top of the ladder.

@@ -177,6 +177,8 @@ export interface Block {
   corners: number[];
   /** How much of the bounding box the block itself fills, 0..1. */
   fill: number;
+  /** What sits just outside its edge. Filled in by measureEdges(). */
+  edge?: BlockEdge;
 }
 
 export function findBlocks(
@@ -317,6 +319,154 @@ export function findBlocks(
     }
   }
   return blocks;
+}
+
+/**
+ * What sits just outside one block's edge: a border, a shadow, both, or the
+ * page itself.
+ *
+ * The page-wide statistics below answer "what hairline does this design use"
+ * and "does it have elevation". They cannot answer "does THIS card have a
+ * border", and that is the question a reader rebuilding the design has: a
+ * borderless card with a soft shadow and a hairlined card with none produce
+ * exactly the same inventory line without this. Absence is a fact here, not a
+ * gap — "borderless" is measured and said, not left to be inferred.
+ *
+ * A border and a shadow are told apart by shape, not by size. A border is a
+ * flat run of one colour that ends in a step; a shadow is a monotone ramp that
+ * settles. Nothing else at a block's edge does either.
+ */
+export interface BlockEdge {
+  border: { px: number; hex: string } | null;
+  shadow: { spread: number; strength: number } | null;
+  /** Share of edge samples that agreed on the verdict, 0..1. */
+  confidence: number;
+}
+
+export function measureBlockEdge(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  b: Block,
+  /*
+     Deep enough that a border does not eat the window. At 24 a bordered card
+     with a 20px shadow had only 22 pixels left to settle in, and its tail was
+     still 2.2 levels short of the page — so the shadow was measured on the
+     borderless card beside it and missed on this one.
+  */
+  look = 34,
+): BlockEdge {
+  const widths: number[] = [];
+  const colours: string[] = [];
+  const spreads: number[] = [];
+  const strengths: number[] = [];
+  let samples = 0;
+
+  // Corners round off, so they are skipped: only the straight part of an edge
+  // reports what the edge is made of.
+  const inset = Math.max(4, Math.round((b.radius ?? 0) + 3));
+
+  /**
+   * `along` is the length of the edge being sampled; `at(offset, k)` turns a
+   * position along it and a distance outward into a pixel index.
+   */
+  const walk = (along: number, at: (offset: number, k: number) => number) => {
+    if (along - inset * 2 < 6) return;
+    const count = Math.min(12, Math.max(3, Math.floor((along - inset * 2) / 8)));
+    for (let i = 0; i < count; i++) {
+      const offset = inset + Math.round((i * (along - inset * 2 - 1)) / (count - 1 || 1));
+      samples++;
+
+      const track: Array<[number, number, number]> = [];
+      let outside = false;
+      for (let k = 1; k <= look; k++) {
+        const i2 = at(offset, k);
+        if (i2 < 0 || i2 >= w * h) { outside = true; break; }
+        track.push(rgbAt(d, i2 * 4));
+      }
+      if (outside || track.length < look) continue;
+
+      // --- border: a flat run of one colour that ends in a step
+      let run = 1;
+      while (run < track.length && dist2(track[run], track[0]) <= SAME) run++;
+      const runLuma = track.slice(0, run).map(luma);
+      const flatRun = Math.max(...runLuma) - Math.min(...runLuma) <= 6;
+      const settledColour = track[track.length - 1];
+      const isBorder =
+        run <= 8 &&
+        run < track.length &&
+        flatRun &&
+        dist2(track[0], b.colour) >= DIFFERENT &&
+        dist2(track[0], settledColour) >= DIFFERENT &&
+        dist2(track[run], track[0]) >= DIFFERENT;
+      if (isBorder) {
+        widths.push(run);
+        colours.push(hex(track[0]));
+      }
+
+      // --- shadow: a monotone ramp that settles, starting past any border
+      const from = isBorder ? run : 0;
+      const profile = track.slice(from).map(luma);
+      if (profile.length < 10) continue;
+      const settled = profile[profile.length - 1];
+      const rise = settled - profile[0];
+      if (rise <= 5) continue;
+      // A falloff asymptotes rather than stopping, so "settled" is judged
+      // against the size of the drop rather than against a fixed two levels.
+      const tolerance = Math.max(2, rise * 0.08);
+      let flat = true;
+      for (let k = profile.length - 4; k < profile.length; k++) {
+        if (Math.abs(profile[k] - settled) > tolerance) flat = false;
+      }
+      if (!flat) continue;
+      let reach = 0;
+      for (let k = 0; k < profile.length; k++) {
+        if (settled - profile[k] > rise * 0.1) reach = k + 1;
+      }
+      let backwards = 0;
+      for (let k = 1; k < reach; k++) if (profile[k] < profile[k - 1] - 1) backwards++;
+      if (reach >= 6 && reach < profile.length - 1 && backwards <= 1 && rise < 110) {
+        spreads.push(reach);
+        strengths.push(rise);
+      }
+    }
+  };
+
+  const { x, y, w: bw, h: bh } = b;
+  const inBounds = (px: number, py: number) =>
+    px >= 0 && px < w && py >= 0 && py < h ? py * w + px : -1;
+  walk(bw, (o, k) => inBounds(x + o, y - k));              // above
+  walk(bw, (o, k) => inBounds(x + o, y + bh - 1 + k));     // below
+  walk(bh, (o, k) => inBounds(x - k, y + o));              // left
+  walk(bh, (o, k) => inBounds(x + bw - 1 + k, y + o));     // right
+  if (samples === 0) return { border: null, shadow: null, confidence: 0 };
+
+  const agree = (n: number) => (samples ? n / samples : 0);
+  const border =
+    agree(widths.length) >= 0.5
+      ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
+      : null;
+  const shadow =
+    agree(spreads.length) >= 0.4
+      ? { spread: Math.round(median(spreads)), strength: Math.round(median(strengths)) }
+      : null;
+  return {
+    border,
+    shadow,
+    confidence: Math.round(Math.max(agree(widths.length), agree(spreads.length)) * 100) / 100,
+  };
+}
+
+/**
+ * The blocks that are elements, out of everything the flood fill returned.
+ *
+ * A block filling a tenth of the box it claims is the border ring around a
+ * block already counted, and one covering most of the canvas is the ground
+ * everything sits on. Neither is an element, and counting them was making four
+ * bordered cards report as "2 of 6 blocks".
+ */
+export function solidBlocks(blocks: Block[], w: number, h: number): Block[] {
+  return blocks.filter((b) => b.fill >= 0.5 && b.area < w * h * 0.45);
 }
 
 function measureRadius(blocks: Block[]) {
@@ -482,6 +632,52 @@ function cluster(values: number[], scale: number): Array<{ px: number; rows: num
     .filter((v, i, a) => a.findIndex((o) => o.px === v.px) === i);
 }
 
+/**
+ * Every block's edge, and what they agree on.
+ *
+ * The roll-up is the part the export needed: "1px #dbdbdb on four of eleven
+ * blocks, the other seven borderless" is a description of a design. "1px
+ * #dbdbdb" on its own is a description of one hairline that happens to exist
+ * somewhere in it.
+ */
+export function measureEdges(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  blocks: Block[],
+) {
+  let withBorder = 0;
+  let withShadow = 0;
+  const widths: number[] = [];
+  const colours: string[] = [];
+  const spreads: number[] = [];
+  const strengths: number[] = [];
+  for (const b of blocks) {
+    b.edge = measureBlockEdge(d, w, h, b);
+    if (b.edge.border) {
+      withBorder++;
+      widths.push(b.edge.border.px);
+      colours.push(b.edge.border.hex);
+    }
+    if (b.edge.shadow) {
+      withShadow++;
+      spreads.push(b.edge.shadow.spread);
+      strengths.push(b.edge.shadow.strength);
+    }
+  }
+  return {
+    blocks: blocks.length,
+    withBorder,
+    withShadow,
+    border: widths.length
+      ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
+      : null,
+    shadow: spreads.length
+      ? { spread: Math.round(median(spreads)), strength: Math.round(median(strengths)) }
+      : null,
+  };
+}
+
 export function measureDetail(
   sample: { data: Uint8ClampedArray; width: number; height: number; scale: number },
   blocks: Block[],
@@ -493,6 +689,7 @@ export function measureDetail(
   const corner = measureRadius(blocks);
   const shadow = measureShadow(data, w, h);
   const text = measureTextRows(data, w, h);
+  const edges = measureEdges(data, w, h, solidBlocks(blocks, w, h));
 
   return {
     radius: corner ? { px: px(corner.radius), samples: corner.samples } : null,
@@ -505,6 +702,19 @@ export function measureDetail(
           steps: cluster(text.heights, scale),
           leading: cluster(text.leading, scale).map((c) => c.px),
           samples: text.samples,
+        }
+      : null,
+    edges: edges.blocks
+      ? {
+          blocks: edges.blocks,
+          withBorder: edges.withBorder,
+          withShadow: edges.withShadow,
+          border: edges.border
+            ? { px: Math.max(1, px(edges.border.px)), hex: edges.border.hex }
+            : null,
+          shadow: edges.shadow
+            ? { spread: px(edges.shadow.spread), strength: Math.round(edges.shadow.strength) }
+            : null,
         }
       : null,
   };

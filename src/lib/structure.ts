@@ -1,3 +1,4 @@
+import { solidBlocks } from './measure';
 import type { Block } from './measure';
 import type { StructureMeasurement } from './types';
 
@@ -231,14 +232,39 @@ function repeats(blocks: Block[], tolerance = 0.12) {
  */
 function measureComponents(blocks: Block[], w: number, h: number, scale: number) {
   const px = (n: number) => Math.round(n * scale);
-  const wide = (b: Block) => b.w >= w * 0.85;
   /*
-     The page itself is not a component, and neither is an outline: a block
-     covering most of the canvas is the ground everything else sits on, and one
-     filling a tenth of the box it claims is a border ring around a block
-     already counted.
+     Every entry says how it is edged, including when the answer is "not at
+     all". Two cards of the same size, one hairlined and one borderless with a
+     shadow, are different components; without this they were the same line.
   */
-  const pool = blocks.filter((b) => b.fill >= 0.5 && b.area < w * h * 0.45);
+  const edging = (group: Block | Block[]): string => {
+    const all = Array.isArray(group) ? group : [group];
+    const known = all.filter((b) => b.edge);
+    if (known.length === 0) return '';
+    const n = known.length;
+    const bordered = known.filter((b) => b.edge!.border);
+    const shadowed = known.filter((b) => b.edge!.shadow);
+    const parts: string[] = [];
+
+    // A group whose members disagree is reported as the split it is. Taking
+    // the first member's edging spoke for all of them, so a row of four cards
+    // where two were hairlined read as four borderless ones.
+    if (bordered.length === 0) parts.push('borderless');
+    else {
+      const b = bordered[0].edge!.border!;
+      const rule = `${px(b.px)}px ${b.hex} border`;
+      parts.push(bordered.length === n ? rule : `${rule} on ${bordered.length} of ${n}`);
+    }
+    if (shadowed.length === 0) parts.push('no shadow');
+    else {
+      const sh = shadowed[0].edge!.shadow!;
+      const cast = `${px(sh.spread)}px shadow at ${sh.strength}/255`;
+      parts.push(shadowed.length === n ? cast : `${cast} on ${shadowed.length} of ${n}`);
+    }
+    return `, ${parts.join(', ')}`;
+  };
+  const wide = (b: Block) => b.w >= w * 0.85;
+  const pool = solidBlocks(blocks, w, h);
   const found: string[] = [];
 
   /*
@@ -259,7 +285,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   const bar = first((b) => wide(b) && b.y <= h * 0.04 && b.h <= h * 0.16 && b.h >= 16);
   if (bar) {
     claim(bar);
-    found.push(`top navigation — full-width band ~${px(bar.h)}px tall in ${bar.hex}`);
+    found.push(`top navigation — full-width band ~${px(bar.h)}px tall in ${bar.hex}${edging(bar)}`);
   }
 
   const rail = first(
@@ -268,20 +294,20 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   if (rail) {
     claim(rail);
     const side = rail.x <= w * 0.03 ? 'left' : 'right';
-    found.push(`sidebar navigation — ${side} rail ~${px(rail.w)}px wide in ${rail.hex}`);
+    found.push(`sidebar navigation — ${side} rail ~${px(rail.w)}px wide in ${rail.hex}${edging(rail)}`);
   }
 
   const foot = first((b) => wide(b) && b.y + b.h >= h * 0.96 && b.h <= h * 0.3 && b.h >= 24);
   if (foot) {
     claim(foot);
-    found.push(`footer — full-width band ~${px(foot.h)}px tall in ${foot.hex}`);
+    found.push(`footer — full-width band ~${px(foot.h)}px tall in ${foot.hex}${edging(foot)}`);
   }
 
   if (!bar) {
     const hero = first((b) => b.w >= w * 0.6 && b.h >= h * 0.2 && b.y <= h * 0.25);
     if (hero) {
       claim(hero);
-      found.push(`hero section — ~${px(hero.w)}×${px(hero.h)}px block in ${hero.hex}`);
+      found.push(`hero section — ~${px(hero.w)}×${px(hero.h)}px block in ${hero.hex}${edging(hero)}`);
     }
   }
 
@@ -293,14 +319,14 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
     const columns = new Set(cards.map((c) => Math.round(c.x / Math.max(1, cards[0].w * 0.5)))).size;
     found.push(
       `card grid — ${cards.length} blocks of ~${px(cards[0].w)}×${px(cards[0].h)}px` +
-        (columns > 1 ? ` across ${columns} columns` : ' stacked'),
+        (columns > 1 ? ` across ${columns} columns` : ' stacked') + edging(cards),
     );
   }
 
   const rows = repeats(free().filter((b) => b.w >= w * 0.5 && b.h <= 80 && b.h >= 20))[0];
   if (rows && rows.length >= 4) {
     claim(rows);
-    found.push(`data table / list — ${rows.length} rows of ~${px(rows[0].h)}px`);
+    found.push(`data table / list — ${rows.length} rows of ~${px(rows[0].h)}px${edging(rows)}`);
   }
 
   // Fully rounded and small enough to be a label rather than an action.
@@ -313,7 +339,10 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   )[0];
   if (pills && pills.length >= 2) {
     claim(pills);
-    found.push(`badge / pill — ${pills.length} of ~${px(pills[0].w)}×${px(pills[0].h)}px in ${pills[0].hex}`);
+    found.push(
+      `badge / pill — ${pills.length} of ~${px(pills[0].w)}×${px(pills[0].h)}px in ` +
+        `${pills[0].hex}${edging(pills)}`,
+    );
   }
 
   const buttons = repeats(
@@ -327,6 +356,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
         : `~${px(buttons[0].radius ?? 0)}px corners`;
     found.push(
       `button — ${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${buttons[0].hex}` +
+        edging(buttons) +
         (buttons.length > 1 ? ` (${buttons.length} of them)` : ''),
     );
   }
@@ -338,7 +368,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   );
   if (avatars.length >= 2) {
     claim(avatars);
-    found.push(`avatar — ${avatars.length} circles of ~${px(avatars[0].w)}px`);
+    found.push(`avatar — ${avatars.length} circles of ~${px(avatars[0].w)}px${edging(avatars)}`);
   }
 
   return { found, samples: pool.length };
