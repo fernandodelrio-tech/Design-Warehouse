@@ -1,42 +1,39 @@
 /* Self-hosted so the catalog still works with the network switched off,
    and so nothing about opening the app is visible to a font CDN.
-   Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
+   Latin subset, pulled from Google Fonts. */
 
-/* Newsreader at its display optical size for the headings. This design is a
-   1012x1779 scroll — a long column read top to bottom — and Newsreader is cut
-   for exactly that: a text serif with a display size that sharpens rather than
-   thins, which matters on a dark ground where hairlines vanish. */
+/*
+   Nothing was recorded for the families — a bitmap cannot hold them — so this
+   is a choice, and IBM Plex Sans is the choice. The measurements describe a
+   console: light stems (2px at a 23px ink height, 1px at 12px), capitals with
+   a pixel of tracking on the small rows, 25% of the canvas carrying detail.
+   Plex was drawn for exactly that register — a grotesque with a true Light
+   that stays open at 12px, and caps that space evenly when tracked out.
+
+   One file rather than four. Google ships Plex Sans only as a variable font
+   now (weight and width both), so pinning every axis — the trick that gets a
+   static instance out of the API — returns the same variable file whatever is
+   asked for. Declaring the range honestly is cheaper than pretending: 45.7 KB
+   covers 100-700, where four statics of the previous family cost 67.6 KB.
+*/
 @font-face {
-  font-family: 'Newsreader';
+  font-family: 'IBM Plex Sans';
   font-style: normal;
-  font-weight: 500;
+  font-weight: 100 700;
+  font-stretch: 100%;
   font-display: swap;
-  src: url('./fonts/newsreader-500.woff2') format('woff2');
+  src: url('./fonts/ibm-plex-sans.woff2') format('woff2');
 }
 
-/* Public Sans underneath. Plain, tightly fitted and legible small, which is
-   what a page carrying detail across 30% of its canvas needs — and its shapes
-   stay open in marigold on forest green, where a lighter face would smear. */
+/*
+   Plex Mono for the readouts — the hex values, the measured figures and the
+   prompt the app hands to Claude. Same skeleton as the sans, so a hex sitting
+   inside a sentence does not read as a different voice, only a fixed one.
+*/
 @font-face {
-  font-family: 'Public Sans';
+  font-family: 'IBM Plex Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./fonts/public-sans-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('./fonts/public-sans-500.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Public Sans';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('./fonts/public-sans-700.woff2') format('woff2');
+  src: url('./fonts/ibm-plex-mono-400.woff2') format('woff2');
 }

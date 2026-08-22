@@ -126,8 +126,10 @@ export default function App() {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
+  // "Fern Console" is a light design, so light is the resting state and the
+  // dark theme is the derived one.
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
   );
 
   /**
@@ -791,11 +793,13 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* The three greens, which carry no type anywhere in this design,
-                and the marigold that carries all of it. */}
-            <span style={{ background: 'var(--muted-fill-3)' }} />
-            <span style={{ background: 'var(--muted-fill-2)' }} />
+            {/* The design's one hue, walked down: #d2dbd7, #9bb7a7, #4f705d,
+                #1e3929. The two lightest measured fills are left out — on the
+                bar's own ground they are invisible, which is a mark that does
+                not mark. */}
             <span style={{ background: 'var(--muted-fill)' }} />
+            <span style={{ background: 'var(--muted-fill-3)' }} />
+            <span style={{ background: 'var(--text-faint)' }} />
             <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
