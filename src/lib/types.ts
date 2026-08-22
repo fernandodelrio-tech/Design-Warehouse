@@ -93,8 +93,11 @@ export interface DetailMeasurement {
     blocks: number;
     withBorder: number;
     withShadow: number;
+    /** How many of them are filled with a ramp rather than a flat colour. */
+    withGradient: number;
     border: { px: number; hex: string } | null;
     shadow: { spread: number; strength: number } | null;
+    gradient: { axis: string; from: string; to: string; span: number } | null;
   } | null;
 }
 

@@ -179,7 +179,44 @@ export interface Block {
   fill: number;
   /** What sits just outside its edge. Filled in by measureEdges(). */
   edge?: BlockEdge;
+  /** A ramp across the block's own fill, where there is one. */
+  gradient?: BlockGradient | null;
 }
+
+/** A fill that ramps rather than sitting flat. */
+export interface BlockGradient {
+  axis: 'vertical' | 'horizontal' | 'diagonal' | 'radial';
+  from: string;
+  to: string;
+  /** How far the colour travels across it, as an average per-channel step. */
+  span: number;
+}
+
+/**
+ * Average per-channel distance. Ramps are judged on this rather than on
+ * luminance: an indigo-to-fuchsia ramp — the most ordinary gradient in
+ * interface design — travels eighty levels of colour at constant brightness,
+ * and a luminance test calls it flat.
+ */
+const chroma = (a: [number, number, number], b: [number, number, number]) =>
+  Math.sqrt(dist2(a, b) / 3);
+
+/** Below this a fill is one colour with noise in it, not a ramp. */
+const CHROMA_STEP = 10;
+
+/**
+ * How the flood decides two pixels belong together.
+ *
+ * 'flat' measures every pixel against the seed, which is what finds a solid
+ * fill and what makes a ramp come apart into stripes. 'smooth' measures each
+ * pixel against its own neighbour instead, so a ramp stays one region however
+ * far it travels, and only a hard edge stops it. A gradient element is exactly
+ * a region with no hard edge in it, which is why the second mode finds them.
+ */
+export type FloodMode = 'flat' | 'smooth';
+
+/** Neighbour-to-neighbour tolerance in 'smooth' mode: four levels a channel. */
+const CONTINUOUS = 4 * 4 * 3;
 
 export function findBlocks(
   d: Uint8ClampedArray,
@@ -187,11 +224,20 @@ export function findBlocks(
   h: number,
   maxRadius: number,
   minSide = 24,
+  mode: FloodMode = 'flat',
 ): Block[] {
   const seen = new Uint8Array(w * h);
   const blocks: Block[] = [];
   const minArea = minSide * minSide;
   const stack = new Int32Array(w * h);
+  /*
+     Membership as a stamped mask rather than a Set. The edge-coverage test
+     needs to ask "is this pixel in the region" a few thousand times per block,
+     and a Set of four million numbers made the smooth pass cost more than the
+     flood itself. The stamp increments per region, so nothing needs clearing.
+  */
+  const mask = new Int32Array(w * h);
+  let stamp = 0;
 
   const step = Math.max(1, Math.floor(Math.min(w, h) / 120));
   for (let sy = 0; sy < h; sy += step) {
@@ -205,13 +251,13 @@ export function findBlocks(
       stack[top++] = seed;
       seen[seed] = 1;
       let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
-      const members: number[] = [];
+      stamp++;
       while (top > 0 && area < 4_000_000) {
         const p = stack[--top];
         const py = (p / w) | 0;
         const px = p - py * w;
         area++;
-        if (members.length < 4_000_000) members.push(p);
+        mask[p] = stamp;
         if (px < minX) minX = px;
         if (px > maxX) maxX = px;
         if (py < minY) minY = py;
@@ -222,9 +268,11 @@ export function findBlocks(
           py > 0 ? p - w : -1,
           py < h - 1 ? p + w : -1,
         ];
+        const here = mode === 'smooth' ? rgbAt(d, p * 4) : colour;
+        const tolerance = mode === 'smooth' ? CONTINUOUS : SAME;
         for (const n of neighbours) {
           if (n < 0 || seen[n]) continue;
-          if (dist2(rgbAt(d, n * 4), colour) > SAME) continue;
+          if (dist2(rgbAt(d, n * 4), here) > tolerance) continue;
           seen[n] = 1;
           stack[top++] = n;
         }
@@ -234,10 +282,10 @@ export function findBlocks(
       const bh = maxY - minY + 1;
       if (bw < minSide || bh < minSide || area < minArea) continue;
       // A block filling its whole box to the edge of the canvas is the page,
-      // not a card.
+      // not a card — and neither is one covering half the canvas, which is
+      // also the expensive case to go on and test.
       if (bw >= w - 2 && bh >= h - 2) continue;
-
-      const inside = new Set(members);
+      if (area >= w * h * 0.45) continue;
 
       /*
          Rectangularity is judged on the block's own edges, not on how much of
@@ -255,7 +303,7 @@ export function findBlocks(
         let n = 0;
         for (let i = from; i <= to; i++) {
           n++;
-          if (inside.has(horizontal ? fixed * w + i : i * w + fixed)) hit++;
+          if (mask[horizontal ? fixed * w + i : i * w + fixed] === stamp) hit++;
         }
         return n ? hit / n : 0;
       };
@@ -276,7 +324,7 @@ export function findBlocks(
         [maxX, maxY, -1, -1],
       ] as const) {
         let k = 0;
-        while (k <= limit && !inside.has((cy + dy * k) * w + (cx + dx * k))) k++;
+        while (k <= limit && mask[(cy + dy * k) * w + (cx + dx * k)] !== stamp) k++;
         if (k > limit) continue;
         corners.push(k * DIAGONAL_TO_RADIUS);
       }
@@ -455,6 +503,185 @@ export function measureBlockEdge(
     shadow,
     confidence: Math.round(Math.max(agree(widths.length), agree(spreads.length)) * 100) / 100,
   };
+}
+
+/**
+ * A ramp inside one block's own fill.
+ *
+ * Text and content punch holes in a card, so this cannot test raw pixels the
+ * way the page-wide gradient test does — a paragraph would break every scan
+ * line. The interior is projected onto each candidate axis, binned, and reduced
+ * to the MEDIAN colour per bin instead. Ink is a minority of a card's area and
+ * lands far from its fill, so the median steps over it and the fill is what is
+ * left.
+ *
+ * This is the subtle case, where the whole ramp fits inside the tolerance the
+ * flood fill uses and the block came back whole. A stronger ramp arrives
+ * already in pieces; mergeGradientBands() reassembles those.
+ */
+export function measureBlockGradient(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  b: Block,
+): BlockGradient | null {
+  const inset = Math.max(2, Math.round((b.radius ?? 0) * 0.8) + 2);
+  const x0 = b.x + inset;
+  const x1 = b.x + b.w - 1 - inset;
+  const y0 = b.y + inset;
+  const y1 = b.y + b.h - 1 - inset;
+  if (x1 - x0 < 12 || y1 - y0 < 12) return null;
+
+  /*
+     A coarse look first. Most blocks on a page are one flat colour, and the
+     binning below costs a few thousand samples and forty-eight medians to say
+     so; this says it in sixty-four reads. Only a block whose corners actually
+     differ is worth the full test.
+  */
+  const corner = (fx: number, fy: number) =>
+    rgbAt(d, (Math.round(y0 + (y1 - y0) * fy) * w + Math.round(x0 + (x1 - x0) * fx)) * 4);
+  const probes: Array<[number, number, number]> = [];
+  for (const fy of [0.1, 0.37, 0.63, 0.9]) {
+    for (const fx of [0.1, 0.37, 0.63, 0.9]) probes.push(corner(fx, fy));
+  }
+  let widest = 0;
+  for (let i = 0; i < probes.length; i++) {
+    for (let j = i + 1; j < probes.length; j++) {
+      widest = Math.max(widest, chroma(probes[i], probes[j]));
+    }
+  }
+  // Halved, because a probe can land on ink and because the bin medians the
+  // full test uses sit inside the true ends of the ramp.
+  if (widest < CHROMA_STEP / 2) return null;
+
+  const xs: number[] = [];
+  const ys: number[] = [];
+  const cols: Array<[number, number, number]> = [];
+  const stepX = Math.max(1, Math.floor((x1 - x0) / 36));
+  const stepY = Math.max(1, Math.floor((y1 - y0) / 36));
+  for (let y = y0; y <= y1; y += stepY) {
+    for (let x = x0; x <= x1; x += stepX) {
+      if (x < 0 || x >= w || y < 0 || y >= h) continue;
+      xs.push(x);
+      ys.push(y);
+      cols.push(rgbAt(d, (y * w + x) * 4));
+    }
+  }
+  if (cols.length < 120) return null;
+
+  const cx = (x0 + x1) / 2;
+  const cy = (y0 + y1) / 2;
+  const rx = Math.max(1, (x1 - x0) / 2);
+  const ry = Math.max(1, (y1 - y0) / 2);
+  const axes: Array<[BlockGradient['axis'], (i: number) => number]> = [
+    ['vertical', (i) => (ys[i] - y0) / (y1 - y0)],
+    ['horizontal', (i) => (xs[i] - x0) / (x1 - x0)],
+    ['diagonal', (i) => ((xs[i] - x0) / (x1 - x0) + (ys[i] - y0) / (y1 - y0)) / 2],
+    ['radial', (i) => Math.min(1, Math.hypot((xs[i] - cx) / rx, (ys[i] - cy) / ry) / Math.SQRT2)],
+  ];
+
+  const BINS = 12;
+  let best: BlockGradient | null = null;
+  for (const [axis, t] of axes) {
+    const bins: Array<Array<[number, number, number]>> = Array.from({ length: BINS }, () => []);
+    for (let i = 0; i < cols.length; i++) {
+      const k = Math.min(BINS - 1, Math.max(0, Math.floor(t(i) * BINS)));
+      bins[k].push(cols[i]);
+    }
+    if (bins.some((bin) => bin.length < 6)) continue;
+    const mid = bins.map(
+      (bin) =>
+        [
+          median(bin.map((c) => c[0])),
+          median(bin.map((c) => c[1])),
+          median(bin.map((c) => c[2])),
+        ] as [number, number, number],
+    );
+    const total = chroma(mid[0], mid[BINS - 1]);
+    if (total < CHROMA_STEP) continue;
+    // Every bin moves further from the first and none of them by most of the
+    // total: a card with a dark header over a light body is two blocks, and it
+    // fails here on the one step where it changes.
+    let walks = true;
+    let previous = 0;
+    for (let k = 1; k < BINS; k++) {
+      const away = chroma(mid[0], mid[k]);
+      if (away < previous - 1) walks = false;
+      if (away - previous > total * 0.45 + 2) walks = false;
+      previous = away;
+    }
+    if (!walks) continue;
+    /*
+       Axes are tried simplest first, and a later one has to win by a margin.
+       Diagonal describes a vertical ramp nearly as well as vertical does — it
+       is a superset — so on a straight tie it took the name, and a vertical
+       gradient came back diagonal. A genuinely diagonal ramp beats vertical by
+       about √2, comfortably clear of this.
+    */
+    if (!best || total > best.span * 1.15) {
+      best = { axis, from: hex(mid[0]), to: hex(mid[BINS - 1]), span: Math.round(total) };
+    }
+  }
+  return best;
+}
+
+/**
+ * Elements whose fill is a ramp.
+ *
+ * Found with a second flood in 'smooth' mode, which walks a gradient from end
+ * to end because nothing inside it is a hard edge. Every candidate is then put
+ * to measureBlockGradient, so a region that merely happens to be continuous —
+ * a photograph, a soft shadow the flood leaked into — is dropped rather than
+ * called a gradient.
+ *
+ * The flat pass keeps its own results; where a ramped element encloses blocks
+ * that pass found separately (the stripes it came apart into), those are
+ * dropped, because they are pieces of this one rather than elements of their
+ * own.
+ */
+export function findGradientBlocks(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  maxRadius: number,
+  flat: Block[],
+  /*
+     Sample pixels of the FINE pass per sample pixel of this one. The gradient
+     pass runs on a coarser sample than the hairline pass does — a ramp is a
+     large, smooth thing and does not need native resolution, whereas a second
+     full-resolution flood cost more than everything else in the analyzer put
+     together on a 6000px capture. Results are scaled back into the fine
+     coordinate space before they meet anything measured there.
+  */
+  toFine = 1,
+): Block[] {
+  const candidates = findBlocks(d, w, h, Math.max(4, Math.round(maxRadius / toFine)), 16, 'smooth')
+    .filter((b) => b.area < w * h * 0.45 && b.fill >= 0.6);
+  const ramped: Block[] = [];
+  for (const b of candidates) {
+    const gradient = measureBlockGradient(d, w, h, b);
+    if (!gradient) continue;
+    b.gradient = gradient;
+    if (toFine !== 1) {
+      b.x = Math.round(b.x * toFine);
+      b.y = Math.round(b.y * toFine);
+      b.w = Math.round(b.w * toFine);
+      b.h = Math.round(b.h * toFine);
+      b.area = Math.round(b.area * toFine * toFine);
+      b.radius = b.radius === null ? null : b.radius * toFine;
+      b.corners = b.corners.map((c) => c * toFine);
+    }
+    ramped.push(b);
+  }
+  if (ramped.length === 0) return flat;
+
+  const inside = (outer: Block, b: Block) =>
+    b.x >= outer.x - 2 &&
+    b.y >= outer.y - 2 &&
+    b.x + b.w <= outer.x + outer.w + 2 &&
+    b.y + b.h <= outer.y + outer.h + 2;
+  const kept = flat.filter((b) => !ramped.some((r) => inside(r, b)));
+  return [...kept, ...ramped];
 }
 
 /**
@@ -648,12 +875,16 @@ export function measureEdges(
 ) {
   let withBorder = 0;
   let withShadow = 0;
+  let withGradient = 0;
+  let ramp: BlockGradient | null = null;
   const widths: number[] = [];
   const colours: string[] = [];
   const spreads: number[] = [];
   const strengths: number[] = [];
   for (const b of blocks) {
     b.edge = measureBlockEdge(d, w, h, b);
+    // A reassembled element already knows its ramp; anything else is asked.
+    if (b.gradient === undefined) b.gradient = measureBlockGradient(d, w, h, b);
     if (b.edge.border) {
       withBorder++;
       widths.push(b.edge.border.px);
@@ -664,11 +895,17 @@ export function measureEdges(
       spreads.push(b.edge.shadow.spread);
       strengths.push(b.edge.shadow.strength);
     }
+    if (b.gradient) {
+      withGradient++;
+      if (!ramp || b.gradient.span > ramp.span) ramp = b.gradient;
+    }
   }
   return {
     blocks: blocks.length,
     withBorder,
     withShadow,
+    withGradient,
+    gradient: ramp,
     border: widths.length
       ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
       : null,
@@ -715,6 +952,8 @@ export function measureDetail(
           shadow: edges.shadow
             ? { spread: px(edges.shadow.spread), strength: Math.round(edges.shadow.strength) }
             : null,
+          withGradient: edges.withGradient,
+          gradient: edges.gradient,
         }
       : null,
   };

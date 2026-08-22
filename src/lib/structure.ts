@@ -237,6 +237,27 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
      all". Two cards of the same size, one hairlined and one borderless with a
      shadow, are different components; without this they were the same line.
   */
+  /*
+     A gradient block has no single hex, and saying "in #4f46e5" for one is a
+     quiet lie — it names the colour the flood fill happened to seed on. Where
+     a block ramps, the ramp is what it is filled with.
+  */
+  const fillOf = (group: Block | Block[]): string => {
+    const all = Array.isArray(group) ? group : [group];
+    const ramped = all.filter((b) => b.gradient);
+    if (ramped.length === 0) return all[0].hex;
+    const axes = [...new Set(ramped.map((b) => b.gradient!.axis))];
+    const g = ramped[0].gradient!;
+    // Four cards that all ramp but ramp differently are not one gradient, and
+    // naming the first one's axis for all of them would say they are.
+    const ramp =
+      axes.length > 1
+        ? `ramps of differing axes (${axes.join(', ')}), the first from ${g.from} to ${g.to}`
+        : `a ${g.axis} ramp from ${g.from} to ${g.to}`;
+    if (ramped.length === all.length) return ramp;
+    return `${ramp} on ${ramped.length} of ${all.length}, flat ${all.find((b) => !b.gradient)!.hex} on the rest`;
+  };
+
   const edging = (group: Block | Block[]): string => {
     const all = Array.isArray(group) ? group : [group];
     const known = all.filter((b) => b.edge);
@@ -285,7 +306,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   const bar = first((b) => wide(b) && b.y <= h * 0.04 && b.h <= h * 0.16 && b.h >= 16);
   if (bar) {
     claim(bar);
-    found.push(`top navigation — full-width band ~${px(bar.h)}px tall in ${bar.hex}${edging(bar)}`);
+    found.push(`top navigation — full-width band ~${px(bar.h)}px tall in ${fillOf(bar)}${edging(bar)}`);
   }
 
   const rail = first(
@@ -294,20 +315,20 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   if (rail) {
     claim(rail);
     const side = rail.x <= w * 0.03 ? 'left' : 'right';
-    found.push(`sidebar navigation — ${side} rail ~${px(rail.w)}px wide in ${rail.hex}${edging(rail)}`);
+    found.push(`sidebar navigation — ${side} rail ~${px(rail.w)}px wide in ${fillOf(rail)}${edging(rail)}`);
   }
 
   const foot = first((b) => wide(b) && b.y + b.h >= h * 0.96 && b.h <= h * 0.3 && b.h >= 24);
   if (foot) {
     claim(foot);
-    found.push(`footer — full-width band ~${px(foot.h)}px tall in ${foot.hex}${edging(foot)}`);
+    found.push(`footer — full-width band ~${px(foot.h)}px tall in ${fillOf(foot)}${edging(foot)}`);
   }
 
   if (!bar) {
     const hero = first((b) => b.w >= w * 0.6 && b.h >= h * 0.2 && b.y <= h * 0.25);
     if (hero) {
       claim(hero);
-      found.push(`hero section — ~${px(hero.w)}×${px(hero.h)}px block in ${hero.hex}${edging(hero)}`);
+      found.push(`hero section — ~${px(hero.w)}×${px(hero.h)}px block in ${fillOf(hero)}${edging(hero)}`);
     }
   }
 
@@ -319,14 +340,19 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
     const columns = new Set(cards.map((c) => Math.round(c.x / Math.max(1, cards[0].w * 0.5)))).size;
     found.push(
       `card grid — ${cards.length} blocks of ~${px(cards[0].w)}×${px(cards[0].h)}px` +
-        (columns > 1 ? ` across ${columns} columns` : ' stacked') + edging(cards),
+        (columns > 1 ? ` across ${columns} columns` : ' stacked') +
+        ` in ${fillOf(cards)}` +
+        edging(cards),
     );
   }
 
   const rows = repeats(free().filter((b) => b.w >= w * 0.5 && b.h <= 80 && b.h >= 20))[0];
   if (rows && rows.length >= 4) {
     claim(rows);
-    found.push(`data table / list — ${rows.length} rows of ~${px(rows[0].h)}px${edging(rows)}`);
+    found.push(
+      `data table / list — ${rows.length} rows of ~${px(rows[0].h)}px in ${fillOf(rows)}` +
+        edging(rows),
+    );
   }
 
   // Fully rounded and small enough to be a label rather than an action.
@@ -341,7 +367,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
     claim(pills);
     found.push(
       `badge / pill — ${pills.length} of ~${px(pills[0].w)}×${px(pills[0].h)}px in ` +
-        `${pills[0].hex}${edging(pills)}`,
+        `${fillOf(pills[0])}${edging(pills)}`,
     );
   }
 
@@ -355,7 +381,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
         ? 'fully rounded'
         : `~${px(buttons[0].radius ?? 0)}px corners`;
     found.push(
-      `button — ${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${buttons[0].hex}` +
+      `button — ${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${fillOf(buttons[0])}` +
         edging(buttons) +
         (buttons.length > 1 ? ` (${buttons.length} of them)` : ''),
     );
@@ -368,7 +394,10 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   );
   if (avatars.length >= 2) {
     claim(avatars);
-    found.push(`avatar — ${avatars.length} circles of ~${px(avatars[0].w)}px${edging(avatars)}`);
+    found.push(
+      `avatar — ${avatars.length} circles of ~${px(avatars[0].w)}px in ${fillOf(avatars)}` +
+        edging(avatars),
+    );
   }
 
   return { found, samples: pool.length };

@@ -1,6 +1,6 @@
 import { describeAspect, loadBitmap, makeThumbnail, sampleDetail, samplePixels } from './image';
 import { estimateLayout } from './layout';
-import { findBlocks, measureDetail } from './measure';
+import { findBlocks, findGradientBlocks, measureDetail } from './measure';
 import { measureStructure } from './structure';
 import { extractPalette } from './palette';
 import type {
@@ -11,7 +11,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 3;
+export const ANALYZER_VERSION = 4;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -32,10 +32,16 @@ export async function analyzeBlob(blob: Blob): Promise<AnalysisResult> {
     // One flood fill answers both passes. Running it twice — once for the
     // radius, once for the inventory — doubled the time to catalogue a 2560px
     // screenshot for no extra information.
-    const blocks = findBlocks(
-      fine.data, fine.width, fine.height,
-      Math.max(8, Math.round(64 / fine.scale)),
-      10,
+    const maxRadius = Math.max(8, Math.round(64 / fine.scale));
+    // Two floods. The first finds elements with flat fills; the second follows
+    // local continuity instead of the seed colour, which is what keeps a ramped
+    // element in one piece rather than in stripes. The second runs on a coarser
+    // sample: a ramp is large and smooth, and at native resolution that flood
+    // cost more than the rest of the analyzer together.
+    const flat = findBlocks(fine.data, fine.width, fine.height, maxRadius, 10);
+    const broad = sampleDetail(bitmap, 1_000_000);
+    const blocks = findGradientBlocks(
+      broad.data, broad.width, broad.height, maxRadius, flat, broad.scale / fine.scale,
     );
     const detail = measureDetail(fine, blocks);
     const structure = measureStructure(fine, blocks);
@@ -234,6 +240,7 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
  */
 function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
   const s = auto.structure;
+  const e = auto.detail?.edges ?? null;
   const frame = s?.frame ?? null;
   const accent = auto.palette.find((c) => c.role === 'accent')?.hex ?? '';
   const border = auto.detail?.border?.hex ?? auto.palette.find((c) => c.role === 'border')?.hex ?? '';
@@ -266,11 +273,32 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
       `single column below 768px.`
     : '';
 
-  const gradients = s?.gradient
-    ? `A ${s.gradient.axis} ramp across the page from ${s.gradient.from} to ${s.gradient.to}, ` +
-      `holding across ${Math.round(s.gradient.coverage * 100)}% of the scan lines`
+  /*
+     Two different questions, and the field used to answer only the first: does
+     the PAGE ramp, and does any ELEMENT ramp. A page of flat colour carrying a
+     gradient button reported "no gradient measured", which is how a button
+     came back flat.
+  */
+  const pageRamp = s?.gradient
+    ? `The page carries a ${s.gradient.axis} ramp from ${s.gradient.from} to ` +
+      `${s.gradient.to}, holding across ${Math.round(s.gradient.coverage * 100)}% of the scan lines.`
+    : null;
+  const elementRamp =
+    e && e.withGradient && e.gradient
+      ? `${e.withGradient} of the ${e.blocks} blocks measured are filled with a ramp rather ` +
+        `than a flat colour — the strongest a ${e.gradient.axis} one from ${e.gradient.from} ` +
+        `to ${e.gradient.to}, travelling ${e.gradient.span}/255` +
+        (e.blocks - e.withGradient > 0
+          ? `. The other ${e.blocks - e.withGradient} are flat fills — do not put a ramp on them.`
+          : ' — every one of them ramps.')
+      : e
+        ? `All ${e.blocks} measured blocks are flat fills.`
+        : null;
+
+  const gradients = pageRamp || elementRamp
+    ? [pageRamp, elementRamp].filter(Boolean).join(' ')
     : s
-      ? 'No gradient measured — fills are flat colour'
+      ? 'None. Neither the page nor any element ramps; every fill is flat colour.'
       : '';
 
   const imagery = s?.imagery
