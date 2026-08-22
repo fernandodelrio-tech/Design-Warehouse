@@ -221,7 +221,19 @@ function unrecorded(record: DesignRecord): string[] {
   if (!has(layout.maxWidth) && !has(layout.gutter) && !has(layout.breakpoints)) {
     gaps.push('max width, gutter and breakpoints');
   }
-  if (!Object.values(effects).some(has)) gaps.push('shadows, gradients, blur, motion or imagery');
+  const missingEffects = (
+    [
+      ['shadows', 'elevation'],
+      ['gradients', 'gradients'],
+      ['blur', 'blur / glass'],
+      ['animation', 'motion'],
+      ['iconography', 'iconography'],
+      ['imagery', 'imagery'],
+    ] as const
+  )
+    .filter(([key]) => !has(effects[key]))
+    .map(([, label]) => label);
+  if (missingEffects.length) gaps.push(missingEffects.join(', '));
   if (components.length === 0) gaps.push('a component inventory');
   if (!has(interactions)) gaps.push('interaction notes');
   return gaps;
@@ -258,17 +270,22 @@ export function toClaudePrompt(record: DesignRecord, target = ''): string {
     '',
     '- **Restyle, do not re-architect.** Keep the structure, components and behaviour the',
     '  target already has. You are changing how it looks, not what it is or what it does.',
-    '- **Honour what the spec carries, exactly.** Two kinds of thing are in it and both',
-    '  bind. The colours, the contrast ratios and the layout figures are measured off the',
-    '  pixels. Anything under Typography, Corner radius, Borders, Effects or Components',
-    '  was recorded by hand. Neither is a suggestion; a section simply missing means it',
-    '  was never recorded, not that the design has none of it.',
+    '- **Honour what the spec carries, exactly.** Most of it is measured off the pixels —',
+    '  the colours, the contrast ratios, the radius, the hairlines, the type sizes, the',
+    '  content width and gutter, the component sizes. Take those as given. A few entries',
+    '  say "Convention, not measured" in the text: breakpoints, motion, blur and hover',
+    '  states, which a single still frame at a single width cannot show. Those are',
+    '  defaults chosen to suit the measurements around them — follow them unless the',
+    '  target already has its own, in which case keep the target\'s and say so. Nothing',
+    '  here is a suggestion, and a section simply missing means it was never recorded,',
+    '  not that the design has none of it.',
     '- **Map onto what is already there.** If the target has its own tokens, theme or',
     '  variables, redefine those rather than bolting a second system alongside them.',
     '- **Where the spec is silent, choose** something consistent with the style keywords,',
     '  and say what you chose.',
-    '- **Derive rather than invent.** A working interface needs what a screenshot never',
-    '  had — hover, focus and disabled states, error styling, a second theme. Build those',
+    '- **Derive rather than invent.** A working interface needs more than a screenshot',
+    '  ever held. Hover, focus and disabled are set out under Behaviour; for anything',
+    '  beyond them — error and success styling, a second theme, an empty state — build it',
     '  by mixing the measured colours toward the darkest or lightest of them, and say what',
     '  you derived and what it measures.',
     '- **Check contrast before spending a colour.** The ratios below include any that fail.',
@@ -290,17 +307,20 @@ export function toClaudePrompt(record: DesignRecord, target = ''): string {
 function gapLines(record: DesignRecord): string[] {
   const gaps = unrecorded(record);
   if (gaps.length === 0) return [];
+  const one = gaps.length === 1;
   return [
     '',
     '## What this one does not carry',
     '',
-    'Nothing was recorded for:',
+    one ? 'Nothing was recorded for one thing:' : 'Nothing was recorded for:',
     '',
     ...gaps.map((gap) => `- ${gap}`),
     '',
-    'Those are fields somebody fills in, not things the app measures. Their absence says',
-    'this design was never annotated — it is not a claim that the design lacks them.',
-    'Choose what suits the style keywords, and say what you chose.',
+    one
+      ? 'That is a field somebody fills in, not something the app measures. Its absence is'
+      : 'Those are fields somebody fills in, not things the app measures. Their absence is',
+    'not a claim that the design lacks it — nothing read it. Choose what suits the style',
+    'keywords, and say what you chose.',
   ];
 }
 

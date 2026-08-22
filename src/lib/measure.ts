@@ -155,10 +155,39 @@ function measureBorders(d: Uint8ClampedArray, w: number, h: number, maxWidth: nu
  */
 const DIAGONAL_TO_RADIUS = 1 / (1 - Math.SQRT1_2);
 
-function measureRadius(d: Uint8ClampedArray, w: number, h: number, maxRadius: number) {
+/**
+ * Every solid rectangular block on the page, with its corner radius.
+ *
+ * One flood fill answers several questions at once — what the radius is, what
+ * blocks repeat, how wide the content sits — so it runs once here and the
+ * callers read what they need off the result.
+ */
+export interface Block {
+  /** In sample pixels, top-left origin. */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  area: number;
+  hex: string;
+  colour: [number, number, number];
+  /** Corner radius in sample pixels, or null where no corner was readable. */
+  radius: number | null;
+  /** The individual corners behind that median, for the page-wide statistic. */
+  corners: number[];
+  /** How much of the bounding box the block itself fills, 0..1. */
+  fill: number;
+}
+
+export function findBlocks(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  maxRadius: number,
+  minSide = 24,
+): Block[] {
   const seen = new Uint8Array(w * h);
-  const radii: number[] = [];
-  const minSide = 24;
+  const blocks: Block[] = [];
   const minArea = minSide * minSide;
   const stack = new Int32Array(w * h);
 
@@ -234,8 +263,10 @@ function measureRadius(d: Uint8ClampedArray, w: number, h: number, maxRadius: nu
         covered(minX, minY, maxY, false),
         covered(maxX, minY, maxY, false),
       ];
-      if (edges.some((c) => c < 0.75)) continue;
+      const container = edges.every((c) => c >= 0.75);
+
       const limit = Math.min(maxRadius, Math.floor(Math.min(bw, bh) / 2));
+      const corners: number[] = [];
       for (const [cx, cy, dx, dy] of [
         [minX, minY, 1, 1],
         [maxX, minY, -1, 1],
@@ -245,11 +276,53 @@ function measureRadius(d: Uint8ClampedArray, w: number, h: number, maxRadius: nu
         let k = 0;
         while (k <= limit && !inside.has((cy + dy * k) * w + (cx + dx * k))) k++;
         if (k > limit) continue;
-        radii.push(k * DIAGONAL_TO_RADIUS);
+        corners.push(k * DIAGONAL_TO_RADIUS);
       }
+
+      /*
+         Two shapes have to get through, and one test cannot pass both.
+
+         A container — a card, a bar — carries content that punches holes in it,
+         so it is judged on its own edges, which stay solid. That works because
+         its radius is small next to its sides.
+
+         A control — a button, a pill, an avatar — has no content inside but is
+         rounded hard enough that the edge test is meaningless: on a fully
+         rounded pill the short edges are a single tangent pixel, so they score
+         near zero however perfect the shape. It is judged instead on area,
+         against what a rounded rectangle of the measured radius should have:
+         bw·bh − (4 − π)r². Nothing else lands that close.
+
+         Between them they also drop what neither is: a card's border ring
+         scores solid edges but only a few percent of the area it claims, so it
+         no longer counts as a second card sitting on the first.
+      */
+      const r = corners.length === 4 ? median(corners) : 0;
+      const predicted = bw * bh - (4 - Math.PI) * r * r;
+      const control = corners.length === 4 && Math.abs(area - predicted) <= bw * bh * 0.1;
+      if (!container && !control) continue;
+
+      blocks.push({
+        x: minX,
+        y: minY,
+        w: bw,
+        h: bh,
+        area,
+        hex: hex(colour),
+        colour,
+        radius: corners.length ? median(corners) : null,
+        corners,
+        fill: area / (bw * bh),
+      });
     }
   }
+  return blocks;
+}
 
+function measureRadius(blocks: Block[]) {
+  // Anything under 24px is a control or a glyph-sized shape, whose corner is
+  // most of its short side; the page radius is what the containers agree on.
+  const radii = blocks.filter((b) => b.w >= 24 && b.h >= 24).flatMap((b) => b.corners);
   if (radii.length < 4) return null;
   return { radius: median(radii), samples: radii.length };
 }
@@ -409,17 +482,15 @@ function cluster(values: number[], scale: number): Array<{ px: number; rows: num
     .filter((v, i, a) => a.findIndex((o) => o.px === v.px) === i);
 }
 
-export function measureDetail(sample: {
-  data: Uint8ClampedArray;
-  width: number;
-  height: number;
-  scale: number;
-}): DetailMeasurement {
+export function measureDetail(
+  sample: { data: Uint8ClampedArray; width: number; height: number; scale: number },
+  blocks: Block[],
+): DetailMeasurement {
   const { data, width: w, height: h, scale } = sample;
   const px = (n: number) => Math.round(n * scale);
 
   const border = measureBorders(data, w, h, Math.max(4, Math.round(6 / scale)));
-  const corner = measureRadius(data, w, h, Math.max(8, Math.round(64 / scale)));
+  const corner = measureRadius(blocks);
   const shadow = measureShadow(data, w, h);
   const text = measureTextRows(data, w, h);
 

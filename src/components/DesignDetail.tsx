@@ -61,9 +61,9 @@ export function DesignDetail({
   const [recent] = useState(recentTargets);
   const draftRef = useRef(draft);
   draftRef.current = draft;
-  // Catalogued before the analyzer measured radius, borders, elevation and type
-  // sizes: those fields are blank and stay out of the exported prompt until the
-  // pixels are read again.
+  // Catalogued by an older analyzer, so whatever it did not know how to measure
+  // is still blank — and a blank field is one the exported prompt leaves out.
+  // Only re-reading the pixels fills it.
   const stale = draft.auto.version < ANALYZER_VERSION;
   // Tracks whether the user has actually changed something, so closing an
   // untouched drawer never writes a pointless revision to the database.
@@ -273,7 +273,7 @@ export function DesignDetail({
                 className={stale ? 'btn btn-primary' : 'btn'}
                 title={
                   stale
-                    ? 'Catalogued by an older analyzer. Re-run it to measure the corner radius, hairlines, elevation and type sizes this design is missing.'
+                    ? 'Catalogued by an older analyzer. Re-run it to measure what this design is still missing — the exported prompt leaves out every blank field.'
                     : 'Run the analyzer again over the pixels'
                 }
                 onClick={() => onReanalyze(draft.id)}
@@ -754,9 +754,11 @@ export function DesignDetail({
                     <>
                       <br />
                       <span className="apply-hint">
-                        Older than v{ANALYZER_VERSION}, so the radius, borders, elevation and type
-                        sizes were never measured and the exported prompt leaves them out.
-                        Re-analyze fills them in.
+                        Older than v{ANALYZER_VERSION}. Whatever this analyzer measures and that
+                        one did not — radius, hairlines, elevation, type sizes, content width,
+                        gutters, gradients, imagery, the component inventory — is still blank
+                        here, and the exported prompt leaves blank fields out. Re-analyze fills
+                        them in without touching anything you have edited.
                       </span>
                     </>
                   ) : null}

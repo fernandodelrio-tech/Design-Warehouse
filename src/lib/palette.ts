@@ -169,7 +169,16 @@ function assignRoles(
     if (taken.has(i)) return;
     const [, sat, light] = s.hsl;
     if (sat < 22 || light < 8 || light > 95) return;
-    const score = (sat / 100) * Math.sqrt(s.share) * (1 - Math.abs(light - 55) / 100);
+    /*
+       Saturation squared against a fourth root of area, because an accent is
+       defined by being the most chromatic thing on the page and not by being
+       a large one. Weighted the other way round — saturation linear, area by
+       its square root — a 20%-area beige wash at 33% saturation outscored the
+       1%-area brand orange at 84%, and every prompt that design exported named
+       the wash as the accent, hover state and all.
+    */
+    const score =
+      (sat / 100) ** 2 * s.share ** 0.25 * (1 - Math.abs(light - 55) / 100);
     if (score > bestAccent) {
       bestAccent = score;
       accentIndex = i;

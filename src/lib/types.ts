@@ -86,6 +86,38 @@ export interface DetailMeasurement {
   } | null;
 }
 
+/** Structure measured off the same near-native sample: see lib/structure.ts. */
+export interface StructureMeasurement {
+  /** Content box and column gap, in source pixels. */
+  frame: {
+    contentWidth: number;
+    marginLeft: number;
+    marginRight: number;
+    gutter: number | null;
+    gutterSamples: number;
+  } | null;
+  /** A page-wide ramp, if there is one, with the colours at each end. */
+  gradient: {
+    axis: 'vertical' | 'horizontal';
+    from: string;
+    to: string;
+    coverage: number;
+    samples: number;
+  } | null;
+  /** Photographic coverage, 0 when the page is flat colour throughout. */
+  imagery: {
+    coverage: number;
+    box: { x: number; y: number; w: number; h: number } | null;
+    samples: number;
+  } | null;
+  /** Named patterns with their measured sizes, empty when nothing repeated. */
+  components: string[];
+  /** How many solid blocks the inventory was drawn from. */
+  blocks: number;
+  /** Small square shapes: the icon set. */
+  icons: { count: number; px: number } | null;
+}
+
 export interface AutoAnalysis {
   /** Bumped when the analyzer changes so stale records can be re-run. */
   version: number;
@@ -98,6 +130,8 @@ export interface AutoAnalysis {
   layout: LayoutEstimate;
   /** Absent on records analysed before the detail pass existed. */
   detail?: DetailMeasurement;
+  /** Absent on records analysed before the structure pass existed. */
+  structure?: StructureMeasurement;
 }
 
 export interface TypeStep {
