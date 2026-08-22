@@ -285,11 +285,15 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
     : null;
   const elementRamp =
     e && e.withGradient && e.gradient
-      ? `${e.withGradient} of the ${e.blocks} blocks measured are filled with a ramp rather ` +
-        `than a flat colour — the strongest a ${e.gradient.axis} one from ${e.gradient.from} ` +
-        `to ${e.gradient.to}, travelling ${e.gradient.span}/255` +
+      ? `${e.withGradient} of the ${e.blocks} blocks measured ` +
+        `${e.withGradient === 1 ? 'is' : 'are'} filled with a ramp rather than a flat colour — ` +
+        `the ${e.withGradient === 1 ? 'ramp is a' : 'strongest a'} ${e.gradient.axis} one ` +
+        `from ` +
+        `${e.gradient.from} to ${e.gradient.to}, travelling ${e.gradient.span}/255` +
         (e.blocks - e.withGradient > 0
-          ? `. The other ${e.blocks - e.withGradient} are flat fills — do not put a ramp on them.`
+          ? `. The other ${e.blocks - e.withGradient} ` +
+            `${e.blocks - e.withGradient === 1 ? 'is a flat fill' : 'are flat fills'} — do not ` +
+            'put a ramp on them.'
           : ' — every one of them ramps.')
       : e
         ? `All ${e.blocks} measured blocks are flat fills.`
