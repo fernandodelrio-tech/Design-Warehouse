@@ -159,48 +159,120 @@ function measureGradient(d: Uint8ClampedArray, w: number, h: number) {
 // --- photographs -------------------------------------------------------------
 
 /**
- * Photographic regions, told apart from UI by colour variety. A tile of
- * interface holds a handful of flat colours however busy it looks; a tile of
- * photograph holds dozens, because a lens does not produce flat fills.
+ * Photographic regions, told apart from UI by colour variety, and segmented
+ * into the separate pictures they actually are.
+ *
+ * A tile of interface holds a handful of flat colours however busy it looks; a
+ * tile of photograph holds dozens, because a lens does not produce flat fills.
+ * That part worked. What did not was the reporting: every photographic tile on
+ * the page went into ONE bounding box, so three 360x240 pictures in a row came
+ * back as "a 1224x240px region" — a shape that exists nowhere on the page, and
+ * one a reader would rebuild as a single wide banner.
+ *
+ * The tiles are joined into connected regions now, so the count, the size and
+ * the aspect ratio are of a picture rather than of their union. Whether they
+ * are in colour is measured too, because a page of greyscale photography is a
+ * different design from the same page in colour and neither the palette nor
+ * the coverage says which it is.
  */
 function measureImagery(d: Uint8ClampedArray, w: number, h: number, scale: number) {
   const tile = 24;
+  const cols = Math.floor(w / tile);
+  const rows = Math.floor(h / tile);
+  if (cols < 2 || rows < 2) return null;
+  const mask = new Uint8Array(cols * rows);
   let photographic = 0;
-  let total = 0;
-  let minX = w, maxX = 0, minY = h, maxY = 0;
-  for (let ty = 0; ty + tile <= h; ty += tile) {
-    for (let tx = 0; tx + tile <= w; tx += tile) {
-      total++;
+  let chroma = 0;
+  let chromaSamples = 0;
+
+  for (let ty = 0; ty < rows; ty++) {
+    for (let tx = 0; tx < cols; tx++) {
       const seen = new Set<number>();
-      for (let y = ty; y < ty + tile; y += 2) {
-        for (let x = tx; x + 1 < tx + tile; x += 2) {
+      const tones = new Set<number>();
+      let spread = 0;
+      let n = 0;
+      for (let y = ty * tile; y < ty * tile + tile; y += 2) {
+        for (let x = tx * tile; x + 1 < tx * tile + tile; x += 2) {
           const p = (y * w + x) * 4;
           // 5 bits per channel: finer than this and antialiasing alone counts
           // as variety, coarser and a photograph collapses to a few buckets.
           seen.add(((d[p] >> 3) << 10) | ((d[p + 1] >> 3) << 5) | (d[p + 2] >> 3));
+          tones.add(Math.round(luma(d[p], d[p + 1], d[p + 2])) >> 2);
+          spread += Math.max(d[p], d[p + 1], d[p + 2]) - Math.min(d[p], d[p + 1], d[p + 2]);
+          n++;
         }
       }
-      if (seen.size >= 48) {
+      /*
+         Two tests, because one of them cannot see a greyscale photograph. The
+         colour key collapses when r, g and b are equal — a monochrome picture
+         has at most 32 of those buckets whatever is in it — so a row of
+         greyscale photographs came back as "no photographic regions". Where a
+         tile carries almost no chroma the variety is counted in TONES instead,
+         which is the only axis a monochrome image varies on.
+      */
+      const grey = n ? spread / n < 12 : false;
+      if (grey ? tones.size >= 34 : seen.size >= 48) {
+        mask[ty * cols + tx] = 1;
         photographic++;
-        if (tx < minX) minX = tx;
-        if (tx + tile > maxX) maxX = tx + tile;
-        if (ty < minY) minY = ty;
-        if (ty + tile > maxY) maxY = ty + tile;
+        if (n) {
+          chroma += spread / n;
+          chromaSamples++;
+        }
       }
     }
   }
-  if (!total) return null;
-  const coverage = photographic / total;
-  if (coverage < 0.02) return { coverage: 0, box: null, samples: total };
+
+  const total = cols * rows;
+  if (!photographic) return { coverage: 0, regions: [], colour: true, samples: total };
+
+  // Connected components over the tile mask: one per picture.
+  const seenTile = new Uint8Array(cols * rows);
+  const regions: Array<{ x: number; y: number; w: number; h: number }> = [];
+  const stack: number[] = [];
+  for (let i = 0; i < mask.length; i++) {
+    if (!mask[i] || seenTile[i]) continue;
+    stack.length = 0;
+    stack.push(i);
+    seenTile[i] = 1;
+    let minX = cols, maxX = 0, minY = rows, maxY = 0, area = 0;
+    while (stack.length) {
+      const p = stack.pop()!;
+      const py = (p / cols) | 0;
+      const px = p - py * cols;
+      area++;
+      if (px < minX) minX = px;
+      if (px > maxX) maxX = px;
+      if (py < minY) minY = py;
+      if (py > maxY) maxY = py;
+      const around = [
+        px > 0 ? p - 1 : -1,
+        px < cols - 1 ? p + 1 : -1,
+        py > 0 ? p - cols : -1,
+        py < rows - 1 ? p + cols : -1,
+      ];
+      for (const q of around) {
+        if (q < 0 || seenTile[q] || !mask[q]) continue;
+        seenTile[q] = 1;
+        stack.push(q);
+      }
+    }
+    // One stray tile is a busy patch of interface, not a picture.
+    if (area < 2) continue;
+    regions.push({
+      x: Math.round(minX * tile * scale),
+      y: Math.round(minY * tile * scale),
+      w: Math.round((maxX - minX + 1) * tile * scale),
+      h: Math.round((maxY - minY + 1) * tile * scale),
+    });
+  }
+
   return {
-    coverage: Math.round(coverage * 100) / 100,
-    box: {
-      x: Math.round(minX * scale),
-      y: Math.round(minY * scale),
-      w: Math.round((maxX - minX) * scale),
-      h: Math.round((maxY - minY) * scale),
-    },
-    samples: photographic,
+    coverage: Math.round((photographic / total) * 100) / 100,
+    regions: regions.sort((a, b) => b.w * b.h - a.w * a.h),
+    // Chroma near zero across the photographic tiles means the pictures are
+    // greyscale, which is a design decision and not a palette one.
+    colour: chromaSamples ? chroma / chromaSamples >= 12 : true,
+    samples: total,
   };
 }
 
@@ -278,6 +350,76 @@ function measureTexture(d: Uint8ClampedArray, w: number, h: number) {
 
 // --- what repeats ------------------------------------------------------------
 
+/**
+ * The inset from a block's edge to the first thing drawn on it.
+ *
+ * Padding was never measured, so a card reported its size and its fill and
+ * nothing about how its content sits inside — which is half of what makes a
+ * component look like itself. It is a straightforward walk: step inward from
+ * each edge until the colour stops being the block's own.
+ */
+function paddingOf(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  b: Block,
+): { top: number | null; right: number | null; bottom: number | null; left: number | null } {
+  const same = (x: number, y: number) => {
+    if (x < 0 || x >= w || y < 0 || y >= h) return false;
+    const p = (y * w + x) * 4;
+    const dr = d[p] - b.colour[0];
+    const dg = d[p + 1] - b.colour[1];
+    const db = d[p + 2] - b.colour[2];
+    return dr * dr + dg * dg + db * db <= 26 * 26 * 3;
+  };
+  /*
+     Along a line of samples, not down one column: a column through the middle
+     of a card may run through a gap between two words and report the padding
+     as half the card. The distance wanted is the SMALLEST inset any of the
+     samples finds, which is where the content actually begins.
+  */
+  /*
+     A rule around the block stops the walk at the rule, so a bordered card
+     reported its 2px border as its padding and dragged the group's figure down
+     with it. The border is part of the edge, not of the space inside it, so
+     the walk starts beyond it — with a pixel for the antialiasing.
+  */
+  const inset = b.edge?.border ? Math.round(b.edge.border.px) + 1 : 0;
+  const walk = (along: number, at: (o: number, k: number) => [number, number]) => {
+    const limit = Math.min(Math.floor(Math.min(b.w, b.h) / 2), 160);
+    let best = limit + 1;
+    const count = Math.min(24, Math.max(4, Math.floor(along / 12)));
+    // The corners are rounded away from the block's own colour, so a sample
+    // taken at one breaks on the first pixel and reports no padding at all.
+    const margin = Math.round(along * 0.1);
+    const span = along - 1 - margin * 2;
+    if (span <= 0 || inset >= limit) return null;
+    for (let i = 0; i < count; i++) {
+      const o = margin + Math.round((i * span) / Math.max(1, count - 1));
+      let k = inset;
+      while (k < limit) {
+        const [x, y] = at(o, k);
+        if (!same(x, y)) break;
+        k++;
+      }
+      if (k < limit && k < best) best = k;
+    }
+    return best > limit ? null : best;
+  };
+  /*
+     Each side stands alone. A card whose content sits at the top has nothing
+     within reach of its bottom edge, and requiring all four to answer threw
+     away the three that had — every card in a test scene reported no padding
+     at all because its text stopped two thirds of the way down.
+  */
+  return {
+    top: walk(b.w, (o, k) => [b.x + o, b.y + k]),
+    bottom: walk(b.w, (o, k) => [b.x + o, b.y + b.h - 1 - k]),
+    left: walk(b.h, (o, k) => [b.x + k, b.y + o]),
+    right: walk(b.h, (o, k) => [b.x + b.w - 1 - k, b.y + o]),
+  };
+}
+
 /** Blocks of near-identical size, which is what makes a grid a grid. */
 function repeats(blocks: Block[], tolerance = 0.12) {
   const groups: Block[][] = [];
@@ -302,7 +444,13 @@ function repeats(blocks: Block[], tolerance = 0.12) {
  * of anything. Each entry carries the count and the measured size, so the
  * reader can see what it was built from rather than trusting the noun.
  */
-function measureComponents(blocks: Block[], w: number, h: number, scale: number) {
+function measureComponents(
+  d: Uint8ClampedArray,
+  blocks: Block[],
+  w: number,
+  h: number,
+  scale: number,
+) {
   const px = (n: number) => Math.round(n * scale);
   /*
      Every entry says how it is edged, including when the answer is "not at
@@ -328,6 +476,69 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
         : `a ${g.axis} ramp from ${g.from} to ${g.to}`;
     if (ramped.length === all.length) return ramp;
     return `${ramp} on ${ramped.length} of ${all.length}, flat ${all.find((b) => !b.gradient)!.hex} on the rest`;
+  };
+
+  /*
+     What a repeated group is spaced like: the inset from its own edge to its
+     content, and the distance from one of them to the next. Neither was
+     reported, so a card grid gave its size and its colour and said nothing
+     about the two figures somebody rebuilding it would have to invent.
+  */
+  const spacingOf = (group: Block[]): string => {
+    const bits: string[] = [];
+    /*
+       A ramp drifts away from its seed colour within a pixel or two of the
+       edge, so the inward walk stops immediately and calls that drift the
+       start of the content: gradient-filled cards reported ~0px padding when
+       there was nothing there to read. They cannot answer this question, and a
+       zero from any block means the walk broke on the block's own edge rather
+       than on anything inside it.
+    */
+    const pads = group.filter((b) => !b.gradient).map((b) => paddingOf(d, w, h, b));
+    const sides = ['top', 'right', 'bottom', 'left'] as const;
+    const measured = sides
+      .map((k) => {
+        const values = pads.map((p) => p[k]).filter((v): v is number => v !== null && v > 0);
+        return values.length ? Math.round(median(values) * scale) : null;
+      });
+    const known = measured.filter((v): v is number => v !== null);
+    if (known.length) {
+      /*
+         The tightest edge is the padding; the others are where the content
+         happens to stop. Ragged text leaves a hundred pixels of clearance on
+         the right of a card that is padded by twenty-eight, and reporting that
+         as "73px right padding" is reporting the paragraph's rag as a design
+         decision. So the minimum is the figure, and a wide spread is called
+         what it is.
+      */
+      const tight = Math.min(...known);
+      const loose = Math.max(...known);
+      bits.push(
+        loose > tight * 2
+          ? `~${tight}px padding at its tightest edge (content stops up to ${loose}px short of ` +
+            'another, which is its own rag rather than more padding)'
+          : `~${tight}px padding`,
+      );
+    }
+    if (group.length >= 2) {
+      const byX = group.slice().sort((a, b) => a.x - b.x);
+      const byY = group.slice().sort((a, b) => a.y - b.y);
+      const xGaps: number[] = [];
+      const yGaps: number[] = [];
+      for (let i = 1; i < byX.length; i++) {
+        const gap = byX[i].x - (byX[i - 1].x + byX[i - 1].w);
+        if (gap > 0 && gap < w * 0.4) xGaps.push(gap);
+      }
+      for (let i = 1; i < byY.length; i++) {
+        const gap = byY[i].y - (byY[i - 1].y + byY[i - 1].h);
+        if (gap > 0 && gap < h * 0.4) yGaps.push(gap);
+      }
+      if (xGaps.length) bits.push(`~${Math.round(median(xGaps) * scale)}px apart across`);
+      if (yGaps.length) bits.push(`~${Math.round(median(yGaps) * scale)}px apart down`);
+    }
+    const ratio = group[0].w / group[0].h;
+    if (Math.abs(ratio - 1) > 0.06) bits.push(`${Math.round(ratio * 100) / 100}:1`);
+    return bits.length ? `, ${bits.join(', ')}` : '';
   };
 
   const edging = (group: Block | Block[]): string => {
@@ -414,6 +625,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
       `card grid — ${cards.length} blocks of ~${px(cards[0].w)}×${px(cards[0].h)}px` +
         (columns > 1 ? ` across ${columns} columns` : ' stacked') +
         ` in ${fillOf(cards)}` +
+        spacingOf(cards) +
         edging(cards),
     );
   }
@@ -423,6 +635,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
     claim(rows);
     found.push(
       `data table / list — ${rows.length} rows of ~${px(rows[0].h)}px in ${fillOf(rows)}` +
+        spacingOf(rows) +
         edging(rows),
     );
   }
@@ -454,6 +667,7 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
         : `~${px(buttons[0].radius ?? 0)}px corners`;
     found.push(
       `button — ${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${fillOf(buttons[0])}` +
+        spacingOf(buttons) +
         edging(buttons) +
         (buttons.length > 1 ? ` (${buttons.length} of them)` : ''),
     );
@@ -475,15 +689,67 @@ function measureComponents(blocks: Block[], w: number, h: number, scale: number)
   return { found, samples: pool.length };
 }
 
-/** Small compact shapes: the icon set, sized. */
+/**
+ * Small compact shapes: the icon set, sized, and drawn at what weight.
+ *
+ * The stroke is the same measurement the type pass makes for a stem — the
+ * commonest run of ink along a scan line through the shape — because an icon's
+ * stroke and a letter's stem are the same thing. It was not being read, so the
+ * export told its reader to match the stroke "to the body text weight", which
+ * is a convention standing in for a number that was there to be measured.
+ */
 function measureIcons(blocks: Block[], scale: number) {
   const icons = blocks.filter(
     (b) => Math.abs(b.w - b.h) <= Math.max(4, b.w * 0.3) && b.w >= 10 && b.w <= 48,
   );
   if (icons.length < 3) return null;
+
+  /*
+     An outlined icon reaches the flood as TWO regions: the ink of the ring,
+     whose bounding box is the icon's outer edge, and the page-coloured hole it
+     encloses, whose box is the inner edge. Half the difference between them is
+     the stroke, and it is the only reading here that is actually a
+     measurement. Scanning ink runs inside the ring — the first attempt — found
+     only the antialiasing and reported 1px against a painted 5px stroke,
+     because the hole itself is wider than the half-width cutoff and every
+     genuine run is thrown away.
+  */
+  const widths: number[] = [];
+  for (const ring of icons) {
+    if (ring.fill >= 0.75) continue; // solid, so there is no stroke to read
+    for (const hole of blocks) {
+      const left = hole.x - ring.x;
+      const top = hole.y - ring.y;
+      const right = ring.x + ring.w - (hole.x + hole.w);
+      const bottom = ring.y + ring.h - (hole.y + hole.h);
+      if (left < 1 || top < 1 || right < 1 || bottom < 1) continue;
+      // Centred inside it, or it is a neighbour that merely overlaps.
+      if (Math.abs(left - right) > 2 || Math.abs(top - bottom) > 2) continue;
+      const [dr, dg, db] = [0, 1, 2].map((i) => ring.colour[i] - hole.colour[i]);
+      if (dr * dr + dg * dg + db * db < 40 * 40 * 3) continue;
+      widths.push((left + right + top + bottom) / 4);
+      break;
+    }
+  }
+
+  /*
+     Reported only where the shapes agree. The square-ish filter above is right
+     for counting things that might be icons, but it also takes in glyph
+     clusters, and an 'o' is a ring with a hole in it too. A stroke that is
+     several times wrong some of the time is worse than saying nothing, so it
+     needs three shapes drawn alike and a clear majority at the same width.
+  */
+  const commonest = widths.length >= 3 ? modal(widths, 0) : null;
+  const agreed =
+    commonest !== null &&
+    widths.filter((v) => Math.abs(v - commonest) <= 1).length / widths.length >= 0.6
+      ? commonest
+      : null;
+
   return {
     count: icons.length,
     px: Math.round(median(icons.map((b) => b.w)) * scale),
+    stroke: agreed === null ? null : Math.round(agreed * scale * 10) / 10,
   };
 }
 
@@ -492,7 +758,7 @@ export function measureStructure(
   blocks: Block[],
 ): StructureMeasurement {
   const { data, width: w, height: h, scale } = sample;
-  const components = measureComponents(blocks, w, h, scale);
+  const components = measureComponents(data, blocks, w, h, scale);
   const texture = measureTexture(data, w, h);
   return {
     frame: measureFrame(data, w, h, scale),

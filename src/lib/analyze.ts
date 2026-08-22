@@ -424,19 +424,40 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
 
   const imagery = s
     ? [
-        s.imagery && s.imagery.coverage > 0 && s.imagery.box
-          ? `Photographic content over ~${Math.round(s.imagery.coverage * 100)}% of the canvas, ` +
-            `concentrated in a ${s.imagery.box.w}×${s.imagery.box.h}px region at ` +
-            `${s.imagery.box.x},${s.imagery.box.y}.`
+        s.imagery && s.imagery.coverage > 0 && s.imagery.regions.length
+          ? (() => {
+              const r = s.imagery.regions;
+              const first = r[0];
+              const ratio = Math.round((first.w / first.h) * 100) / 100;
+              const alike = r.every(
+                (x) => Math.abs(x.w - first.w) <= first.w * 0.2 && Math.abs(x.h - first.h) <= first.h * 0.2,
+              );
+              return (
+                `${r.length === 1 ? 'One photograph' : `${r.length} photographs`}, ` +
+                (alike
+                  ? `each about ${first.w}×${first.h}px (${ratio}:1)`
+                  : `the largest ${first.w}×${first.h}px (${ratio}:1), the rest smaller`) +
+                `, over ~${Math.round(s.imagery.coverage * 100)}% of the canvas. ` +
+                (s.imagery.colour
+                  ? 'In colour.'
+                  : 'Greyscale — the pictures carry almost no chroma, which is a treatment and ' +
+                    'not something the palette says.')
+              );
+            })()
           : 'No photographic regions — the page is flat colour and type throughout.',
         ...texture,
       ].join(' ')
     : '';
 
   const iconography = s?.icons
-    ? `${s.icons.count} small square shapes at ~${s.icons.px}px. Convention for what the ` +
-      `bitmap cannot show: line icons at that size on a 24px grid, stroke matched to the ` +
-      `body text weight, corners following the ${radius || 'page'} radius.`
+    ? `${s.icons.count} square-ish regions at ~${s.icons.px}px — a count of shapes that could ` +
+      'be icons, which may take in a cluster of glyphs as well' +
+      (s.icons.stroke
+        ? `, drawn at a ~${s.icons.stroke}px stroke — measured, not assumed. `
+        : ', drawn at a stroke the shapes did not agree on, so treat the weight below as a ' +
+          'convention rather than a reading. ') +
+      `Convention for what the bitmap cannot show: line icons at that size on a 24px grid, ` +
+      `corners following the ${radius || 'page'} radius.`
     : s
       ? 'No icon-sized shapes measured — the design carries its meaning in type and colour'
       : '';

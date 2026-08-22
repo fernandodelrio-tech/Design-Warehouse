@@ -132,18 +132,26 @@ export interface StructureMeasurement {
     coverage: number;
     samples: number;
   } | null;
-  /** Photographic coverage, 0 when the page is flat colour throughout. */
+  /**
+   * Photographic coverage, and each picture separately rather than the union
+   * of all of them, so a row of three reports as three.
+   */
   imagery: {
     coverage: number;
-    box: { x: number; y: number; w: number; h: number } | null;
+    regions: Array<{ x: number; y: number; w: number; h: number }>;
+    /** False when the photographic tiles carry almost no chroma. */
+    colour: boolean;
     samples: number;
   } | null;
   /** Named patterns with their measured sizes, empty when nothing repeated. */
   components: string[];
   /** How many solid blocks the inventory was drawn from. */
   blocks: number;
-  /** Small square shapes: the icon set. */
-  icons: { count: number; px: number } | null;
+  /**
+   * Small square shapes: the icon set, with the weight they are drawn at.
+   * `stroke` is null where the shapes do not agree on one — not zero.
+   */
+  icons: { count: number; px: number; stroke: number | null } | null;
   /** High-frequency noise laid over the fills, where there is any. */
   grain: { coverage: number; amplitude: number } | null;
 
