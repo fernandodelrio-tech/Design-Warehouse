@@ -4,6 +4,7 @@ import { ANALYZER_VERSION } from '../lib/analyze';
 import { readableOn } from '../lib/color';
 import { describeAspect, formatBytes } from '../lib/image';
 import { useOverlay } from '../lib/overlay';
+import { scrollerAbove, usePinchZoom } from '../lib/pinch';
 import {
   slugify,
   toClaudePrompt,
@@ -55,6 +56,13 @@ export function DesignDetail({
   const notify = useNotify();
   const url = useFullImageUrl(record.id);
   const [zoomed, setZoomed] = useState(false);
+  /*
+     Pinch and drag on the picture. The scroller it hands a one-finger drag
+     back to is whichever ancestor actually scrolls, found by looking rather
+     than by name: it is the overlay under a thumb and the preview pane with a
+     mouse, and naming one of them picks the wrong one half the time.
+  */
+  const pinch = usePinchZoom(scrollerAbove);
   const [draft, setDraft] = useState(record);
   // Remembered across designs and sessions: you usually restyle one project at
   // a time, so the field is nearly always already right.
@@ -157,8 +165,20 @@ export function DesignDetail({
               src={url}
               alt={draft.title}
               className={zoomed ? 'zoomed' : ''}
-              onClick={() => setZoomed((z) => !z)}
-              style={{ cursor: zoomed ? 'zoom-out' : 'zoom-in' }}
+              {...pinch.handlers}
+              onClick={() => {
+                // A mouse has no pinch; a click still steps in and out.
+                if (pinch.zoomed) pinch.reset();
+                else setZoomed((z) => !z);
+              }}
+              onDoubleClick={pinch.reset}
+              style={{
+                cursor: pinch.zoomed ? 'grab' : zoomed ? 'zoom-out' : 'zoom-in',
+                transform: pinch.zoomed
+                  ? `translate(${pinch.zoom.x}px, ${pinch.zoom.y}px) scale(${pinch.zoom.scale})`
+                  : undefined,
+                touchAction: 'none',
+              }}
             />
           ) : (
             <div style={{ color: 'var(--text-faint)' }}>Loading image…</div>

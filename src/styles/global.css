@@ -2086,6 +2086,12 @@ kbd {
     max-height: none;
   }
 
+  /* Pinched up to eight times its size, the picture has to be able to grow
+     out of the column it sits in rather than being cut off at the edge. */
+  .detail-preview {
+    overflow: clip visible;
+  }
+
   /* Bounded so a tall capture cannot push the spec a screen and a half down
      before it starts. The image scales rather than being cropped. */
   .detail-preview img {
@@ -2099,14 +2105,21 @@ kbd {
 /*
    And where there are two columns, the picture stays put while the spec runs
    past it — which is what the desktop does, and the thing the whole-dialog
-   scroll would otherwise have cost. Sticky needs no definite height from
-   anybody, so it does not reintroduce the assumption this arrangement exists
-   to avoid. `align-self: start` because a stretched grid item cannot stick.
+   scroll would otherwise have cost.
+
+   The PICTURE sticks, not the pane around it. Sticking the pane meant
+   shrinking it to its content, and a column that is only as tall as its
+   picture leaves its own ground behind halfway down the drawer: the reader
+   sees the panel colour give way to the page under it. The pane keeps its
+   full height and its full background; the image inside it holds its place.
 */
 @media (pointer: coarse) and (min-width: 761px) {
   .detail-preview {
+    align-self: stretch;
+  }
+
+  .detail-preview img {
     position: sticky;
     top: 0;
-    align-self: start;
   }
 }
