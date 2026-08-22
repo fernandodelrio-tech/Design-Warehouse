@@ -28,7 +28,15 @@ import {
 import { currentTarget, rememberTarget } from './lib/target';
 import { copyText, downloadBlob, downloadText, exportCatalog, importCatalog } from './lib/transfer';
 import type { DesignRecord } from './lib/types';
-import { connectionStatus, disconnect, lastSyncAt, readSettings, runSync } from './lib/sync';
+import {
+  NeedsSignInError,
+  connectionStatus,
+  disconnect,
+  lastSyncAt,
+  readSettings,
+  runSync,
+  warmUpAuth,
+} from './lib/sync';
 import { currentAccount, databaseFor } from './lib/accounts';
 import type { Account } from './lib/accounts';
 import { forgetCatalog, openCatalogFor } from './lib/session';
@@ -269,7 +277,14 @@ export default function App() {
       if (syncing) return;
       setSyncing(true);
       try {
-        const summary = await runSync();
+        // A quiet run is one nobody clicked, so it may not ask Google for
+        // access: that asking opens a popup, and a popup with no click behind
+        // it is blocked.
+        const summary = await runSync({ interactive: !quiet });
+        // A clicked sync renews the token, which is what background syncing
+        // was waiting for: without this the app stays paused until the next
+        // launch even though the access it needs is back in hand.
+        setConnected(true);
         setLastSummary(summary);
         // Anything pulled changed the database underneath us, so re-read it.
         if (summary.pulled > 0 || summary.deletedLocally > 0) {
@@ -290,7 +305,17 @@ export default function App() {
           notify(`${summary.failed.length} design(s) could not be synced.`, 'error');
         }
       } catch (error) {
-        if (!quiet) {
+        /*
+           A token lasts about an hour and cannot be renewed without a click, so
+           this is where background syncing stops until there is one. Saying so
+           through the connection state — rather than swallowing it, as a quiet
+           run swallows everything else — is what stops the app looking like it
+           is still syncing when it is not.
+        */
+        if (error instanceof NeedsSignInError) {
+          setConnected(false);
+          if (!quiet) notify(error.message, 'error');
+        } else if (!quiet) {
           notify(error instanceof Error ? error.message : 'Sync failed.', 'error');
         }
       } finally {
@@ -302,6 +327,9 @@ export default function App() {
 
   // Sync once on launch when a connection is already set up.
   useEffect(() => {
+    // Fetch Google's script now, so the click that needs it does not have to
+    // wait for the network and lose the right to open a popup while it waits.
+    warmUpAuth();
     void (async () => {
       const [status, settings] = await Promise.all([connectionStatus(), readSettings()]);
       setConnected(status.connected);
@@ -830,7 +858,9 @@ export default function App() {
               title={
                 connected
                   ? `Shared catalog${lastSync ? ` — last synced ${new Date(lastSync).toLocaleString()}` : ''}`
-                  : 'Share this catalog across devices'
+                  : account
+                    ? 'Signed in — press Sync now to renew Google access'
+                    : 'Share this catalog across devices'
               }
               onClick={() => setSyncOpen(true)}
             >

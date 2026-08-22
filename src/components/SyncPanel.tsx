@@ -41,10 +41,13 @@ export function SyncPanel({
   const [busy, setBusy] = useState(false);
   const [strayCount, setStrayCount] = useState(0);
 
+  // Re-read after every sync as well as at launch: a token lasts about an hour,
+  // and the panel saying "connected" while the token behind it has expired is
+  // how a paused sync goes unnoticed.
   useEffect(() => {
     void readSettings().then(setSettings);
     void connectionStatus().then((status) => setConnected(status.connected));
-  }, []);
+  }, [syncing, account]);
 
   // Designs catalogued before signing in sit in the signed-out catalog; offer
   // to bring them across rather than letting them look lost.
@@ -152,6 +155,7 @@ export function SyncPanel({
                 <>
                   <strong>{account.email || account.name}</strong>
                   {lastSync ? ` · last synced ${new Date(lastSync).toLocaleString()}` : ''}
+                  {connected ? '' : ' · Google access has expired — press Sync now to renew it'}
                 </>
               ) : (
                 'Not signed in'

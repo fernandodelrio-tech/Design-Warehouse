@@ -26,6 +26,39 @@ class MissingDriveScopeError extends Error {
   }
 }
 
+/**
+ * Google's token client asks for consent in a POPUP WINDOW, and a browser only
+ * opens one for a page that a person has just interacted with. Every failure to
+ * meet that rule arrives as the same unhelpful string — "Failed to open popup
+ * window" — which reads as a bug in the app rather than as a blocked window.
+ */
+class PopupBlockedError extends Error {
+  constructor() {
+    super(
+      'The browser blocked Google\u2019s sign-in window. Allow pop-ups for this site, then ' +
+        'press Sync now \u2014 Google can only ask for access from a window opened by a click.',
+    );
+    this.name = 'PopupBlockedError';
+  }
+}
+
+/**
+ * Raised instead of opening a popup that cannot be opened.
+ *
+ * Access tokens live for about an hour and are held in memory only; there is no
+ * refresh token to renew them with, because renewing one needs a client secret
+ * and there is no server here to keep it in. Renewal therefore means asking
+ * Google again, which means a popup, which means a click. A sync that no one
+ * clicked cannot have one, so it says so rather than firing a window the
+ * browser will block.
+ */
+export class NeedsSignInError extends Error {
+  constructor() {
+    super('Google access has expired. Press Sync now to renew it.');
+    this.name = 'NeedsSignInError';
+  }
+}
+
 function grantsDrive(granted: string | undefined): boolean {
   return (granted ?? '').split(/\s+/).includes(DRIVE_SCOPE);
 }
@@ -139,8 +172,29 @@ function loadIdentityServices(): Promise<GoogleIdentity> {
   return loading;
 }
 
+/**
+ * Fetches Google's script ahead of the click that needs it.
+ *
+ * Loading it inside the click is what broke: the script comes over the network,
+ * and by the time it arrives the browser no longer counts the page as one the
+ * person just interacted with, so the popup it then opens is blocked. Called at
+ * launch, the script is already there and the popup opens in the same breath as
+ * the click. Failure here is not worth reporting — the sign-in path reports it
+ * properly, and there may be nothing to sign in to.
+ */
+export function warmUpAuth(): void {
+  void readSettings().then((settings) => {
+    if (settings.webClientId) void loadIdentityServices().catch(() => undefined);
+  });
+}
+
 /** Browser tokens are short-lived and held in memory only. */
 let webToken: { value: string; expiresAt: number } | null = null;
+
+/** Whether a token is in hand, so a sync can run without asking for one. */
+export function hasFreshToken(): boolean {
+  return webToken !== null && webToken.expiresAt - 60_000 > Date.now();
+}
 
 function requestWebToken(clientId: string, prompt: string): Promise<string> {
   return loadIdentityServices().then(
@@ -165,7 +219,15 @@ function requestWebToken(clientId: string, prompt: string): Promise<string> {
             resolve(response.access_token);
           },
           error_callback: (error) =>
-            reject(new Error(error.message ?? 'Google sign-in was dismissed.')),
+            reject(
+              error.type === 'popup_failed_to_open'
+                ? new PopupBlockedError()
+                : new Error(
+                    error.type === 'popup_closed'
+                      ? 'Google\u2019s sign-in window was closed before access was granted.'
+                      : (error.message ?? 'Google sign-in was dismissed.'),
+                  ),
+            ),
         });
         client.requestAccessToken({ prompt });
       }),
@@ -211,7 +273,7 @@ export async function connectionStatus(): Promise<ConnectionStatus> {
   // though the account is still signed in. Identity and "has a usable token
   // right now" are different questions, and only the second gates syncing.
   return {
-    connected: webToken !== null && account !== null,
+    connected: hasFreshToken() && account !== null,
     needsSetup: !settings.webClientId,
     account,
   };
@@ -255,12 +317,18 @@ export async function disconnect(): Promise<void> {
  * A valid access token for Drive. Asks Google for a fresh one without
  * prompting, which works for as long as the Google session lasts.
  */
-export async function accessToken(): Promise<string> {
-  if (webToken && webToken.expiresAt - 60_000 > Date.now()) return webToken.value;
+export async function accessToken(interactive = true): Promise<string> {
+  if (hasFreshToken()) return webToken!.value;
+  if (!interactive) throw new NeedsSignInError();
 
   const account = currentAccount();
-  const settings = await readSettings();
-  const clientId = account?.clientId || settings.webClientId;
+  /*
+     Nothing is awaited before the popup where it can be helped. A browser
+     allows a popup only for a short window after a click, and every await
+     between the click and the request spends part of it; reading the settings
+     is only needed when there is no account to take the client ID from.
+  */
+  const clientId = account?.clientId || (await readSettings()).webClientId;
   if (!clientId) throw new Error('Not signed in to Google.');
   let token: string;
   try {

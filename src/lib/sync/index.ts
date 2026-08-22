@@ -20,6 +20,15 @@ async function folderId(): Promise<string> {
   return id;
 }
 
+export interface RunOptions extends SyncOptions {
+  /**
+   * Whether this run may ask Google for access. False for a sync no one
+   * clicked: it has no click to open a popup with, so it stops rather than
+   * firing a window the browser will block.
+   */
+  interactive?: boolean;
+}
+
 let running: Promise<SyncSummary> | null = null;
 
 /**
@@ -29,10 +38,19 @@ let running: Promise<SyncSummary> | null = null;
  * is still going would otherwise have both halves reading the same listing and
  * uploading the same records twice.
  */
-export async function runSync(options: SyncOptions = {}): Promise<SyncSummary> {
+export async function runSync(options: RunOptions = {}): Promise<SyncSummary> {
   if (running) return running;
 
   running = (async () => {
+    /*
+       The token is asked for FIRST, before the folder lookup and before any
+       Drive call, because asking for one opens a popup and a browser only
+       opens a popup for a page that was just clicked on. Asking for it where
+       Drive first needed it — after an IndexedDB read and a round trip — was
+       late enough that the click had stopped counting, and the sync failed
+       with Google's "Failed to open popup window" instead of syncing.
+    */
+    await accessToken(options.interactive ?? true);
     const store = createDriveStore(accessToken, await folderId());
     const summary = await syncWith(store, options);
     await writeMeta(LAST_SYNC_KEY, Date.now());
