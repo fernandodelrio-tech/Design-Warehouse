@@ -1,43 +1,41 @@
 /* Self-hosted so the catalog still works with the network switched off,
    and so nothing about opening the app is visible to a font CDN.
-   Latin subset, static instances, pulled from Google Fonts. */
+   Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
 
+/* Archivo, one heavy weight. Square shoulders, flat terminals and a wide set —
+   the letterform equivalent of a wall with an opening cut in it, which is what
+   this design is. Headings only; it is too assertive to run. */
 @font-face {
-  font-family: 'Young Serif';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/young-serif-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/hanken-grotesk-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('./fonts/hanken-grotesk-500.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Hanken Grotesk';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./fonts/hanken-grotesk-600.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Hanken Grotesk';
+  font-family: 'Archivo';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/hanken-grotesk-700.woff2') format('woff2');
+  src: url('./fonts/archivo-700.woff2') format('woff2');
+}
+
+/* Space Grotesk for everything else. Technical rather than warm, with the
+   clipped diagonals and open counters that stay legible at the 12px labels
+   this app is full of. */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/space-grotesk-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/space-grotesk-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/space-grotesk-700.woff2') format('woff2');
 }
