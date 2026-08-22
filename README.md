@@ -55,9 +55,9 @@ applied back to it. Its measurements drive the interface directly:
 | | |
 | --- | --- |
 | **Colour** | Eight measured tokens, exact — ground `#faf0e6`, panel `#ece4da`, ink `#171616`, slate `#a7c5d7`, fire `#e77843`, rule `#708188`, lime `#bff365`, umber `#47413c` |
-| **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between |
+| **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
 | **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale so both land on one grid |
-| **Corners** | Zero, everywhere |
+| **Corners** | Zero, everywhere — no radius in the stylesheet bypasses the token |
 | **Faces** | Fraunces for the wordmark and headings, Newsreader for anything you read, Archivo Narrow for every control and label |
 
 The accent measures **2.61:1** on the page ground, which fails at every size, so it is

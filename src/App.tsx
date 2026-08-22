@@ -929,7 +929,7 @@ export default function App() {
             </div>
           )}
 
-          <span style={{ marginLeft: 'auto', color: 'var(--text-faint)', fontSize: 12 }}>
+          <span style={{ marginLeft: 'auto', color: 'var(--text-faint)', fontSize: 'var(--t-label)' }}>
             {visible.length} shown
           </span>
           <button type="button" className="btn btn-ghost btn-danger" onClick={wipeCatalog}>

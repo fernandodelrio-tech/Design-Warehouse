@@ -126,14 +126,14 @@ export function SyncPanel({
       <div className="sync-panel">
         <header className="detail-head">
           <div className="detail-head-row">
-            <h2 style={{ flex: 1, margin: 0, fontSize: 17, letterSpacing: '-0.015em' }}>
+            <h2 style={{ flex: 1, margin: 0, fontSize: 'var(--t-lede)', letterSpacing: '-0.015em' }}>
               Shared catalog
             </h2>
             <button type="button" className="btn btn-ghost btn-icon" onClick={onClose} title="Close">
               <IconClose />
             </button>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '8px 0 0' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--t-small)', margin: '8px 0 0' }}>
             Keeps this catalog in step with a <strong>Design Warehouse</strong> folder in your
             own Google Drive, so every browser you sign in from shows the same designs. Where
             the same design was edited in two places, the most recent edit wins.
@@ -147,7 +147,7 @@ export function SyncPanel({
             ) : (
               <span className={`sync-dot${connected ? ' on' : ''}`} />
             )}
-            <span style={{ fontSize: 13, marginRight: 'auto' }}>
+            <span style={{ fontSize: 'var(--t-small)', marginRight: 'auto' }}>
               {account ? (
                 <>
                   <strong>{account.email || account.name}</strong>
@@ -216,7 +216,7 @@ export function SyncPanel({
 
         <div className="detail-body">
           <Section title="Setup" defaultOpen={!connected}>
-            <p style={{ color: 'var(--text-muted)', fontSize: 12.5, margin: 0 }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--t-label)', margin: 0 }}>
               Sync needs a <strong>Web application</strong> OAuth client from your own Google
               Cloud project — there is no server in the middle, so the app signs in as you.
               README → <em>Sharing a catalog across devices</em> has the steps.
@@ -230,7 +230,7 @@ export function SyncPanel({
             />
 
             <Field label="This device">
-              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13 }}>
+              <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 'var(--t-small)' }}>
                 <input
                   type="checkbox"
                   checked={settings.forgetOnSignOut}
@@ -239,7 +239,7 @@ export function SyncPanel({
                 />
                 <span>
                   Delete this device&rsquo;s copy when I sign out
-                  <span style={{ display: 'block', color: 'var(--text-faint)', fontSize: 11.5 }}>
+                  <span style={{ display: 'block', color: 'var(--text-faint)', fontSize: 'var(--t-label)' }}>
                     Your designs stay in Drive and come back when you sign in again. Anything
                     unsynced is pushed first, and sign-out is abandoned if that fails.
                   </span>
@@ -248,7 +248,7 @@ export function SyncPanel({
             </Field>
 
             <Field label="Automatic sync">
-              <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
+              <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 'var(--t-small)' }}>
                 <input
                   type="checkbox"
                   checked={settings.autoSync}

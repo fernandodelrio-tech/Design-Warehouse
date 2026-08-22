@@ -573,7 +573,7 @@ export function DesignDetail({
             </Section>
 
             <Section title="Layout" defaultOpen>
-              <div style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: 'var(--t-label)' }}>
                 {draft.auto.layout.summary}
               </div>
               <div className="field-row">
