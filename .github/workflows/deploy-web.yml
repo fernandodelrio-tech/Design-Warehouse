@@ -1,7 +1,7 @@
 name: Deploy web app
 
-# Publishes the built renderer to GitHub Pages, so the catalog is reachable
-# from a browser on any machine as well as from the desktop app.
+# Publishes the built app to GitHub Pages, so the catalog is reachable from a
+# browser on any machine.
 on:
   push:
     # The repository's default branch today, plus main for after any merge.
@@ -10,7 +10,6 @@ on:
       - claude/design-catalog-app-wgqj95
     paths-ignore:
       - '**.md'
-      - .github/workflows/build-desktop.yml
   workflow_dispatch:
 
 permissions:

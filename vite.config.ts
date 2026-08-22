@@ -2,12 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 /**
- * The same content security policy the desktop shell serves over app://, but as
- * a meta tag for the hosted build — which otherwise ran under no policy at all.
+ * The content security policy the hosted build runs under, injected as a meta
+ * tag — without it the deployed app has no policy at all.
  *
- * Injected only into production output: the dev server needs inline scripts and
- * a websocket for hot reload, and relaxing the shipped policy to suit it would
- * defeat the point.
+ * Build output only: the dev server needs inline scripts and a websocket for hot
+ * reload, and relaxing the shipped policy to suit it would defeat the point.
  */
 const CSP = [
   "default-src 'self'",

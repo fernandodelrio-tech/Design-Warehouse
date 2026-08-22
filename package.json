@@ -10,24 +10,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false --pretty",
-    "icons": "node scripts/make-icons.mjs",
-    "desktop": "npm run build && electron .",
-    "desktop:dev": "node scripts/desktop-dev.mjs",
-    "dist:win": "npm run build && electron-builder --win",
-    "dist:linux": "npm run build && electron-builder --linux",
-    "pack": "npm run build && electron-builder --dir"
+    "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false --pretty"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^6.1.0",
-    "electron": "^43.4.1",
-    "electron-builder": "^26.15.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "typescript": "^5.6.3",
     "vite": "^8.2.2"
-  },
-  "main": "electron/main.cjs"
+  }
 }

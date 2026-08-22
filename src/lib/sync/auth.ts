@@ -1,4 +1,3 @@
-import { desktop } from '../desktop';
 import { clearMeta } from '../db';
 import {
   assertClientNotShared,
@@ -32,21 +31,17 @@ function grantsDrive(granted: string | undefined): boolean {
 }
 
 /**
- * Signing in to Google, by whichever route the platform allows.
+ * Signing in to Google from the browser.
  *
- * The desktop app uses a loopback redirect handled in the main process, which
- * is the flow Google requires for installed apps. The browser build cannot
- * listen on a port, so it uses Google Identity Services, which hands back a
- * short-lived access token and no secret at all.
- *
- * The two need different OAuth client types, so they are configured separately.
+ * The app has no server, so there is nowhere to keep a client secret and
+ * nothing to receive a redirect. Google Identity Services covers exactly that
+ * case: it hands back a short-lived access token, held in memory only, from a
+ * "Web application" client that needs no secret at all.
  */
 
 export interface GoogleSettings {
-  /** "Web application" client for the browser build. */
+  /** "Web application" client from your own Google Cloud project. */
   webClientId: string;
-  /** "Desktop app" client for the packaged app. */
-  desktopClientId: string;
   autoSync: boolean;
   /** Delete this device's copy of the catalog when signing out. */
   forgetOnSignOut: boolean;
@@ -54,7 +49,6 @@ export interface GoogleSettings {
 
 export const DEFAULT_SETTINGS: GoogleSettings = {
   webClientId: '',
-  desktopClientId: '',
   autoSync: true,
   forgetOnSignOut: false,
 };
@@ -212,26 +206,7 @@ export interface ConnectionStatus {
 
 export async function connectionStatus(): Promise<ConnectionStatus> {
   const settings = await readSettings();
-  let account = currentAccount();
-  if (desktop) {
-    const status = await desktop.google.status();
-    // The grant lives in the main process and the account in localStorage; if
-    // the latter is lost, recover it from the former rather than showing a
-    // signed-out app that still holds a live Google session.
-    if (status.connected && status.profile && !account) {
-      account = { ...status.profile, clientId: status.clientId };
-      setCurrentAccount(account);
-    }
-    if (!status.connected && account) {
-      setCurrentAccount(null);
-      account = null;
-    }
-    return {
-      connected: status.connected && account !== null,
-      needsSetup: !settings.desktopClientId,
-      account,
-    };
-  }
+  const account = currentAccount();
   // In a browser the token lives in memory, so there is none at launch even
   // though the account is still signed in. Identity and "has a usable token
   // right now" are different questions, and only the second gates syncing.
@@ -250,27 +225,6 @@ export async function connectionStatus(): Promise<ConnectionStatus> {
  */
 export async function connect(): Promise<Account> {
   const settings = await readSettings();
-
-  if (desktop) {
-    const clientId = settings.desktopClientId;
-    if (!clientId) throw new Error('Add a desktop client ID first.');
-    // No secret passed: the main process holds it and never gives it back.
-    const result = await desktop.google.authorize({ clientId, scope: AUTH_SCOPES });
-    if (!result.profile) throw new Error('Google did not return an account.');
-    // Checked after consent because the account is only known once it is given;
-    // the grant is dropped again immediately if the client is someone else's.
-    try {
-      assertClientNotShared(clientId, result.profile.sub);
-    } catch (error) {
-      await desktop.google.disconnect();
-      throw error;
-    }
-    const account: Account = { ...result.profile, clientId };
-    bindClientId(clientId, account.sub);
-    setCurrentAccount(account);
-    return account;
-  }
-
   const clientId = settings.webClientId;
   if (!clientId) throw new Error('Add a web client ID first.');
   // 'consent' the first time so the user sees exactly what is being granted.
@@ -288,17 +242,8 @@ export async function connect(): Promise<Account> {
   return account;
 }
 
-/** Abandons a consent flow that is still waiting on the browser. */
-export async function cancelConnect(): Promise<void> {
-  if (desktop) await desktop.google.cancel();
-}
-
 export async function disconnect(): Promise<void> {
   setCurrentAccount(null);
-  if (desktop) {
-    await desktop.google.disconnect();
-    return;
-  }
   const token = webToken?.value;
   webToken = null;
   if (token && window.google?.accounts?.oauth2) {
@@ -307,25 +252,10 @@ export async function disconnect(): Promise<void> {
 }
 
 /**
- * A valid access token for Drive. On the desktop this refreshes silently from
- * the stored grant; in a browser it asks Google for a fresh one without
+ * A valid access token for Drive. Asks Google for a fresh one without
  * prompting, which works for as long as the Google session lasts.
  */
 export async function accessToken(): Promise<string> {
-  if (desktop) {
-    const token = await desktop.google.token();
-    if (!token) throw new Error('Not signed in to Google.');
-    // Guard the same way as the browser: never write into one account's Drive
-    // with another account's token.
-    const account = currentAccount();
-    const status = await desktop.google.status();
-    if (account && status.profile && status.profile.sub !== account.sub) {
-      throw new Error(
-        `The stored Google session is ${status.profile.email || 'a different account'}. Sign in again.`,
-      );
-    }
-    return token;
-  }
   if (webToken && webToken.expiresAt - 60_000 > Date.now()) return webToken.value;
 
   const account = currentAccount();

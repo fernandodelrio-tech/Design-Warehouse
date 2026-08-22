@@ -11,8 +11,6 @@ import {
   saveDesign,
 } from './lib/db';
 import { GROUPS, SORTS, groupRecords } from './lib/grouping';
-import { isDesktop, onMenuAction } from './lib/desktop';
-import type { MenuAction } from './lib/desktop';
 import { formatBytes } from './lib/image';
 import {
   filesFromDataTransfer,
@@ -39,7 +37,7 @@ import { SyncPanel } from './components/SyncPanel';
 import { DesignCard } from './components/DesignCard';
 import { DesignDetail } from './components/DesignDetail';
 import { EmptyState } from './components/EmptyState';
-import { MasonryGrid } from './components/MasonryGrid';
+import { CatalogGrid } from './components/CatalogGrid';
 import { useNotify } from './components/Toast';
 import {
   IconClipboard,
@@ -123,6 +121,20 @@ export default function App() {
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
+  /**
+   * Auto-sync, driven by catalog events: adding, editing, favouriting,
+   * re-analysing, restoring and deleting all bump this counter.
+   *
+   * The trigger used to be the highest `updatedAt` across the records, which a
+   * deletion can never raise — removing a design left the catalog out of step
+   * with Drive until the next launch or a manual sync. A counter every mutation
+   * bumps has no such blind spot. Pulls are excluded: they are what a sync
+   * writes, and treating them as changes would sync in a loop.
+   */
+  const [changeCount, setChangeCount] = useState(0);
+  const markChanged = useCallback(() => setChangeCount((count) => count + 1), []);
+  const syncedThrough = useRef(0);
+
   // Read by the ingest callbacks, which must stay referentially stable: they
   // back the window-level paste and drop listeners.
   const recordsRef = useRef<DesignRecord[]>([]);
@@ -182,9 +194,10 @@ export default function App() {
     (added: DesignRecord[]) => {
       if (added.length === 0) return;
       setRecords((current) => [...added, ...current]);
+      markChanged();
       void refreshUsage();
     },
-    [refreshUsage],
+    [markChanged, refreshUsage],
   );
 
   const handleFiles = useCallback(
@@ -307,24 +320,41 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Push edits shortly after they settle, rather than on every keystroke.
-  const recordCount = records.length;
-  const latestEdit = useMemo(
-    () => records.reduce((max, record) => Math.max(max, record.updatedAt), 0),
-    [records],
-  );
-  const syncedThrough = useRef(0);
+  // Push catalog events to Drive once they settle.
   useEffect(() => {
-    if (!connected || loading) return;
-    if (latestEdit === 0 || latestEdit === syncedThrough.current) return;
-    const timer = setTimeout(async () => {
-      if ((await readSettings()).autoSync) {
-        syncedThrough.current = latestEdit;
+    if (!connected || loading || changeCount === syncedThrough.current) return;
+
+    const flush = () => {
+      const through = changeCount;
+      void (async () => {
+        if (!(await readSettings()).autoSync) return;
+        // Claimed before the run rather than after it: a failed sync that reset
+        // this would re-arm the timer immediately and retry every couple of
+        // seconds for as long as Drive stayed unreachable. Launch and the Sync
+        // now button are the recovery paths.
+        syncedThrough.current = through;
         void sync(true);
-      }
-    }, 6000);
-    return () => clearTimeout(timer);
-  }, [connected, loading, latestEdit, recordCount, sync]);
+      })();
+    };
+
+    // Coalesce a burst — a folder import fires once per file — while keeping
+    // the wait short enough that one edit reaches Drive before you look away.
+    const timer = setTimeout(flush, 2500);
+
+    // Backgrounding the tab is the last reliable moment to push: a phone may
+    // freeze or discard the page before the timer ever runs.
+    const onVisibility = () => {
+      if (document.visibilityState !== 'hidden') return;
+      clearTimeout(timer);
+      flush();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [changeCount, connected, loading, sync]);
 
   // --- clipboard -----------------------------------------------------------
 
@@ -406,9 +436,10 @@ export default function App() {
   const updateRecord = useCallback(
     (next: DesignRecord) => {
       setRecords((current) => current.map((r) => (r.id === next.id ? next : r)));
+      markChanged();
       saveDesign(next).catch(() => notify('Could not save that change.', 'error'));
     },
-    [notify],
+    [markChanged, notify],
   );
 
   const toggleFavorite = useCallback(
@@ -421,8 +452,9 @@ export default function App() {
           return next;
         }),
       );
+      markChanged();
     },
-    [],
+    [markChanged],
   );
 
   const removeRecord = useCallback(
@@ -438,10 +470,11 @@ export default function App() {
         return next;
       });
       if (openId === id) setOpenId(null);
+      markChanged();
       void refreshUsage();
       notify('Design deleted.', 'success');
     },
-    [notify, openId, records, refreshUsage],
+    [markChanged, notify, openId, records, refreshUsage],
   );
 
   const reanalyze = useCallback(
@@ -471,6 +504,7 @@ export default function App() {
         await saveDesign(next, { id, full: blobs.full, thumb });
         releaseImage(id);
         setRecords((current) => current.map((r) => (r.id === id ? next : r)));
+        markChanged();
         notify(
           untouched ? 'Re-analysed and tokens refreshed.' : 'Re-analysed; your edited tokens were kept.',
           'success',
@@ -479,7 +513,7 @@ export default function App() {
         notify(err instanceof Error ? err.message : 'Re-analysis failed.', 'error');
       }
     },
-    [notify, records],
+    [markChanged, notify, records],
   );
 
   const downloadImage = useCallback(
@@ -596,6 +630,7 @@ export default function App() {
     const ids = new Set(selectedRecords.map((r) => r.id));
     setRecords((current) => current.filter((r) => !ids.has(r.id)));
     setSelected(new Set());
+    markChanged();
     void refreshUsage();
     notify(`Deleted ${ids.size} design(s).`, 'success');
   };
@@ -617,6 +652,7 @@ export default function App() {
       const count = await importCatalog(file);
       releaseAllImages();
       setRecords(await listDesigns());
+      markChanged();
       void refreshUsage();
       notify(`Restored ${count} design(s).`, 'success');
     } catch (err) {
@@ -630,40 +666,10 @@ export default function App() {
     releaseAllImages();
     setRecords([]);
     setSelected(new Set());
+    markChanged();
     void refreshUsage();
     notify('Catalog cleared.', 'success');
   };
-
-  // --- desktop application menu -------------------------------------------
-
-  // Held in a ref so the subscription is made once, while the handlers it calls
-  // are always the current render's — several of them close over `records`.
-  const menuDispatch = useRef<(action: MenuAction) => void>(() => {});
-  menuDispatch.current = (action) => {
-    switch (action) {
-      case 'paste':
-        void pasteFromButton();
-        break;
-      case 'add-files':
-        fileInput.current?.click();
-        break;
-      case 'add-folder':
-        folderInput.current?.click();
-        break;
-      case 'backup':
-        void backupCatalog();
-        break;
-      case 'restore':
-        importInput.current?.click();
-        break;
-      case 'search':
-        searchInput.current?.focus();
-        searchInput.current?.select();
-        break;
-    }
-  };
-
-  useEffect(() => onMenuAction((action) => menuDispatch.current(action)), []);
 
   /**
    * Signing out, optionally taking this device's copy of the catalog with it.
@@ -767,67 +773,77 @@ export default function App() {
           />
         </div>
 
+        {/*
+          Two groups rather than one row of buttons: on a phone the bar wraps,
+          and the three ways of getting a design in have to stay reachable while
+          the utilities move up beside the wordmark.
+        */}
         <div className="topbar-actions">
-          <button type="button" className="btn btn-primary" onClick={pasteFromButton}>
-            <IconClipboard /> Paste
-          </button>
-          <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
-            <IconImage /> Files
-          </button>
-          <button type="button" className="btn" onClick={() => folderInput.current?.click()}>
-            <IconFolder /> Folder
-          </button>
-          {account && (
+          <div className="topbar-primary">
+            <button type="button" className="btn btn-primary" onClick={pasteFromButton}>
+              <IconClipboard /> Paste
+            </button>
+            <button type="button" className="btn" onClick={() => fileInput.current?.click()}>
+              <IconImage /> Files
+            </button>
+            <button type="button" className="btn" onClick={() => folderInput.current?.click()}>
+              <IconFolder /> Folder
+            </button>
+          </div>
+
+          <div className="topbar-utility">
+            {account && (
+              <button
+                type="button"
+                className="btn btn-ghost account-chip"
+                onClick={() => setSyncOpen(true)}
+                title={`Signed in as ${account.email || account.name}`}
+              >
+                {/* Drawn locally rather than fetched: a Google-hosted avatar would
+                    mean a request to Google on every launch, and nothing here
+                    otherwise touches the network unless you ask it to. */}
+                <span className="account-avatar account-initial">
+                  {(account.email || account.name || '?').charAt(0).toUpperCase()}
+                </span>
+              </button>
+            )}
             <button
               type="button"
-              className="btn btn-ghost account-chip"
+              className={`btn btn-ghost btn-icon${syncing ? ' spinning' : ''}`}
+              title={
+                connected
+                  ? `Shared catalog${lastSync ? ` — last synced ${new Date(lastSync).toLocaleString()}` : ''}`
+                  : 'Share this catalog across devices'
+              }
               onClick={() => setSyncOpen(true)}
-              title={`Signed in as ${account.email || account.name}`}
             >
-              {/* Drawn locally rather than fetched: a Google-hosted avatar would
-                  mean a request to Google on every launch, and nothing here
-                  otherwise touches the network unless you ask it to. */}
-              <span className="account-avatar account-initial">
-                {(account.email || account.name || '?').charAt(0).toUpperCase()}
-              </span>
+              <IconCloud connected={connected} />
             </button>
-          )}
-          <button
-            type="button"
-            className={`btn btn-ghost btn-icon${syncing ? ' spinning' : ''}`}
-            title={
-              connected
-                ? `Shared catalog${lastSync ? ` — last synced ${new Date(lastSync).toLocaleString()}` : ''}`
-                : 'Share this catalog across devices'
-            }
-            onClick={() => setSyncOpen(true)}
-          >
-            <IconCloud connected={connected} />
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon"
-            title="Back up the whole catalog to a file"
-            onClick={backupCatalog}
-          >
-            <IconDownload />
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon"
-            title="Restore a catalog backup"
-            onClick={() => importInput.current?.click()}
-          >
-            <IconUpload />
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-icon"
-            title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            {theme === 'dark' ? <IconSun /> : <IconMoon />}
-          </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              title="Back up the whole catalog to a file"
+              onClick={backupCatalog}
+            >
+              <IconDownload />
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              title="Restore a catalog backup"
+              onClick={() => importInput.current?.click()}
+            >
+              <IconUpload />
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost btn-icon"
+              title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <IconSun /> : <IconMoon />}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -916,7 +932,6 @@ export default function App() {
         ) : visible.length === 0 ? (
           <EmptyState
             filtered={filtersActive}
-            desktop={isDesktop}
             onClearFilters={() => {
               setQuery('');
               setScheme('all');
@@ -934,19 +949,19 @@ export default function App() {
                 {section.label}
                 <span className="group-count">{section.records.length}</span>
               </h2>
-              <MasonryGrid
+              <CatalogGrid
                 items={section.records}
                 keyFor={(record) => record.id}
                 minWidth={cardMin}
               >
                 {(record) => renderCard(record)}
-              </MasonryGrid>
+              </CatalogGrid>
             </section>
           ))
         ) : (
-          <MasonryGrid items={visible} keyFor={(record) => record.id} minWidth={cardMin}>
+          <CatalogGrid items={visible} keyFor={(record) => record.id} minWidth={cardMin}>
             {(record) => renderCard(record)}
-          </MasonryGrid>
+          </CatalogGrid>
         )}
       </main>
 

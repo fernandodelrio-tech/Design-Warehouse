@@ -19,12 +19,19 @@ export function useNotify(): Notify {
 
 let nextId = 1;
 
+/**
+ * A phone screen is about four toasts tall. Pasting a folder of screenshots
+ * would otherwise bury the catalog under its own progress reports, so the
+ * stack keeps only the newest few and the older ones drop out early.
+ */
+const MAX_VISIBLE = 3;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const notify = useCallback<Notify>((message, kind = 'info') => {
     const id = nextId++;
-    setToasts((current) => [...current, { id, message, kind }]);
+    setToasts((current) => [...current, { id, message, kind }].slice(-MAX_VISIBLE));
     setTimeout(
       () => setToasts((current) => current.filter((t) => t.id !== id)),
       kind === 'error' ? 6000 : 3200,

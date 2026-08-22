@@ -1,6 +1,5 @@
 import { analyzeBlob, seedSpec } from './analyze';
 import { saveDesign } from './db';
-import { desktop, readDesktopClipboardImage } from './desktop';
 import { nameDesign } from './naming';
 import { isGenericFileName, titleFromFileName, uniqueTitle } from './title';
 import type { DesignBlobs, DesignRecord, IngestSource } from './types';
@@ -134,13 +133,6 @@ export function imagesFromClipboard(event: ClipboardEvent): File[] {
 
 /** Explicit "Paste" button path — needs the clipboard-read permission. */
 export async function readClipboardImages(): Promise<Blob[]> {
-  // In the desktop build this goes through Electron's clipboard, which needs no
-  // permission grant and reads bitmaps that `navigator.clipboard` misses.
-  if (desktop) {
-    const image = await readDesktopClipboardImage();
-    return image ? [image] : [];
-  }
-
   if (!navigator.clipboard?.read) {
     throw new Error('This browser cannot read the clipboard on demand — press Ctrl/Cmd+V instead.');
   }

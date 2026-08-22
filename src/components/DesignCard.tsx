@@ -16,12 +16,15 @@ interface Props {
   onTagClick: (tag: string) => void;
 }
 
+/**
+ * Always rendered, empty or not: an omitted line would shorten the footer, and
+ * every tile in the grid has to come out the same height.
+ */
 function specLine(label: string, value: string) {
-  if (!value) return null;
   return (
     <dl className="card-spec-line">
       <dt>{label}</dt>
-      <dd title={value}>{value}</dd>
+      <dd title={value || undefined}>{value || '—'}</dd>
     </dl>
   );
 }
@@ -29,6 +32,10 @@ function specLine(label: string, value: string) {
 /**
  * One vignette. The footer is the whole point of the app: it carries the
  * metadata Claude Code or Claude Design needs to rebuild the design.
+ *
+ * The tile is a fixed height and the screenshot is cropped to fill it from the
+ * top, which is the part that identifies a design. Anything taller than the
+ * crop gets a fade and a marker; opening the tile shows it at full length.
  */
 export const DesignCard = memo(function DesignCard({
   record,
@@ -59,6 +66,10 @@ export const DesignCard = memo(function DesignCard({
     .filter(Boolean)
     .join(' · ');
 
+  // Compared against the tile's own aspect rather than a fixed number: the
+  // crop box is as wide as its column, so what is cut off depends on the tile.
+  const cropped = image.height / image.width > 0.82;
+
   return (
     <article className={`card${selected ? ' selected' : ''}`}>
       <input
@@ -85,10 +96,13 @@ export const DesignCard = memo(function DesignCard({
             height={image.height}
           />
         ) : (
-          <div
-            className="card-image-placeholder"
-            style={{ aspectRatio: `${image.width} / ${image.height}` }}
-          />
+          <div className="card-image-placeholder" />
+        )}
+        {cropped && (
+          <>
+            <span className="card-crop-fade" aria-hidden />
+            <span className="card-crop-badge">Full length on open</span>
+          </>
         )}
       </button>
 

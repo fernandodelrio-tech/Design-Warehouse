@@ -298,6 +298,13 @@ select {
   margin-left: auto;
 }
 
+.topbar-primary,
+.topbar-utility {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .filters {
   display: flex;
   align-items: center;
@@ -341,19 +348,27 @@ select {
   padding: 20px;
 }
 
-/* --- masonry ------------------------------------------------------------- */
+/* --- catalog grid -------------------------------------------------------- */
 
-.masonry {
+/*
+   Every tile the same height, so the footers line up across a row and the eye
+   can scan them. The height rides on the chosen tile width: the image box takes
+   whatever the footer does not, so a wider tile gets a taller crop.
+
+   `min(..., 100%)` is what keeps a phone from scrolling sideways — a bare
+   300px floor cannot fit the viewport and the track overflows instead.
+*/
+.catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-min, 300px), 1fr));
-  grid-auto-rows: 8px;
-  column-gap: 20px;
-  row-gap: 0;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 300px), 100%), 1fr));
+  gap: 20px;
+  align-items: stretch;
+  --card-height: calc(var(--card-min, 300px) * 0.62 + 215px);
 }
 
-.masonry-item > .masonry-inner {
-  margin-bottom: 20px;
+.catalog-cell {
+  display: flex;
+  min-width: 0;
 }
 
 /* --- grouped sections ---------------------------------------------------- */
@@ -395,6 +410,11 @@ select {
 
 .card {
   position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  height: var(--card-height, 400px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -412,25 +432,58 @@ select {
   box-shadow: 0 0 0 1px var(--accent);
 }
 
+/* Takes whatever height the footer leaves, which is what makes the tiles equal. */
 .card-image {
   position: relative;
   display: block;
+  flex: 1 1 auto;
   width: 100%;
+  min-height: 60px;
   background: var(--bg-elevated);
   border: 0;
   padding: 0;
+  overflow: hidden;
   cursor: zoom-in;
   line-height: 0;
 }
 
+/* Cropped from the top: the head of a screenshot is what identifies it. */
 .card-image img {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* Says the tile is showing a crop, without competing with the screenshot. */
+.card-crop-fade {
+  position: absolute;
+  inset: auto 0 0;
+  height: 56px;
+  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg) 78%, transparent));
+  pointer-events: none;
+}
+
+.card-crop-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 76%, transparent);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  pointer-events: none;
 }
 
 .card-image-placeholder {
   width: 100%;
+  height: 100%;
   background: linear-gradient(
     100deg,
     var(--bg-elevated) 30%,
@@ -489,6 +542,7 @@ select {
 }
 
 .card-footer {
+  flex: 0 0 auto;
   padding: 12px 14px 14px;
   border-top: 1px solid var(--border);
 }
@@ -513,13 +567,23 @@ select {
   color: var(--text-faint);
   font-size: 11.5px;
   margin-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/*
+   One row, clipped rather than wrapped. A second row on the cards that happen
+   to carry more chips would make those tiles taller than the rest, and the
+   whole point of the grid is that none of them are.
+*/
 .card-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 10px;
+  height: 23px;
+  overflow: hidden;
 }
 
 .card-spec-line {
@@ -1126,40 +1190,232 @@ kbd {
   font-size: 13px;
 }
 
+/* --- touch --------------------------------------------------------------- */
+
+/*
+   Hover-revealed controls are unreachable with a finger: the first tap is the
+   hover and the second lands on whatever moved under it. On a touch device the
+   card's actions and its select box are simply always there.
+*/
+@media (hover: none) {
+  .card-hover-actions,
+  .card-select {
+    opacity: 1;
+  }
+
+  /* Comfortably tappable without changing the pointer layout. */
+  .card-hover-actions .btn {
+    min-width: 34px;
+    min-height: 34px;
+  }
+
+  .card-select {
+    width: 24px;
+    height: 24px;
+  }
+
+  .card:hover {
+    border-color: var(--border);
+    box-shadow: none;
+  }
+}
+
+/* --- narrow screens ------------------------------------------------------- */
+
 @media (max-width: 900px) {
   .detail {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(160px, 40%) 1fr;
+    /* The preview keeps a readable share of the height but the spec, which is
+       what you came to edit, gets the rest and scrolls. */
+    grid-template-rows: minmax(160px, 38%) 1fr;
   }
 
   .detail-preview {
     border-right: 0;
     border-bottom: 1px solid var(--border);
+    padding: 14px;
   }
 
   .search {
     max-width: none;
   }
+
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+
+  /* Five columns of type scale do not survive a phone; the labels move to a
+     row of their own and each step becomes a two-column block. */
+  .scale-head {
+    display: none;
+  }
+
+  .scale-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 8px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border);
+  }
+
+  .scale-row > :first-child {
+    grid-column: 1 / -1;
+  }
+
+  .token-row {
+    grid-template-columns: 26px 1fr 26px;
+    row-gap: 6px;
+  }
+
+  .token-row > :nth-child(4) {
+    grid-column: 2 / -1;
+  }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 700px) {
+  /*
+     Two rows: identity and search up top, actions beneath. The action row
+     scrolls sideways rather than wrapping, so the bar keeps a fixed height and
+     the grid below it does not jump when a button appears.
+  */
   .topbar {
-    flex-wrap: wrap;
+    position: sticky;
     height: auto;
-    padding: 10px 14px;
-    position: static;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  .brand {
+    font-size: 15px;
+    min-width: 0;
+  }
+
+  .brand-count {
+    white-space: nowrap;
+  }
+
+  .search {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  /*
+     Three rows: wordmark and utilities, then search, then the ways of adding a
+     design. Squeezed onto one scrolling row the Paste button ended up off the
+     left edge — present, measurable, and unreachable without knowing to swipe.
+  */
+  .topbar-actions {
+    display: contents;
+  }
+
+  .topbar-utility {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .topbar-primary {
+    order: 4;
+    flex-basis: 100%;
+  }
+
+  .topbar-primary .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* One line that scrolls, rather than four wrapped rows pushing the catalog
+     off the screen. */
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filters > * {
+    flex: 0 0 auto;
+  }
+
+  .tag-filter {
+    flex-wrap: nowrap;
   }
 
   .main {
-    padding: 14px;
+    padding: 14px 12px;
+  }
+
+  .empty {
+    padding: 40px 16px;
+  }
+
+  .empty-hints {
+    padding: 14px 16px;
+  }
+
+  .toasts {
+    left: 12px;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    max-width: none;
+  }
+
+  /* A pill centred on a 360px screen either overflows or truncates; full width
+     with the buttons sharing the row is the honest layout. */
+  .selection-bar {
+    left: 12px;
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    transform: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    border-radius: var(--radius);
+    padding: 10px 12px;
   }
 
   .overlay {
     padding: 0;
   }
 
-  .detail {
-    border-radius: 0;
+  .detail,
+  .sync-panel {
+    width: 100%;
     height: 100%;
+    max-height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .detail-head,
+  .detail-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .detail-body {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .detail-actions .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 460px) {
+  /* Below this the second column is narrower than a thumbnail is useful at, so
+     the catalog goes to one tile per row whatever size is chosen. */
+  .catalog-grid {
+    grid-template-columns: 1fr;
+    --card-height: 360px;
+  }
+
+  .brand-count {
+    display: none;
   }
 }

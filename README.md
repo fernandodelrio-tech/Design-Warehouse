@@ -1,69 +1,37 @@
 # Design Warehouse
 
 A catalog for design screenshots. Paste or drop a screenshot, and it is filed as a
-vignette in a photo-album grid with a footer of design metadata — palette, contrast,
-type scale, layout structure, effects — that Claude Code and Claude Design can read
-back when building a prototype.
+vignette in a grid of equal tiles with a footer of design metadata — palette,
+contrast, type scale, layout structure, effects — that Claude Code and Claude Design
+can read back when building a prototype.
 
-Everything runs in the browser. Images and specs live in IndexedDB on the machine
-you use; nothing is uploaded anywhere and there is no server to run.
+Everything runs in the browser. Images and specs live in IndexedDB on the machine you
+use; nothing is uploaded anywhere and there is no server to run.
 
-## Where you can run it
+## Running it
 
-| | How to get it |
-| --- | --- |
-| **Web** | [The hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) — nothing to install, works in any browser |
-| **Windows** | The installer, below |
-| **macOS / Linux** | From source, below |
-
-Each of these stores its catalog locally, in that browser profile or that user
-profile. Connect them to Google Drive (below) and they share one catalog; leave it
-switched off and nothing ever leaves the machine. Either way there is no server in
-the middle — the app talks to your Drive as you, or to nothing at all.
-
-## Installing it
-
-### Windows
-
-Get **`Design Warehouse <version> Setup.exe`** and run it. It is built by the
-`Build desktop installer` workflow, and there are two places to get it:
-
-- **From a release** — the [Releases page](../../releases), once a `v*` tag has been
-  pushed. `git tag v0.1.0 && git push origin v0.1.0` builds the installer and attaches
-  it to a new release.
-- **From a build** — the [Actions tab](../../actions/workflows/build-desktop.yml):
-  open the most recent run and download the `design-warehouse-windows` artifact. This
-  works with no tag, and is the quickest way to get an installer right now. Artifacts
-  are a zip and expire after 30 days.
-
-One installer covers both x64 and ARM64 machines. It installs per-user, so Windows
-never asks for an administrator password and the catalog stays with the account that
-created it; you can choose the folder, and it adds Start menu and desktop shortcuts.
-A **Portable** `.exe` is built alongside it if you would rather run it from a USB
-stick without installing — note that a portable copy still keeps its catalog in your
-Windows user profile, not next to the executable.
-
-To uninstall: Settings → Apps → Design Warehouse. Your catalog is deliberately left
-in place, so reinstalling picks up where you left off. Back it up first
-(**File → Back up the catalog…**) if you want it gone or moved.
-
-### macOS and Linux
-
-Open [the hosted app](https://fernandodelrio-tech.github.io/Design-Warehouse/) in a
-browser, or run the desktop window from source — there is no signed macOS build, and
-an unsigned one would be quarantined by Gatekeeper:
+[**The hosted app**](https://fernandodelrio-tech.github.io/Design-Warehouse/) — nothing
+to install, and it works the same on a phone, a tablet or a laptop. Or from source:
 
 ```bash
 npm install
-npm run desktop     # builds, then opens the desktop window
+npm run dev         # hot reload on http://localhost:5173
+npm run build       # emits dist/
+npm run preview     # serves dist/ locally
 ```
 
-A Linux AppImage can be produced locally with `npm run dist:linux`.
+`dist/` is a plain static bundle with relative asset paths, so it works from a
+repository subpath and can be dropped on any static host.
 
-## The hosted web app
+Each browser you open it in stores its own catalog. Connect them to Google Drive
+(below) and they share one; leave it switched off and nothing ever leaves the
+machine. Either way there is no server in the middle — the app talks to your Drive
+as you, or to nothing at all.
 
-`Deploy web app` publishes the built renderer to GitHub Pages on every push to the
-default branch, and can be run by hand from the Actions tab.
+## Publishing it
+
+`Deploy web app` publishes the built app to GitHub Pages on every push to the default
+branch, and can be run by hand from the Actions tab.
 
 **One-time setup:** open **Settings → Pages**, and under *Build and deployment* set
 **Source** to **GitHub Actions**. The workflow tries to enable this itself, but the
@@ -78,42 +46,6 @@ https://fernandodelrio-tech.github.io/Design-Warehouse/
 The repository is public, so that page is reachable by anyone with the link. Only the
 app is published — every catalog lives in its own visitor's browser, so no designs
 are exposed by it.
-
-It is a static bundle with relative asset paths, so it works from a repository
-subpath, and it can equally be dropped on any other static host. The app needs no
-network once loaded — everything it does happens in the browser.
-
-## Building the Windows installer yourself
-
-On Windows:
-
-```bash
-npm ci
-npm run dist:win    # writes release/Design Warehouse <version> Setup.exe
-```
-
-NSIS packaging needs a Windows toolchain, so this does not cross-compile from macOS
-or Linux. The repository's `Build desktop installer` workflow runs it on a
-`windows-latest` runner instead: trigger it by hand from the Actions tab, or push a
-`v*` tag to build and attach the installer to a release.
-
-The installer is unsigned. Windows SmartScreen will show a "Windows protected your
-PC" warning on first run — *More info* → *Run anyway*. Signing it needs a code
-signing certificate; once you have one, set `CSC_LINK` and `CSC_KEY_PASSWORD` as
-repository secrets and pass them to the packaging step.
-
-## Running from source
-
-```bash
-npm install
-npm run dev         # web app with hot reload
-npm run desktop:dev # desktop window against the dev server, with hot reload
-npm run build       # emits dist/
-npm run preview     # serves dist/ locally
-```
-
-`dist/` is a plain static bundle with relative asset paths, so it can also be dropped
-on any static host.
 
 ## Getting designs in
 
@@ -144,7 +76,7 @@ page*. A filename that says nothing — a clipboard paste, `IMG_4471.PNG`,
 The colour word comes from the accent's hue, the noun from the kind of screen, so
 the name still tells you something — and the factual line under it on the card keeps
 carrying the measurements. It is entirely deterministic: the same design always earns
-the same name, with no model call, so it works offline and in the packaged app.
+the same name, with no model call, so it works offline.
 
 A second red dashboard becomes *Crimson Cockpit* rather than *Ember Console 2* —
 names are drawn from the whole vocabulary before numbering is used at all. Every
@@ -185,6 +117,17 @@ populated one.
 
 ## Arranging the grid
 
+Every tile is the same height, whatever shape the screenshot is, so the footers line
+up across a row and can be read down the page. A screenshot taller than its tile is
+cropped from the top — the part that identifies it — and marked *Full length on
+open*; opening it shows the whole thing, scrolling if it is long. **Size** sets how
+wide the tiles are, and the tile height follows from it.
+
+The layout adapts down to a phone: the catalog drops to one tile per row, the filter
+bar becomes a single scrolling strip, and the detail and sync panels take the whole
+screen. Card actions that appear on hover with a mouse are simply always visible on
+a touch screen.
+
 Two controls in the filter bar, remembered between sessions.
 
 **Sort by** — date added (newest, oldest), recently edited, name A–Z or Z–A,
@@ -218,18 +161,18 @@ for seeding a whole project with a reference set.
 ## Signing in, and sharing a catalog across devices
 
 Sign in with Google and this catalog becomes yours: it is kept in step with a
-**Design Warehouse** folder in your own Drive, so the web app and the desktop app
-show the same designs. Sign-in is optional — without it the app works exactly as
+**Design Warehouse** folder in your own Drive, so every browser you sign in from
+shows the same designs. Sign-in is optional — without it the app works exactly as
 before, storing everything locally and syncing nothing.
 
 ### Each person gets their own catalog
 
 Signing in opens a catalog belonging to that Google account, keyed on the account's
 permanent Google id rather than its email address. Two people using the same
-computer, the same browser profile, or the same installed copy of the app see only
-their own designs; switching accounts swaps the whole catalog, and neither can reach
-the other's. Anything catalogued before you signed in stays in a signed-out catalog,
-and the sync panel offers to move it into your account the first time.
+computer or the same browser profile see only their own designs; switching accounts
+swaps the whole catalog, and neither can reach the other's. Anything catalogued
+before you signed in stays in a signed-out catalog, and the sync panel offers to move
+it into your account the first time.
 
 ### One OAuth client per person
 
@@ -244,6 +187,13 @@ here — the account decides which catalog opens and whose Drive is written to. 
 client-ID rule is enforced per device, because without a server there is nowhere to
 keep a registry, so two people on two machines could still pick the same one. It
 would not let either read the other's designs.
+
+**When it syncs.** On launch, and a couple of seconds after any catalog event —
+adding, editing, favouriting, re-analysing, restoring or deleting a design. A burst
+is coalesced into one sync, and leaving the tab pushes immediately rather than
+waiting out the delay, which matters on a phone where the page may be frozen before
+the timer runs. Turn **Automatic sync** off in the sync panel to leave it entirely to
+the **Sync now** button.
 
 **How it works.** Each design is stored as two files — its image and its spec — plus
 a small marker for each deletion. There is no shared index file, so two devices
@@ -260,9 +210,8 @@ spec afterwards only re-sends the small JSON file.
 
 ### One-time Google setup
 
-There is no server, so the app signs in as you, and that needs an OAuth client from
-your own Google Cloud project. It is free, and the two builds need different client
-types.
+There is no server, so the app signs in as you, and that needs a **Web application**
+OAuth client from your own Google Cloud project. It is free.
 
 1. At [console.cloud.google.com](https://console.cloud.google.com/), create a project
    (or pick one) and enable the **Google Drive API** under *APIs & Services →
@@ -304,19 +253,13 @@ types.
    > on an old run. A re-run rebuilds that old commit and republishes it, which can
    > silently overwrite a newer deploy — that is what breaks verification most often.
 
-4. Under *APIs & Services → Credentials*, create the OAuth client you need:
-   - **For the desktop app** — *Create credentials → OAuth client ID → Desktop app*.
-     Copy the client ID and client secret into the app's sync panel. Google issues a
-     secret for desktop clients and documents it as not confidential; it is handed
-     straight to the keychain and never read back, so the field appears empty
-     afterwards. There is no redirect URI to configure — desktop clients use a
-     loopback redirect, which the app serves on `http://127.0.0.1:<random port>`.
-   - **For the web app** — *Create credentials → OAuth client ID → Web application*.
-     Add your Pages URL (and `http://localhost:5173` for development) as an
-     authorized JavaScript origin. Copy the client ID into the sync panel.
-5. Open the cloud button in either app, paste the client ID, and press **Sign in
-   with Google**. The consent screen opens in your real browser, not an embedded
-   window.
+4. Under *APIs & Services → Credentials*, choose *Create credentials → OAuth client
+   ID → **Web application***. Add your Pages URL (and `http://localhost:5173` for
+   development) as an authorized JavaScript origin. There is no client secret to
+   handle and no redirect URI to configure — the browser flow uses neither. Copy the
+   client ID.
+5. Open the cloud button in the app, paste the client ID, and press **Sign in with
+   Google**.
 
    **Tick the Drive box.** Google asks for each permission separately and the Drive
    one is not ticked by default, so it is easy to approve identity alone. Sign-in then
@@ -324,37 +267,25 @@ types.
    now catches a short grant at sign-in and says so; if you see it, sign in again and
    allow the app to see and manage the files it creates in your Drive.
 
-Do the same on the other device with the same Google account, and the two catalogs
-converge on the next sync. Someone else using the app needs their own client ID from
-step 3, in their own Google Cloud project.
+Open the app on another device with the same Google account, paste the same client
+ID, and the two catalogs converge on the next sync. Someone else using the app needs
+their own client ID, in their own Google Cloud project.
 
 ### What this does and does not protect
 
-Neither build keeps a Google credential where the page can reach it, by different
-routes.
+There is no Google credential at rest anywhere: the access token is a variable in
+memory, so it is gone when the tab closes, and the browser flow issues no refresh
+token and needs no client secret. The app runs under a content security policy with
+no inline scripts, and the only outbound connections it permits are to Google, and
+only if you sign in. Nothing else the app does touches the network, including the
+account avatar, which is drawn locally rather than fetched from Google.
 
-In the **desktop app**, the refresh token and the client secret live in your
-operating system's keychain — DPAPI on Windows, Keychain on macOS, libsecret on
-Linux — held by the process outside the page. The renderer receives short-lived
-access tokens and nothing else; the secret field is write-only, which is why it shows
-no value once one is set. On a system with no keyring available it falls back to a
-permission-restricted file and the sync panel says so plainly rather than implying
-protection it does not have.
-
-In the **web app** there is no credential at rest at all: the access token is a
-variable in memory, so it is gone when the tab closes and there is no refresh token
-to store. Both builds run under the same content security policy — no inline scripts,
-and the only outbound connections permitted are to Google, and only if you sign in.
-Nothing else the app does touches the network, including the account avatar, which is
-drawn locally rather than fetched from Google.
-
-Your designs, though, are stored **unencrypted** in the browser's storage or your
-user profile. The separation between accounts keeps catalogs apart *in the app*; it
-is not a security boundary. Anyone who can use that browser profile or that computer
-account can read any catalog on it by inspecting storage directly. On a machine only
-you use, that is the same exposure as any other local file. On a shared one, separate
-operating system accounts or browser profiles are the real answer — no app-level
-scheme beats them.
+Your designs, though, are stored **unencrypted** in the browser's storage. The
+separation between accounts keeps catalogs apart *in the app*; it is not a security
+boundary. Anyone who can use that browser profile can read any catalog in it by
+inspecting storage directly. On a machine only you use, that is the same exposure as
+any other local file. On a shared one, separate operating system accounts or browser
+profiles are the real answer — no app-level scheme beats them.
 
 If you want the local copy gone when you walk away, turn on **Delete this device's
 copy when I sign out** in the sync panel. Anything unsynced is pushed to Drive first,
@@ -374,11 +305,9 @@ hand, with nothing leaving them in between.
 
 ## Backups
 
-The catalog lives in one place on one machine, and each way of running the app has
-its own (see the table at the top): a browser profile on the web, or your user
-profile in the desktop app (**Help → Where is my catalog stored?** opens the exact
-folder). **⬇** in the header writes a single JSON file with the images inlined;
-**⬆** restores one — that file is how a catalog moves between machines. The app also
+The catalog lives in the browser profile you use, and each profile has its own.
+**⬇** in the header writes a single JSON file with the images inlined; **⬆** restores
+one — that file is how a catalog moves between machines. The app also
 asks for persistent storage so the catalog is not evicted under storage pressure.
 
 ## Layout of the code
@@ -400,39 +329,12 @@ src/
   lib/sync/
     engine.ts      two-way reconciliation, last edit wins
     drive.ts       Google Drive as the shared folder
-    auth.ts        signing in: loopback on the desktop, GIS in a browser
+    auth.ts        signing in with Google Identity Services
     types.ts       the narrow interface the engine is written against
     spec.ts        markdown / prompt / token-JSON / CSS exporters
     db.ts          IndexedDB: metadata and blobs in separate stores
     ingest.ts      clipboard, file, folder and drag-drop intake
     transfer.ts    clipboard writes, downloads, catalog backup and restore
-    desktop.ts     the Electron bridge, absent and unused in a browser
-  components/      the shell, masonry grid, card, and spec editor
+  components/      the shell, catalog grid, card, and spec editor
   hooks/           object-URL management for thumbnails and full images
-electron/
-  main.cjs         desktop shell: app:// protocol, window state, menu, clipboard
-  google-auth.cjs  the OAuth loopback flow, kept out of the renderer
-  preload.cjs      the calls exposed to the renderer
-scripts/
-  make-icons.mjs   regenerates build/icon.ico and build/icon.png
-  desktop-dev.mjs  runs the shell against the Vite dev server
 ```
-
-## Notes on the desktop build
-
-The renderer is the same bundle the web build produces. The shell adds four things:
-
-- It serves the app over an `app://` scheme registered as standard and secure.
-  A `file://` page gets an opaque origin and Chromium refuses to open IndexedDB on
-  one, which would leave the catalog unable to store anything.
-- **Paste** reads the clipboard through Electron rather than `navigator.clipboard`,
-  which needs a permission grant and misses bitmaps put there by screenshot tools.
-  <kbd>Ctrl</kbd>+<kbd>V</kbd> remains the native paste, so it still works inside the
-  spec editor's text fields; the menu item is <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>.
-- The window remembers its size, position and maximised state between launches, and
-  a second launch focuses the running window rather than opening a rival copy of the
-  catalog.
-- The renderer is sandboxed with context isolation on and node integration off, under
-  a content security policy that permits no network access at all. The preload
-  exposes exactly two functions.
-

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { isDesktop } from '../lib/desktop';
 import { adoptLocalCatalog, countLocalCatalog } from '../lib/session';
 import type { Account } from '../lib/accounts';
 import {
-  cancelConnect,
   connect,
   connectionStatus,
   readSettings,
@@ -42,43 +40,11 @@ export function SyncPanel({
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [strayCount, setStrayCount] = useState(0);
-  const [tokenEncrypted, setTokenEncrypted] = useState<boolean | null>(null);
-  const [hasSecret, setHasSecret] = useState(false);
-  const [secretDraft, setSecretDraft] = useState('');
 
   useEffect(() => {
     void readSettings().then(setSettings);
     void connectionStatus().then((status) => setConnected(status.connected));
-    if (isDesktop) {
-      void window.designWarehouse?.google.status().then((status) => {
-        setTokenEncrypted(status.tokenEncrypted);
-        setHasSecret(status.hasSecret);
-      });
-      // A secret stored by an earlier version sits in localStorage; move it into
-      // the keychain and take it out of the page.
-      void readSettings().then(async (stored) => {
-        const legacy = (stored as { desktopClientSecret?: string }).desktopClientSecret;
-        if (!legacy) return;
-        await window.designWarehouse?.google.setCredentials({ clientSecret: legacy });
-        const { desktopClientSecret, ...rest } = stored as GoogleSettings & {
-          desktopClientSecret?: string;
-        };
-        void desktopClientSecret;
-        await writeSettings(rest);
-        setHasSecret(true);
-      });
-    }
   }, []);
-
-  const saveSecret = () => {
-    const value = secretDraft.trim();
-    if (!value) return;
-    void window.designWarehouse?.google.setCredentials({ clientSecret: value }).then(() => {
-      setSecretDraft('');
-      setHasSecret(true);
-      notify('Client secret stored in this computer\u2019s keychain.', 'success');
-    });
-  };
 
   // Designs catalogued before signing in sit in the signed-out catalog; offer
   // to bring them across rather than letting them look lost.
@@ -169,8 +135,8 @@ export function SyncPanel({
           </div>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '8px 0 0' }}>
             Keeps this catalog in step with a <strong>Design Warehouse</strong> folder in your
-            own Google Drive, so the web and desktop apps show the same designs. Where the same
-            design was edited in both places, the most recent edit wins.
+            own Google Drive, so every browser you sign in from shows the same designs. Where
+            the same design was edited in two places, the most recent edit wins.
           </p>
 
           <div className="detail-actions">
@@ -205,25 +171,14 @@ export function SyncPanel({
                   Sign out
                 </button>
               </>
-            ) : busy ? (
-              <>
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-                  Finish signing in in your browser…
-                </span>
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    void cancelConnect();
-                    setBusy(false);
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
             ) : (
-              <button type="button" className="btn btn-primary" onClick={handleConnect}>
-                Sign in with Google
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleConnect}
+                disabled={busy}
+              >
+                {busy ? 'Signing in…' : 'Sign in with Google'}
               </button>
             )}
           </div>
@@ -262,48 +217,17 @@ export function SyncPanel({
         <div className="detail-body">
           <Section title="Setup" defaultOpen={!connected}>
             <p style={{ color: 'var(--text-muted)', fontSize: 12.5, margin: 0 }}>
-              Sync needs an OAuth client from your own Google Cloud project — there is no
-              server in the middle, so the app signs in as you. The two builds need different
-              client types; README → <em>Sharing a catalog across devices</em> has the steps.
+              Sync needs a <strong>Web application</strong> OAuth client from your own Google
+              Cloud project — there is no server in the middle, so the app signs in as you.
+              README → <em>Sharing a catalog across devices</em> has the steps.
             </p>
 
-            {isDesktop ? (
-              <>
-                <TextField
-                  label="Desktop client ID"
-                  value={settings.desktopClientId}
-                  placeholder="123456789-abc.apps.googleusercontent.com"
-                  onChange={(value) => {
-                    const clientId = value.trim();
-                    update({ desktopClientId: clientId });
-                    void window.designWarehouse?.google.setCredentials({ clientId });
-                  }}
-                />
-                <Field label="Desktop client secret">
-                  <input
-                    type="password"
-                    value={secretDraft}
-                    placeholder={hasSecret ? '•••••••••• stored — type to replace' : 'GOCSPX-…'}
-                    onChange={(event) => setSecretDraft(event.target.value)}
-                    onBlur={saveSecret}
-                    autoComplete="off"
-                  />
-                </Field>
-                <p style={{ color: 'var(--text-faint)', fontSize: 11.5, margin: 0 }}>
-                  Google issues a secret for desktop clients and documents it as not
-                  confidential. It is handed straight to the part of the app outside the
-                  page, kept in this computer&rsquo;s keychain, and never read back — which
-                  is why the box above shows no value once one is set.
-                </p>
-              </>
-            ) : (
-              <TextField
-                label="Web client ID"
-                value={settings.webClientId}
-                placeholder="123456789-abc.apps.googleusercontent.com"
-                onChange={(value) => update({ webClientId: value.trim() })}
-              />
-            )}
+            <TextField
+              label="Web client ID"
+              value={settings.webClientId}
+              placeholder="123456789-abc.apps.googleusercontent.com"
+              onChange={(value) => update({ webClientId: value.trim() })}
+            />
 
             <Field label="This device">
               <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13 }}>
@@ -323,14 +247,6 @@ export function SyncPanel({
               </label>
             </Field>
 
-            {isDesktop && tokenEncrypted === false && (
-              <p style={{ color: 'var(--warning)', fontSize: 11.5, margin: 0 }}>
-                This system has no keyring available, so the Google sign-in is kept in a
-                permission-restricted file rather than encrypted. Installing a keyring
-                (gnome-keyring or kwallet) will secure it.
-              </p>
-            )}
-
             <Field label="Automatic sync">
               <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}>
                 <input
@@ -339,7 +255,7 @@ export function SyncPanel({
                   onChange={(event) => update({ autoSync: event.target.checked })}
                   style={{ width: 16, height: 16, accentColor: 'var(--accent-strong)' }}
                 />
-                Sync on launch, and shortly after anything changes
+                Sync on launch, and whenever a design is added, edited or removed
               </label>
             </Field>
           </Section>
@@ -358,10 +274,9 @@ export function SyncPanel({
               <dd>The most recently edited copy replaces the other.</dd>
               <dt>On this device</dt>
               <dd>
-                Designs are stored unencrypted in {isDesktop ? 'your user profile' : "this browser's storage"}.
-                Anyone who can use this {isDesktop ? 'computer account' : 'browser profile'} can
-                read them; the separation between accounts keeps catalogs apart in the app, not
-                from someone inspecting storage directly.
+                Designs are stored unencrypted in this browser&rsquo;s storage. Anyone who can
+                use this browser profile can read them; the separation between accounts keeps
+                catalogs apart in the app, not from someone inspecting storage directly.
               </dd>
             </div>
           </Section>
