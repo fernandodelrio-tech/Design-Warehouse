@@ -1684,15 +1684,20 @@ kbd {
    the drawer was mostly furniture with a letterbox at the bottom of it, and
    every part a thumb naturally lands on was one of the parts that do not move.
 
-   The width alone is the wrong test, though, and that is what left a tablet
-   broken after the phone was fixed. At 1180px a tablet in landscape keeps the
-   two columns, and the left one is the preview: it scrolls only when the
-   image overflows it, so half the drawer answers a drag with nothing. A mouse
-   copes — it can find the right column — but a thumb lands where it lands.
-   So the pointer decides as well as the width: coarse gets one scroller at
-   any size.
+   Where it stacks is a question about ROOM, not about the pointer. Keying it
+   on a coarse pointer as well was too blunt by half: it gave a tablet the
+   phone's drawer at any size, and a tablet has room for the real one. The two
+   columns need 700px between them, so the drawer stacks below 760 — a phone
+   in either orientation and a small tablet in portrait — and keeps its two
+   columns above that, which is every tablet that can hold them.
+
+   The consequence, and it is deliberate: on a touch tablet the preview column
+   scrolls only when the image overflows it, so a drag on the picture does
+   nothing. That is what the picture does on a desktop too. The spec is the
+   column that scrolls, and it is the one under your thumb when you reach for
+   it.
 */
-@media (max-width: 900px), (pointer: coarse) {
+@media (max-width: 760px) {
   .detail {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
