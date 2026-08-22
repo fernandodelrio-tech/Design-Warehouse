@@ -1102,6 +1102,8 @@ kbd {
 
 .sync-panel {
   overscroll-behavior: contain;
+  /* iOS before 13 does not scroll an overflow pane without it. */
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   width: min(640px, 100%);
@@ -1255,10 +1257,20 @@ kbd {
      not.
   */
   overscroll-behavior: contain;
-  /* The overlay itself is the last resort scroller: at a small enough height
-     the panel inside it can still exceed the screen, and a modal you cannot
-     reach the bottom of is a modal with a hidden Close button. */
-  overflow: auto;
+  /*
+     NOT a scroller, and this line is load-bearing.
+
+     It was `overflow: auto`, added as a "last resort" in case the panel ever
+     exceeded the screen — which it cannot, because the panel is capped at
+     100% of this box. So it was a scroll container that could never scroll,
+     sitting directly between the finger and the container that can. On a
+     touch device the gesture goes to the NEAREST scrollable ancestor, and
+     with overscroll-behavior: contain on it that gesture is then claimed and
+     held: the drawer inside never hears about it, and nothing moves at all.
+
+     A container that cannot scroll must not advertise that it can.
+  */
+  overflow: hidden;
   background: color-mix(in srgb, #2b1b21 66%, transparent);
   display: flex;
   justify-content: center;
@@ -1286,6 +1298,8 @@ kbd {
 
 .detail-preview {
   overscroll-behavior: contain;
+  /* iOS before 13 does not scroll an overflow pane without it. */
+  -webkit-overflow-scrolling: touch;
   background: var(--bg);
   border-right: 1px solid var(--border);
   overflow: auto;
@@ -1385,6 +1399,8 @@ kbd {
 
 .detail-body {
   overscroll-behavior: contain;
+  /* iOS before 13 does not scroll an overflow pane without it. */
+  -webkit-overflow-scrolling: touch;
   flex: 1;
   overflow-y: auto;
   padding: var(--s1) var(--s5) var(--s5);
@@ -1703,6 +1719,7 @@ kbd {
     grid-template-rows: auto auto;
     overflow-y: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .detail-preview,
