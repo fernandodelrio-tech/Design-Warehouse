@@ -25,6 +25,7 @@ import {
   toClaudePrompt,
   toMarkdownSpec,
 } from './lib/spec';
+import { currentTarget, rememberTarget } from './lib/target';
 import { copyText, downloadBlob, downloadText, exportCatalog, importCatalog } from './lib/transfer';
 import type { DesignRecord } from './lib/types';
 import { connectionStatus, disconnect, lastSyncAt, readSettings, runSync } from './lib/sync';
@@ -531,10 +532,14 @@ export default function App() {
 
   const copySpec = useCallback(
     async (record: DesignRecord) => {
+      const target = currentTarget();
       try {
-        await copyText(toClaudePrompt(record));
+        await copyText(toClaudePrompt(record, target));
+        rememberTarget(target);
         notify(
-          `Prompt for "${record.title}" copied — say what to apply it to.`,
+          target
+            ? `Prompt for "${record.title}" copied — applies to ${target}.`
+            : `Prompt for "${record.title}" copied — say what to apply it to.`,
           'success',
         );
       } catch {
@@ -607,9 +612,15 @@ export default function App() {
   // --- bulk + catalog actions ---------------------------------------------
 
   const copySelectedSpecs = async () => {
-    const text = toCatalogMarkdown(selectedRecords);
-    await copyText(text);
-    notify(`Copied ${selectedRecords.length} spec(s) as one document.`, 'success');
+    const target = currentTarget();
+    await copyText(toCatalogMarkdown(selectedRecords, target));
+    rememberTarget(target);
+    notify(
+      target
+        ? `Copied ${selectedRecords.length} spec(s) to apply to ${target}.`
+        : `Copied ${selectedRecords.length} spec(s) as one document.`,
+      'success',
+    );
   };
 
   const downloadSelectedSpecs = () => {

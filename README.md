@@ -181,17 +181,23 @@ remainder section at the end.
 From a card, hover and hit the copy icon. From the detail drawer:
 
 - **Copy prompt for Claude** — the spec wrapped in instructions for *applying* it to
-  something. Paste it into Claude Code or Claude Design and say what the target is —
-  your app, a page, a component, a deck. The prompt opens with a line to replace:
+  something. **Apply it to** in the drawer is where you say what that something is —
+  "the admin dashboard in this repo", "a pitch deck" — and it is baked straight into
+  the copied text, so there is nothing to add once you paste:
 
   ```
   ## Apply it to
 
-  > **[ REPLACE THIS LINE — what should this design be applied to? ]**
+  > **the admin dashboard in this repo**
   ```
 
-  Naming the target in your own message works just as well; the prompt says to use
-  that and ignore the placeholder, and to ask rather than guess if neither is there.
+  It is remembered across designs and sessions, and offered back as suggestions once
+  you have used a few, because you usually restyle one project at a time. The copy
+  icon on a card uses the same target without opening the drawer.
+
+  Leave it blank and the prompt carries a placeholder instead, telling the reader to
+  use whatever target you named in your own message, and to ask rather than guess if
+  you named none.
 
   The rest of it is the part worth having. It establishes that a catalogued design is
   a visual *language* and not a page to reproduce — the screenshot's own content is

@@ -190,18 +190,27 @@ export function toMarkdownSpec(record: DesignRecord): string {
  * what was wanted was an existing app restyled. The target is now the first
  * thing in the prompt and the prompt says to ask when it is missing.
  */
-export function toClaudePrompt(record: DesignRecord): string {
+export function toClaudePrompt(record: DesignRecord, target = ''): string {
+  const named = target.trim();
   return [
     `Apply the design language below — "${record.title}" — to the target named in the`,
     'next section.',
     '',
     '## Apply it to',
     '',
-    '> **[ REPLACE THIS LINE — what should this design be applied to? ]**',
-    '>',
-    '> An app, a page, a component, a document, a deck, a repository. If I named a',
-    '> target elsewhere in my message, use that and ignore this line. If neither is',
-    '> true, ask me what the target is before building anything.',
+    ...(named
+      ? [
+          `> **${named}**`,
+          '>',
+          '> If that is ambiguous, or you cannot find it, ask me before building anything.',
+        ]
+      : [
+          '> **[ REPLACE THIS LINE — what should this design be applied to? ]**',
+          '>',
+          '> An app, a page, a component, a document, a deck, a repository. If I named a',
+          '> target elsewhere in my message, use that and ignore this line. If neither is',
+          '> true, ask me what the target is before building anything.',
+        ]),
     '',
     '## How to use what follows',
     '',
@@ -330,12 +339,14 @@ export function toCssVariables(record: DesignRecord): string {
 }
 
 /** One document covering a selection — handy for seeding a whole project. */
-export function toCatalogMarkdown(records: DesignRecord[]): string {
+export function toCatalogMarkdown(records: DesignRecord[], target = ''): string {
+  const named = target.trim();
   const header = [
     '# Design Warehouse export',
     '',
     `${records.length} design${records.length === 1 ? '' : 's'} · exported ${fmtDate(Date.now())}`,
     '',
+    ...(named ? [`**Apply these to:** ${named}`, ''] : []),
     'Each section below is a self-contained design language: colours, typography, layout',
     'and effects measured from one screenshot. They are references to apply to something',
     'you already have or are about to build — name the target, then say which of these to',

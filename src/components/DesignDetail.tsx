@@ -10,6 +10,13 @@ import {
   toTokens,
 } from '../lib/spec';
 import { COMPONENTS, CATEGORIES, FONT_STACKS, PLATFORMS, STYLE_KEYWORDS } from '../lib/suggestions';
+import {
+  MAX_TARGET,
+  currentTarget,
+  recentTargets,
+  rememberTarget,
+  setCurrentTarget,
+} from '../lib/target';
 import { copyText, downloadText } from '../lib/transfer';
 import type { ColorToken, DesignRecord, TypeStep } from '../lib/types';
 import { useNotify } from './Toast';
@@ -47,6 +54,10 @@ export function DesignDetail({
   const url = useFullImageUrl(record.id);
   const [zoomed, setZoomed] = useState(false);
   const [draft, setDraft] = useState(record);
+  // Remembered across designs and sessions: you usually restyle one project at
+  // a time, so the field is nearly always already right.
+  const [target, setTarget] = useState(currentTarget);
+  const [recent] = useState(recentTargets);
   const draftRef = useRef(draft);
   draftRef.current = draft;
   // Tracks whether the user has actually changed something, so closing an
@@ -172,12 +183,46 @@ export function DesignDetail({
               </button>
             </div>
 
+            <Field label="Apply it to">
+              <input
+                className="apply-target"
+                value={target}
+                maxLength={MAX_TARGET}
+                list="dw-recent-targets"
+                placeholder="the admin dashboard, this repo's UI, a pitch deck…"
+                onChange={(event) => {
+                  setTarget(event.target.value);
+                  setCurrentTarget(event.target.value);
+                }}
+                aria-label="What to apply this design to"
+              />
+              {recent.length > 0 && (
+                <datalist id="dw-recent-targets">
+                  {recent.map((value) => (
+                    <option key={value} value={value} />
+                  ))}
+                </datalist>
+              )}
+              <span className="apply-hint">
+                {target.trim()
+                  ? 'Baked into the copied prompt, and remembered for next time.'
+                  : 'Optional \u2014 left blank, the prompt asks what to apply the design to.'}
+              </span>
+            </Field>
+
             <div className="detail-actions">
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => copy('Prompt', toClaudePrompt(draft))}
-                title="Copies a prompt that applies this design to whatever you name — an app, a page, a deck"
+                onClick={() => {
+                  rememberTarget(target);
+                  void copy('Prompt', toClaudePrompt(draft, target));
+                }}
+                title={
+                  target.trim()
+                    ? `Copies a prompt that applies this design to: ${target.trim()}`
+                    : 'Copies a prompt that applies this design. Name a target above and it is baked in.'
+                }
               >
                 <IconSparkle /> Copy prompt for Claude
               </button>

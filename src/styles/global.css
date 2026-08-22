@@ -648,13 +648,26 @@ select {
   border-color: var(--border-strong);
 }
 
+/*
+   z-index matters here. The checkbox is positioned and comes before the image
+   button in the DOM, and the image button is positioned too — so with both at
+   `z-index: auto` the image painted on top and swallowed every click. Selection
+   was reachable only by tabbing to the box and pressing space. The hover
+   actions never had the problem because they come after the image.
+
+   The backing square is so the box is visible at all: it sits on whatever
+   screenshot was catalogued, which may be any colour.
+*/
 .card-select {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  z-index: 2;
+  top: var(--s2);
+  left: var(--s2);
   width: 20px;
   height: 20px;
   accent-color: var(--accent-strong);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--bg) 82%, transparent);
+  background: var(--bg);
   opacity: 0;
   cursor: pointer;
 }
@@ -1071,6 +1084,35 @@ kbd {
 .detail-title:focus {
   border-color: var(--accent);
   background: var(--surface);
+}
+
+/* The target field: full width above the export buttons, so it is read before
+   the button that bakes it in rather than after. */
+.apply-target {
+  width: 100%;
+  padding: var(--s2) var(--s3);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: var(--t-small);
+  outline: none;
+}
+
+.apply-target:focus {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.apply-target::placeholder {
+  color: var(--text-faint);
+}
+
+.apply-hint {
+  display: block;
+  margin-top: var(--s1);
+  color: var(--text-faint);
+  font-size: var(--t-label);
 }
 
 .detail-actions {
