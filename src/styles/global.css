@@ -1108,7 +1108,9 @@ kbd {
   flex-direction: column;
   min-height: 0;
   width: min(640px, 100%);
-  max-height: 100%;
+  /* The same absolute cap as the drawer; see the note on .detail. */
+  max-height: calc(100vh - var(--s5) * 2);
+  max-height: calc(100dvh - var(--s5) * 2);
   margin: auto;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
@@ -1275,6 +1277,24 @@ kbd {
   background: color-mix(in srgb, #2b1b21 66%, transparent);
   display: flex;
   justify-content: center;
+  /*
+     Stretched, and that is load-bearing: it is what gives the panel a DEFINITE
+     height for its grid rows to resolve against. Centring it instead — tried,
+     briefly — lets the panel size to its content, the rows size to theirs, and
+     the whole spec is clipped by the cap with nothing able to scroll. That is
+     worth recording because it is exactly the fault being chased here, and it
+     reproduced in one line.
+  */
+  align-items: stretch;
+  /*
+     And the box itself is the VISIBLE viewport, not the layout one. `inset: 0`
+     on iOS resolves against a layout viewport that includes the strip behind
+     the toolbars, so the panel stretches to a height taller than the screen
+     and its lower edge — along with part of whatever is scrolling inside it —
+     sits under the chrome. It reads as a drawer cut off at the bottom.
+  */
+  height: 100vh;
+  height: 100dvh;
   padding: var(--s5);
   animation: fade-in 0.15s ease;
 }
@@ -1309,7 +1329,23 @@ kbd {
   display: grid;
   grid-template-columns: minmax(320px, 1.15fr) minmax(380px, 0.85fr);
   width: min(1400px, 100%);
-  max-height: 100%;
+  /*
+     An absolute cap, not a percentage.
+
+     `max-height: 100%` has to resolve against this panel's containing block,
+     and that containing block is a flex container — which is where WebKit and
+     Blink part company. Where the percentage does not resolve, the panel takes
+     its content's height, the column inside it is no longer capped by
+     anything, and the spec is clipped by an ancestor: the reader sees a drawer
+     that is cut off at the bottom and cannot be scrolled to the rest, which is
+     exactly what an iPad showed.
+
+     Stated against the viewport there is nothing to resolve. `dvh` is the
+     honest unit on a tablet, where the toolbars come and go; `vh` is the same
+     figure for anything that does not know what a `dvh` is.
+  */
+  max-height: calc(100vh - var(--s5) * 2);
+  max-height: calc(100dvh - var(--s5) * 2);
   min-height: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
@@ -1938,8 +1974,13 @@ kbd {
   .detail,
   .sync-panel {
     width: 100%;
-    height: 100%;
-    max-height: 100%;
+    /* The overlay's padding is zero at this width, so the panel is the
+       viewport — again in absolute units rather than a percentage of a flex
+       container. */
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     border: 0;
     border-radius: var(--radius);
   }
