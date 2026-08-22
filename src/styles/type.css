@@ -2,40 +2,50 @@
    and so nothing about opening the app is visible to a font CDN.
    Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
 
-/* Archivo, one heavy weight. Square shoulders, flat terminals and a wide set —
-   the letterform equivalent of a wall with an opening cut in it, which is what
-   this design is. Headings only; it is too assertive to run. */
+/* Instrument Serif for the display sizes. This design measured a 74px ink
+   height against a 14px body — a ratio of five — and a face with that much
+   stroke contrast is what a jump like it is for: at 84px the thins are
+   hairlines and the whole page turns on the masthead. One weight, no italic;
+   it is never asked to run at text sizes. */
 @font-face {
-  font-family: 'Archivo';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('./fonts/archivo-700.woff2') format('woff2');
-}
-
-/* Space Grotesk for everything else. Technical rather than warm, with the
-   clipped diagonals and open counters that stay legible at the 12px labels
-   this app is full of. */
-@font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'Instrument Serif';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./fonts/space-grotesk-400.woff2') format('woff2');
+  src: url('./fonts/instrument-serif-400.woff2') format('woff2');
+}
+
+/* Inter underneath it. The capture is 48% detail and 34% flat space — the
+   densest of the six — so the text face is chosen for how it holds at 12px in
+   a crowded column rather than for how it looks large. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/inter-400.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('./fonts/space-grotesk-500.woff2') format('woff2');
+  src: url('./fonts/inter-500.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Space Grotesk';
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/inter-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/space-grotesk-700.woff2') format('woff2');
+  src: url('./fonts/inter-700.woff2') format('woff2');
 }

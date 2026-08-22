@@ -1,110 +1,97 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Scarlet Threshold".
+   Design Warehouse — application shell, wearing "Saffron Broadsheet".
 
-   This palette is the most constrained of the six, and one measurement shapes
-   everything: the page ground #535358 is the SECOND-LIGHTEST colour in the set.
-   Every other token except the ink is darker than the page. So a dark theme
-   here is not a dark page with lighter cards — it is a mid-grey wall with black
-   openings cut into it, and that is the composition the skin builds.
+   The most generous palette of the six: fourteen of its twenty-eight pairs
+   clear 4.5:1, and for the first time the three text levels are all MEASURED
+   rather than mixed. The ink at 18.01, the brown at 8.59, the mid-brown at
+   5.30 — a full hierarchy straight off the pixels, on the page and on the card
+   alike. Nothing here had to be derived to make text legible.
 
-   The second measurement that shapes it: the scarlet #c53d3a sits at luminance
-   0.16 against a page at 0.09. It is 1.49:1 on the page and carries the ink at
-   only 3.88:1, so it can be neither type on the page nor a button ground under
-   a small label. It works only against the near-blacks — 3.37 on #1a1b1d, 4.08
-   on #010101 — which is why the colour in this design lives INSIDE the wells
-   and not on the wall.
+   The saffron is unusual too: at 5.20:1 on the page it is the first accent in
+   the six that is legible AS TYPE, so links can be the accent colour instead
+   of the ink. It also carries a white label at 5.20, so it is a button ground
+   in the same breath.
 
-   What does carry a label is the measured hairline #ed5c5b: knock #010101 out
-   of it and you get 6.24:1. So the design's line colour is also its action
-   colour, which is the one place this palette is generous, and the primary
-   button keeps a real scarlet instead of a washed-out one.
+   That last fact inverts the hover convention. The spec says to shift the
+   accent toward the light, because darkening one usually kills its own label
+   first — but that reasoning assumes a DARK label. This label is white, so
+   lightening is what kills it: twelve percent toward the page takes the button
+   from 5.20 to 4.29 and out of AA before the shift is visible. Hover therefore
+   darkens here, and the note is in --accent-strong.
 
-   Only two text levels clear AA on the page (5.8 and 4.72). The third exists
-   only inside a well, where the ground is #1a1b1d and a dimmer ink still
-   reaches 5.76. Hierarchy in this design is made by sinking the ground, not by
-   fading the ink.
+   The other thing this design measured is elevation — 19px of falloff at
+   20/255 — and it needs it, because the page and the card are 1.07:1 apart.
+   The two largest tokens are both near-white, so a panel here is defined by
+   its shadow rather than by its tone, which is what the measurement is for.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     background #535358 34%   muted   #858587 12%   muted-2 #303235 12%
-     surface    #9b574f 11%   muted-3 #1a1b1d 10%   muted-4 #010101  9%
-     accent     #c53d3a  8%   text    #e0e0e2  4%   hairline #ed5c5b 1px  */
+     background #fefefe 31%   text    #2d0a03 24%   muted   #fbf7e1 18%
+     muted-2    #664429 11%   muted-3 #876442  7%   muted-4 #c18b53  3%
+     muted-5    #e2cc9d  3%   accent  #c0410c  2%   hairline #dbdbdb 1px  */
 
-  --bg: #535358;                                        /* text 5.80:1 */
-  --bg-elevated: #303235;                               /* text 9.75:1 */
-  /* The spec calls #9b574f the surface, and it is not used as one: the ink on
-     it is 4.12:1, which is AA Large and not enough for a card full of body
-     text. The wells are the near-blacks instead and the brick becomes a mark,
-     which is what the instructions say to do with a colour that fails. */
-  --surface: #1a1b1d;                                   /* text 13.07:1 */
-  --surface-hover: #303235;                             /* text 9.75:1 */
-  --chrome: #010101;                                    /* text 15.83:1 */
+  --bg: #fefefe;                                        /* ink 18.01:1 — AAA */
+  --bg-elevated: #fbf7e1;
+  --surface: #fbf7e1;                                   /* ink 16.86:1 — AAA */
+  --surface-hover: color-mix(in srgb, #e2cc9d 34%, #fbf7e1);
+  --chrome: #fbf7e1;
 
-  /* The measured grey, which is what a quiet edge is here. The scarlet line
-     is a measured 1px feature of a design that is 8% accent and 12% grey; put
-     it on every card and chip and it stops being a line and becomes the skin.
-     So the ordinary edge is grey and the scarlet is spent deliberately, below. */
-  --border: #858587;                    /* 4.68 on a well, 5.67 on the chrome */
-  --border-scarlet: #ed5c5b;            /* measured hairline; 5.16 on a well */
-  /* On the page ground nothing measured reaches 3:1 except the ink, so an edge
-     that has to show against the wall is drawn in it. */
-  --border-strong: #e0e0e2;                             /* 5.80 on the page */
+  /* The measured hairline is #dbdbdb, and it is 1.37:1 on the page — fine for
+     a divider, invisible as the edge of a control. So the general border is
+     the measured mid-brown, which is a real rule at 5.30, and the hairline
+     keeps the job it was measured doing. */
+  --border: #876442;                                    /* 5.30 page / 4.96 card */
+  --rule: #dbdbdb;                                      /* the measured hairline */
+  /* A broadsheet's rules are its structure. This is the heavy one, under the
+     masthead and under each section heading, in the ink itself. */
+  --rule-heavy: #2d0a03;
+  --border-strong: #2d0a03;
 
-  --text: #e0e0e2;                              /* 5.80 page / 13.07 well */
-  /* Derived: the ink a seventh of the way to the page. The last level that
-     still clears AA out on the wall. */
-  --text-muted: color-mix(in srgb, #e0e0e2 85%, #535358);   /* 4.72 page */
-  /* Derived toward the WELL, not the page, because a well is the only ground
-     it is allowed on. Tuned against the LIGHTEST of the three wells, #303235,
-     rather than the darkest: aimed at #1a1b1d it read 5.76 there and 4.30 in
-     the drawer, which is where the app actually puts it. */
-  --text-faint: color-mix(in srgb, #e0e0e2 70%, #1a1b1d);
-  /* 5.24 on #303235 · 7.02 on #1a1b1d · 8.50 on #010101 */
+  --text: #2d0a03;                                      /* 18.01 page / 16.86 card */
+  --text-muted: #664429;                                /* 8.59 page / 8.04 card */
+  --text-faint: #876442;                                /* 5.30 page / 4.96 card */
 
-  /* Derived: the accent lifted two fifths toward the ink until it clears 3:1
-     on the wall. A ring has to show wherever focus lands, and the measured
-     scarlet does not on the page. */
-  --focus: color-mix(in srgb, #c53d3a 40%, #e0e0e2);   /* 3.38 page / 7.62 well */
-  --focus-ring: color-mix(in srgb, #c53d3a 40%, #1a1b1d);
+  /* The accent is legible as type on both grounds, so focus is simply it. */
+  --focus: #c0410c;                                     /* 5.20 page / 4.87 card */
+  --focus-ring: color-mix(in srgb, #c0410c 24%, #fefefe);
 
-  /* The line colour, doing double duty as the fill that carries a label. */
-  --accent: #ed5c5b;                                    /* #010101 on it 6.24 */
-  /* Toward the ink, not away from it — the sixth design in a row where the
-     accent could only be brightened. Darkening it drops its own label first. */
-  --accent-strong: color-mix(in srgb, #ed5c5b 78%, #e0e0e2);   /* label 7.46 */
-  --accent-soft: color-mix(in srgb, #c53d3a 30%, #1a1b1d);
-  /* The measured accent, spent as a mark inside the wells where it shows. */
-  --accent-deep: #c53d3a;                       /* 3.37 on a well, 4.08 chrome */
-  --on-fill: #010101;
+  --accent: #c0410c;                                    /* white on it 5.20 */
+  /* Darker on hover, against the usual direction and against this spec's own
+     convention: the label is white here, so lifting the fill is what drops it
+     below AA. #ab390b takes the same label to 6.27. */
+  --accent-strong: color-mix(in srgb, #c0410c 86%, #2d0a03);   /* label 6.27 */
+  --accent-soft: color-mix(in srgb, #c0410c 12%, #fefefe);
+  --on-fill: #fefefe;
 
-  --muted-fill: #9b574f;              /* the brick, as a mark; ink on it 4.12 */
+  --muted-fill: #c18b53;                                /* ink on it 6.13 */
+  --muted-fill-2: #e2cc9d;                              /* ink on it 11.55 */
 
-  /* One hue family and a grey, so the semantics separate by temperature rather
-     than by colour: the grey is neutral, the brick is caution, the scarlet is
+  /* One warm family, so the semantics separate by depth rather than by hue:
+     the brown is settled, the measured badge colour is caution, the saffron is
      alarm. Each checked against what actually sits on it. */
-  --success: #858587;                                   /* #010101 on it 5.67 */
-  --warning: #9b574f;                                   /* #010101 on it 3.85 */
-  --danger: #ed5c5b;                                    /* #010101 on it 6.24 */
+  --success: #664429;                                   /* white on it 8.59 */
+  --warning: #bf793a;                          /* the measured badge; ink 5.20 */
+  --danger: #c0410c;                                    /* white on it 5.20 */
 
   /* --- measured: corners --------------------------------------------------
-     Ten on the panels, seven on the one control the analyzer could size. Both
-     figures are off the pixels rather than off the spacing scale. */
-  --radius-sm: 7px;
-  --radius: 10px;
-  --radius-lg: 16px;
+     Forty-two. One value everywhere, because the browser clamps it to half the
+     short side: 42px on a panel, and a true pill on anything control-height —
+     which is exactly what the capture holds, 35x23px badges and 41px circles. */
+  --radius-sm: 42px;
+  --radius: 42px;
+  --radius-lg: 42px;
 
   /* --- measured: elevation ------------------------------------------------
-     13px of falloff reaching 18/255 at its darkest — 7% of the deepest black
-     in the palette. The first of the six designs to measure any elevation at
-     all, so the wells cast rather than sit flat. */
-  --shadow-sm: 0 2px 7px rgb(1 1 1 / 0.07);
-  --shadow: 0 4px 13px rgb(1 1 1 / 0.07);
-  --shadow-lg: 0 8px 26px rgb(1 1 1 / 0.07);
+     19px of falloff reaching 20/255, ~8% of the ink. Load-bearing here: it is
+     what separates a cream card from a white page 1.07:1 away. */
+  --shadow-sm: 0 2px 10px rgb(45 10 3 / 0.08);
+  --shadow: 0 6px 19px rgb(45 10 3 / 0.08);
+  --shadow-lg: 0 12px 38px rgb(45 10 3 / 0.08);
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -116,75 +103,84 @@
   --s7: 48px;
   --s8: 64px;
 
-  /* --- measured: the page inset -------------------------------------------
-     785px of content in a 1024px capture: 119px left, 120px right. */
-  --page-inset: 11.6%;
+  /* --- measured: the frame ------------------------------------------------
+     989px of content in a 1024px capture — 15px left, 20px right. Nearly full
+     bleed, which with 48% density is the whole character of the thing. The
+     gutter is the measured 39px, not the 32 or 48 the spacing scale offers. */
+  --page-inset: 1.7%;
+  --gutter: 39px;
 
   /* --- measured: type scale -----------------------------------------------
-     Two ink heights were measured, ~13px and ~9px, a step of 1.44, on a row
-     pitch of 46px and 32px. Ink height understates font size, so the step is
-     what transfers: body 16, and 1.44 between each heading tier above it. */
+     Five ink heights: 74, 30, 14, 8, 7. The step from body to H3 is 2.14 and
+     from H3 to H2 is 2.47 — a masthead five times the body, which is what
+     makes this a broadsheet rather than a page with headings. Ink height
+     understates font size, so the steps transfer and the absolutes do not:
+     body 16, then those two ratios above it. */
   --t-label: 12px;
   --t-small: 14px;
   --t-body: 16px;
-  --t-lede: 19px;
-  --t-sub: 23px;
-  --t-head: 33px;
+  --t-lede: 20px;
+  --t-sub: 34px;
+  --t-head: clamp(40px, 8vw, 84px);
 
   /* --- chosen: two voices -------------------------------------------------
-     Nothing was recorded for the families. Archivo 700 for headings — square
-     shoulders, flat terminals, a wide set: a wall with an opening cut in it.
-     Space Grotesk for everything else, technical rather than warm, and still
-     open at the 12px labels this app is full of. */
-  --font: 'Space Grotesk', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-ui: 'Space Grotesk', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Archivo', ui-sans-serif, system-ui, 'Helvetica Neue', sans-serif;
+     Nothing was recorded for the families. Instrument Serif for the display
+     sizes — at 84px its thins go to hairlines, which is what a jump of five
+     is for. Inter underneath, chosen for how it holds at 12px in a crowded
+     column rather than for how it looks large. */
+  --font: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Instrument Serif', 'Hoefler Text', Georgia, 'Times New Roman', serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
   --topbar-height: 60px;
 }
 
-/* --- daylight ---------------------------------------------------------------
-   Derived, and the mirror of the same problem: the only light colour measured
-   is the ink itself, so the light theme cannot raise a card off the page by
-   fill alone — #e0e0e2 on a page derived from it lands at 1.32. The card is
-   therefore drawn by its rule rather than by its tone, and the scarlet goes the
-   other way, darkening toward the black until the ink on it clears 5.43. */
+/* --- the late edition -------------------------------------------------------
+   Derived. The ink becomes the ground and the brown family becomes the panels;
+   the two near-whites cross over to being type, where the cream and the light
+   tan give the same three levels the light theme gets from the browns.
 
-:root[data-theme='light'] {
-  color-scheme: light;
+   The saffron is the one token that cannot cross unchanged: on the ink it is
+   3.46:1 and fails as type. Lifted two thirds toward the light tan it reads at
+   5.23 and still carries the ink at 5.23 as a fill — so on this side it is
+   HOVER that lightens, for the same reason the light side darkens. */
 
-  --bg: color-mix(in srgb, #e0e0e2 80%, #535358);       /* ink 9.90:1 */
-  --bg-elevated: #e0e0e2;
-  --surface: #e0e0e2;                                   /* ink 13.07:1 */
-  --surface-hover: color-mix(in srgb, #e0e0e2 90%, #535358);
-  --chrome: #e0e0e2;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-  --border: color-mix(in srgb, #858587 82%, #1a1b1d);   /* 3.14 page / 4.15 card */
-  --border-scarlet: color-mix(in srgb, #ed5c5b 60%, #1a1b1d);   /* 3.75 page */
-  --border-strong: #1a1b1d;
+  --bg: #2d0a03;                                        /* white 18.01:1 */
+  --bg-elevated: color-mix(in srgb, #664429 40%, #2d0a03);
+  --surface: color-mix(in srgb, #664429 55%, #2d0a03);  /* white 12.2 */
+  --surface-hover: color-mix(in srgb, #664429 78%, #2d0a03);
+  --chrome: color-mix(in srgb, #664429 22%, #2d0a03);
 
-  --text: #1a1b1d;                                      /* 9.90 page / 13.07 card */
-  --text-muted: color-mix(in srgb, #1a1b1d 80%, var(--bg));    /* 6.24 on the page */
-  --text-faint: color-mix(in srgb, #1a1b1d 72%, var(--bg));    /* 4.71 on the page */
+  --border: #c18b53;                                    /* 6.13 page */
+  --rule: color-mix(in srgb, #664429 82%, #fbf7e1);
+  --rule-heavy: #fbf7e1;
+  --border-strong: #fbf7e1;
 
-  --focus: color-mix(in srgb, #c53d3a 90%, #010101);    /* 3.48 page / 4.60 card */
-  --focus-ring: color-mix(in srgb, #c53d3a 25%, #e0e0e2);
+  --text: #fefefe;                                      /* 18.01:1 */
+  --text-muted: #e2cc9d;                                /* 11.55 page */
+  --text-faint: color-mix(in srgb, #c18b53 70%, #e2cc9d);
 
-  /* Down toward the black here rather than up toward the ink: on a light
-     ground the label is the light one, so the fill has to fall for it. */
-  --accent: color-mix(in srgb, #c53d3a 80%, #010101);   /* #e0e0e2 on it 5.43 */
-  --accent-strong: color-mix(in srgb, #c53d3a 62%, #010101);
-  --accent-soft: color-mix(in srgb, #c53d3a 16%, #e0e0e2);
-  --accent-deep: #c53d3a;
-  --on-fill: #e0e0e2;
+  --focus: color-mix(in srgb, #c0410c 65%, #e2cc9d);    /* 5.23 on the page */
+  --focus-ring: color-mix(in srgb, #c0410c 40%, #2d0a03);
 
-  --muted-fill: color-mix(in srgb, #9b574f 82%, #010101);
+  --accent: color-mix(in srgb, #c0410c 65%, #e2cc9d);   /* ink on it 5.23 */
+  /* Lighter on hover here, the mirror of the light theme: this label is the
+     ink, so lifting the fill is what raises it. */
+  --accent-strong: color-mix(in srgb, #c0410c 50%, #e2cc9d);   /* label 6.32 */
+  --accent-soft: color-mix(in srgb, #c0410c 34%, #2d0a03);
+  --on-fill: #2d0a03;
 
-  --success: color-mix(in srgb, #858587 62%, #010101);
-  --warning: color-mix(in srgb, #9b574f 82%, #010101);
-  --danger: color-mix(in srgb, #c53d3a 80%, #010101);
+  --muted-fill: #c18b53;                                /* ink on it 6.13 */
+  --muted-fill-2: #e2cc9d;                              /* ink on it 11.55 */
+
+  --success: #e2cc9d;                                   /* ink on it 11.55 */
+  --warning: #c18b53;                                   /* ink on it 6.13 */
+  --danger: color-mix(in srgb, #c0410c 65%, #e2cc9d);   /* ink on it 5.23 */
 }
 
 * {
@@ -203,9 +199,8 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: var(--t-body);
-  /* The measured row pitch: 32px, against a 9px ink height. This design is 74%
-     flat space and that is where most of it comes from. */
-  line-height: var(--s6);
+  /* The measured row pitch: 28px, against a 14px ink height. */
+  line-height: 28px;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -386,8 +381,8 @@ select {
   padding: 0 var(--s5);
   background: color-mix(in srgb, var(--chrome) 94%, transparent);
   backdrop-filter: blur(12px);
-  /* The threshold: the one rule that separates the chrome from the wall. */
-  border-bottom: 3px solid var(--border-scarlet);
+  /* The masthead rule. */
+  border-bottom: 3px solid var(--rule-heavy);
 }
 
 .brand {
@@ -469,7 +464,7 @@ select {
   gap: var(--s2);
   flex-wrap: wrap;
   padding: var(--s3) var(--s5);
-  border-bottom: 1px solid var(--border-scarlet);
+  border-bottom: 1px solid var(--rule);
   background: var(--chrome);
 }
 
@@ -525,7 +520,7 @@ select {
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 300px), 100%), 1fr));
-  gap: var(--s5);
+  gap: var(--gutter);
   align-items: stretch;
   --card-height: calc(var(--card-min, 300px) * 0.62 + 245px);
 }
@@ -551,8 +546,8 @@ select {
   gap: var(--s2);
   margin: 0 0 var(--s3);
   padding-bottom: var(--s2);
-  /* The threshold: the one rule that separates the chrome from the wall. */
-  border-bottom: 3px solid var(--border-scarlet);
+  /* Every section sits above its own rule, as a column of print does. */
+  border-bottom: 3px solid var(--rule-heavy);
   font-size: var(--t-label);
   font-weight: 700;
   letter-spacing: 0.13em;
@@ -739,9 +734,8 @@ select {
   font-family: var(--font);
   font-weight: 600;
   font-size: var(--t-body);
-  /* The measured row pitch: 32px, against a 9px ink height. This design is 74%
-     flat space and that is where most of it comes from. */
-  line-height: var(--s6);
+  /* The measured row pitch: 28px, against a 14px ink height. */
+  line-height: 28px;
   letter-spacing: -0.005em;
   margin-bottom: var(--s1);
 }

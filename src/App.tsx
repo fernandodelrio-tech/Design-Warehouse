@@ -119,7 +119,7 @@ export default function App() {
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
   );
 
   /**
@@ -767,8 +767,8 @@ export default function App() {
                 all four of them show: the near-black chrome. */}
             <span style={{ background: 'var(--accent)' }} />
             <span style={{ background: 'var(--text)' }} />
-            <span style={{ background: 'var(--accent-deep)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
+            <span style={{ background: 'var(--text-muted)' }} />
           </span>
           Design Warehouse
           <span className="brand-count">
