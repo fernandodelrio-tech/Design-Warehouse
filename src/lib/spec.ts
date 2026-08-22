@@ -184,17 +184,23 @@ export function toMarkdownSpec(record: DesignRecord): string {
  * The prompt behind "Copy prompt for Claude".
  *
  * Its whole job is to establish that what follows is a design *language* to be
- * applied to something the reader names — not a page to rebuild. The earlier
- * wording opened with "Build a faithful implementation of the design below",
- * and that reliably produced a standalone reproduction of the screenshot when
- * what was wanted was an existing app restyled. The target is now the first
- * thing in the prompt and the prompt says to ask when it is missing.
+ * applied to something — not a page to rebuild. The original wording opened
+ * with "Build a faithful implementation of the design below", and that reliably
+ * produced a standalone reproduction of the screenshot when what was wanted was
+ * an existing app restyled.
+ *
+ * With no target set the prompt assumes the obvious one: whatever the
+ * conversation it is pasted into is already working on. That is right far more
+ * often than asking is useful — you paste a design prompt into the session
+ * where you are building the thing — and the two overrides are both cheap: a
+ * target named in the message wins, and so does one typed into the drawer.
+ * Asking is kept only for a conversation with nothing in it yet.
  */
 export function toClaudePrompt(record: DesignRecord, target = ''): string {
   const named = target.trim();
   return [
-    `Apply the design language below — "${record.title}" — to the target named in the`,
-    'next section.',
+    `Apply the design language below — "${record.title}" — to the target set out in`,
+    'the next section.',
     '',
     '## Apply it to',
     '',
@@ -205,11 +211,12 @@ export function toClaudePrompt(record: DesignRecord, target = ''): string {
           '> If that is ambiguous, or you cannot find it, ask me before building anything.',
         ]
       : [
-          '> **[ REPLACE THIS LINE — what should this design be applied to? ]**',
+          '> **Whatever we are already working on in this conversation.**',
           '>',
-          '> An app, a page, a component, a document, a deck, a repository. If I named a',
-          '> target elsewhere in my message, use that and ignore this line. If neither is',
-          '> true, ask me what the target is before building anything.',
+          '> If I named a target in my message, that is it. Otherwise take the thing',
+          '> currently in hand — the artifact you just built, the app or repo that is',
+          '> open, the document we have been editing — and restyle that in place.',
+          '> Ask me only if there is genuinely nothing in play yet.',
         ]),
     '',
     '## How to use what follows',
@@ -349,9 +356,10 @@ export function toCatalogMarkdown(records: DesignRecord[], target = ''): string 
     ...(named ? [`**Apply these to:** ${named}`, ''] : []),
     'Each section below is a self-contained design language: colours, typography, layout',
     'and effects measured from one screenshot. They are references to apply to something',
-    'you already have or are about to build — name the target, then say which of these to',
-    'apply to it. The measured values are exact; anything a spec leaves silent is yours to',
-    'choose, and worth saying out loud when you do.',
+    'you already have or are about to build — by default whatever this conversation is',
+    'already working on, unless a target is named above or in the message. Say which of',
+    'these to apply. The measured values are exact; anything a spec leaves silent is yours',
+    'to choose, and worth saying out loud when you do.',
     '',
     '---',
     '',

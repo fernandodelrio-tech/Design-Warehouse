@@ -539,7 +539,7 @@ export default function App() {
         notify(
           target
             ? `Prompt for "${record.title}" copied — applies to ${target}.`
-            : `Prompt for "${record.title}" copied — say what to apply it to.`,
+            : `Prompt for "${record.title}" copied — applies to whatever you're working on.`,
           'success',
         );
       } catch {
@@ -618,7 +618,7 @@ export default function App() {
     notify(
       target
         ? `Copied ${selectedRecords.length} spec(s) to apply to ${target}.`
-        : `Copied ${selectedRecords.length} spec(s) as one document.`,
+        : `Copied ${selectedRecords.length} spec(s) — they apply to whatever you're working on.`,
       'success',
     );
   };

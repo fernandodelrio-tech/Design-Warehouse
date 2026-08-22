@@ -195,9 +195,12 @@ From a card, hover and hit the copy icon. From the detail drawer:
   you have used a few, because you usually restyle one project at a time. The copy
   icon on a card uses the same target without opening the drawer.
 
-  Leave it blank and the prompt carries a placeholder instead, telling the reader to
-  use whatever target you named in your own message, and to ask rather than guess if
-  you named none.
+  Leave it blank and the prompt assumes the obvious target — **whatever the
+  conversation you paste it into is already working on**: the artifact just built, the
+  repo that is open, the document being edited. That is right far more often than
+  asking is useful, since you paste a design prompt into the session where you are
+  building the thing. Naming a target in your own message still overrides it, and the
+  prompt asks only when there is genuinely nothing in play yet.
 
   The rest of it is the part worth having. It establishes that a catalogued design is
   a visual *language* and not a page to reproduce — the screenshot's own content is

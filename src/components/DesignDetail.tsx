@@ -189,7 +189,7 @@ export function DesignDetail({
                 value={target}
                 maxLength={MAX_TARGET}
                 list="dw-recent-targets"
-                placeholder="the admin dashboard, this repo's UI, a pitch deck…"
+                placeholder="whatever the conversation is working on"
                 onChange={(event) => {
                   setTarget(event.target.value);
                   setCurrentTarget(event.target.value);
@@ -206,7 +206,7 @@ export function DesignDetail({
               <span className="apply-hint">
                 {target.trim()
                   ? 'Baked into the copied prompt, and remembered for next time.'
-                  : 'Optional \u2014 left blank, the prompt asks what to apply the design to.'}
+                  : 'Left blank, the prompt applies the design to whatever the conversation is already working on.'}
               </span>
             </Field>
 
@@ -221,7 +221,7 @@ export function DesignDetail({
                 title={
                   target.trim()
                     ? `Copies a prompt that applies this design to: ${target.trim()}`
-                    : 'Copies a prompt that applies this design. Name a target above and it is baked in.'
+                    : 'Copies a prompt that applies this design to whatever the conversation is working on. Name a target above to override.'
                 }
               >
                 <IconSparkle /> Copy prompt for Claude
