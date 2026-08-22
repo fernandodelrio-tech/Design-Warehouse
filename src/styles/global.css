@@ -1,115 +1,101 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Cinnabar Invitation".
+   Design Warehouse — application shell, wearing "Fern Overture".
 
-   One measurement decides the whole skin: the page #5055ac is the DARKEST
-   colour in the palette. Everything else is lighter than the ground it sits
-   on, which is the opposite of every other design this app has worn.
+   Six tokens, and unusually for these palettes almost all of them work. THREE
+   separate grounds carry text: the stone page (ink 10.35, fern 6.29), the
+   white card (ink 16.05, fern 9.75) and the fern itself, which is a quarter of
+   the canvas and carries white at 9.75, stone at 6.29 and mint at 7.09. That
+   is what "mixed light/dark" means here — not a theme toggle but a dark band
+   living inside a light page, so the chrome is the fern and the catalog is the
+   stone.
 
-   The consequence is severe. Only four pairs in the whole set clear 4.5:1, and
-   all four are against the page — the white, the blush accent, and the two
-   near-whites the capture measured as a button and an avatar. NOTHING carries
-   text on anything else. The lilac, the mauve, the rose and the pink are 55%
-   of the canvas between them and not one of them is a ground that type can sit
-   on: white on the rose is 3.26, the accent on it 2.45.
+   The exception is the accent. The mint is 1% of the canvas and fails as type
+   on both light grounds — 1.13 on the page, 1.38 on a card — and this design
+   has no borders and no shadows to give it an edge instead. So the mint cannot
+   be the primary button the palette names it, because a button whose only cue
+   is its label is not identifiable as one. The primary is the fern: 6.29
+   against the page as a shape, 9.75 under its label. The mint goes where it
+   does show, which is on the fern (7.09) and as the soft wash on a white card.
 
-   So the colour in this design lives in MARKS, not in surfaces — which is
-   exactly what the measurements say it does. All fifteen blocks are flat: no
-   shadow anywhere, no gradient anywhere, and twelve of them borderless. There
-   are no raised panels in this design because there is nothing to raise them
-   onto: lifting a surface out of this page buys 1.1:1 of separation and costs
-   a text level. So nothing is lifted. A tile is a screenshot floating on
-   indigo with its type beneath it, and the mid-tones are spent on swatches,
-   rules and the brand mark, where nothing has to be read on them.
+   Nothing is bordered and nothing is raised — all nine blocks measured
+   borderless and flat — so the whole structure is carried by three fills and
+   the space between them. Which is the other half of this design: 73% of the
+   canvas is flat, the gutter is 10px, and the corners are 80px. Big soft
+   shapes packed close on a lot of empty ground.
 
-   Three text levels do exist, and all three are derived, because the palette
-   holds exactly one colour that carries type on the page and it is the white:
-   6.38, 5.37 and 4.92, each the ink carried a measured distance toward the
-   ground.
-
-   Two measured radii, not one: 17px on panels and 3px on controls, from a
-   48x29px button the capture held. Soft shapes, crisp controls.
-
-   And for the first time in six designs the spec's hover convention is right
-   as written. It says lighten, on the reasoning that darkening a saturated
-   accent kills its own label. This accent is pale and its label is the indigo,
-   so lightening is what RAISES it — 4.80 to 5.10. Followed, not overridden.
+   The hover convention is followed as written, and is right twice over: the
+   mint carries a dark label so lightening raises it, and the fern carries a
+   light one so darkening raises that. Both move away from their label.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     background #5055ac 19%   muted   #8e8ac9 18%   muted-2 #beabcc 17%
-     surface    #bb799e 14%   muted-3 #daccdc 11%   text    #fdfdfe  9%
-     accent     #f8d6d1  6%   muted-4 #e9a6b1  6%
-     hairline #9b9dd1 1px, on 3 of 15 blocks · no elevation, no gradient
-     button #f7f7f9 48x29 at 3px corners · avatar #ffffff 28px           */
+     background #d1cfc2 26%   muted #344745 25%   muted-2 #78857c 17%
+     surface    #fefefd 17%   text  #1b2220 13%   accent  #cbe0d2  1%
+     no borders on any of 9 blocks · no elevation · no gradients
+     radius 80px · gutter 10px · 7 icon shapes at ~18px                  */
 
-  --bg: #5055ac;                                        /* white 6.38:1 */
-  /* Not raised, because nothing in this design is: all fifteen blocks are
-     flat. A panel here is the page with something on it. */
-  --bg-elevated: #5055ac;
-  --surface: #5055ac;
-  --surface-hover: color-mix(in srgb, #8e8ac9 20%, #5055ac);
-  --chrome: #5055ac;
+  --bg: #d1cfc2;                                        /* ink 10.35:1 — AAA */
+  --bg-elevated: #fefefd;
+  --surface: #fefefd;                                   /* ink 16.05:1 — AAA */
+  --surface-hover: color-mix(in srgb, #d1cfc2 12%, #fefefd);
+  /* The fern, at close to the quarter of the canvas it was measured at. */
+  --chrome: #344745;                                    /* white on it 9.75 */
+  --chrome-hover: color-mix(in srgb, #78857c 28%, #344745);
 
-  /* The measured hairline is 2.51 on the page, which is under the 3:1 a
-     control boundary needs, so it stays on the three decorative rules it was
-     measured on. Controls take the measured pale instead, at 4.22. */
-  --border: #daccdc;                                    /* 4.22 on the page */
-  --rule: #9b9dd1;                                      /* the measured hairline */
-  --rule-heavy: #daccdc;
-  --border-strong: #fdfdfe;
+  /* Nothing is bordered in this design, so these are for the two places the
+     app needs a boundary rather than for anything the capture had: a form
+     control, which must reach 3:1 to be findable, and a focus ring. */
+  --border: #344745;                                    /* 6.29 on the page */
+  --rule: color-mix(in srgb, #344745 34%, #d1cfc2);
+  --rule-heavy: #344745;
+  --border-strong: #1b2220;
 
-  --text: #fdfdfe;                                      /* 6.38:1 */
-  /* Derived, both of them: the white is the only colour in the palette that
-     carries type on this page, so every level below it has to be made by
-     carrying that white toward the ground. */
-  --text-muted: color-mix(in srgb, #fdfdfe 88%, #5055ac);   /* 5.37 */
-  --text-faint: color-mix(in srgb, #fdfdfe 82%, #5055ac);   /* 4.92 */
+  --text: #1b2220;                                      /* 10.35 page / 16.05 card */
+  /* Measured, not mixed: the fern is exactly the second level. */
+  --text-muted: #344745;                                /* 6.29 page / 9.75 card */
+  /* Derived: the ink carried a third of the way to the page. */
+  --text-faint: color-mix(in srgb, #1b2220 70%, #d1cfc2);   /* 4.78 page / 7.41 card */
 
-  --focus: #f8d6d1;                                     /* 4.80 on the page */
-  --focus-ring: color-mix(in srgb, #f8d6d1 34%, #5055ac);
+  --focus: #344745;                                     /* 6.29 on the page */
+  --focus-ring: color-mix(in srgb, #344745 26%, #d1cfc2);
 
-  /* The blush, which is a FILL that carries the indigo, not type on a fill. */
-  --accent: #f8d6d1;                                    /* indigo on it 4.80 */
-  /* Lighter on hover, and this time the spec's own convention says so and is
-     right: the label is the dark one, so lifting the fill raises it to 5.10. */
-  --accent-strong: color-mix(in srgb, #f8d6d1 78%, #fdfdfe);   /* label 5.12 */
-  --accent-soft: color-mix(in srgb, #f8d6d1 26%, #5055ac);
-  /* The button the capture actually measured, and the strongest fill here. */
-  --accent-plain: #f7f7f9;                              /* indigo on it 6.06 */
-  --on-fill: #5055ac;
+  /* The mint. A fill and a mark, never type on a light ground. */
+  --accent: #cbe0d2;                                    /* ink on it 11.67 */
+  /* Toward the light, as the spec's convention says, and right here: the
+     label is the ink, so lifting the fill raises it to 12.47. */
+  --accent-strong: color-mix(in srgb, #cbe0d2 80%, #fefefd);
+  --accent-soft: color-mix(in srgb, #cbe0d2 52%, #fefefd);
+  /* What the primary button actually is, since the mint cannot be one. */
+  --accent-solid: #344745;                              /* white on it 9.75 */
+  --accent-solid-hover: color-mix(in srgb, #344745 78%, #1b2220);   /* label 10.9 */
+  --on-fill: #1b2220;
+  --on-solid: #fefefd;
 
-  --muted-fill: #bb799e;             /* the rose, as a mark; nothing reads on it */
-  --muted-fill-2: #beabcc;           /* the mauve, likewise */
-  --muted-fill-3: #8e8ac9;           /* the lilac, likewise */
+  --muted-fill: #78857c;              /* the sage, as a mark; ink on it 4.20 */
+  --muted-fill-2: color-mix(in srgb, #78857c 60%, #fefefd);   /* ink 7.74 */
 
-  /* No green, no red, no amber — one cool family and two warm pastels, so the
-     semantics separate by warmth: the lilac is settled, the rose is caution,
-     the pink is alarm.
-
-     Not one of the three carries the indigo as a fill — 2.05, 1.96 and 3.26 —
-     and a badge is a fill with a word in it. So each is carried toward the
-     white until it does, keeping its hue and losing only its depth. The hues
-     stay apart; the label reads on all three. */
-  --success: color-mix(in srgb, #8e8ac9 32%, #fdfdfe);  /* indigo on it 4.66 */
-  --warning: color-mix(in srgb, #bb799e 30%, #fdfdfe);  /* indigo on it 4.66 */
-  --danger: color-mix(in srgb, #e9a6b1 48%, #fdfdfe);   /* indigo on it 4.70 */
+  /* One family and no warm colour at all, so the semantics cannot separate by
+     hue and separate by depth instead: mint is settled, the lightened sage is
+     caution, the ink is alarm. Each checked against its own label. */
+  --success: #cbe0d2;                                   /* ink on it 11.67 */
+  --warning: color-mix(in srgb, #78857c 60%, #fefefd);  /* ink on it 7.74 */
+  --danger: #1b2220;                                    /* page on it 10.35 */
 
   /* --- measured: corners --------------------------------------------------
-     Two of them, which is unusual and worth keeping: 17px on panels, and 3px
-     on controls, from the 48x29px button the capture held. */
-  --radius-sm: 3px;
-  --radius: 17px;
-  --radius-lg: 17px;
+     Eighty. The largest of the seven by a long way, and the browser clamps it
+     to half the short side, so a panel keeps 80px and anything control-height
+     becomes a true pill. */
+  --radius-sm: 80px;
+  --radius: 80px;
+  --radius-lg: 80px;
 
   /* --- measured: elevation ------------------------------------------------
-     None. All fifteen blocks step straight to the page with no falloff, so
-     there is no shadow anywhere in this skin — not on the drawer, not on the
-     toasts. What would have been a shadow is one of the three measured rules. */
+     None, on any of the nine blocks. No shadow anywhere in this skin. */
   --shadow-sm: none;
   --shadow: none;
   --shadow-lg: none;
@@ -125,86 +111,129 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     972px of content in a 977px capture — 0px left, 5px right. Full bleed.
-     The two passes disagree about the gutter: the layout estimate puts one
-     near 4% of the width, the finer pass finds no column gap at all. The finer
-     one wins, so the gutter comes off the spacing scale rather than off a
-     measurement that the closer look could not confirm. */
-  --page-inset: 0.5%;
-  --gutter: 24px;
+     971px of content in a 1024px capture, and a 10px gutter — the tightest of
+     the seven, against the largest corners. The margins came out asymmetric,
+     52px left and 1px right; a one-pixel right margin is where the capture was
+     cropped rather than how the page was laid out, so the 5% is applied to
+     both sides. */
+  --page-inset: 5%;
+  --gutter: 10px;
 
   /* --- measured: type scale -----------------------------------------------
-     Only two ink heights survived a 977x553 capture: 8px and 5px, a step of
-     1.6. That is Body over Small, so applying it upward is an extrapolation
-     and is one — body 16, then 1.6 a step above it. */
+     Three ink heights: 17, 12 and 7, steps of 1.42 and 1.71. Body is 17 and
+     the ladder runs up on 1.42. The leadings disagree — 1.75 on the Small
+     rows, 2.29 on the Caption, 2.65 on the Body — and 2.65 is not a leading,
+     it is rows with space between them, so the line height takes the Small
+     row's 1.75, which is the one that reads as leading. */
   --t-label: 12px;
   --t-small: 14px;
-  --t-body: 16px;
-  --t-lede: 20px;
-  --t-sub: 26px;
-  --t-head: clamp(34px, 6vw, 41px);
+  --t-body: 17px;
+  --t-lede: 21px;
+  --t-sub: 24px;
+  --t-head: clamp(30px, 5vw, 34px);
 
   /* --- chosen: two voices -------------------------------------------------
-     Nothing was recorded for the families. Cormorant Garamond for display —
-     old-style, high contrast, long extenders, which is the letterform of an
-     invitation. Manrope underneath: soft and near-geometric, with counters
-     open enough to hold as light type on a dark ground, which is what all of
-     this app's text is here. */
-  --font: 'Manrope', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-ui: 'Manrope', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Cormorant Garamond', 'Hoefler Text', Georgia, serif;
+     Nothing was recorded for the families. Fraunces cut soft and wonky for
+     display — rounded terminals and a deliberate wobble, which is the
+     letterform of 80px corners and a muted sage. DM Sans underneath: near
+     geometric, generously round, and it does not argue with those corners. */
+  --font: 'DM Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'DM Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Fraunces', 'Hoefler Text', Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
   --topbar-height: 60px;
 }
 
-/* --- daylight ---------------------------------------------------------------
-   Derived, by inverting the one relationship the palette actually has: the
-   indigo becomes the ink and the near-white the ground. It works because that
-   pair is measured at 6.06 either way round. The blush cannot come with it —
-   it is 1.26 on a white page — so on this side the accent darkens toward the
-   indigo until it carries the ground back at 4.66, which is the mirror of the
-   dark side's hover moving the other way. */
+/* --- nightfall --------------------------------------------------------------
+   Derived, and this palette inverts more cleanly than any of the others,
+   because the fern is already a working dark ground with three levels on it.
+   So the dark theme is the fern grown into the whole page: the ink becomes the
+   deepest well, the stone becomes the type, and the mint — which could not be
+   seen at all on the light side's page — finally becomes what the palette
+   called it, a legible accent at 7.09. */
 
-:root[data-theme='light'] {
-  color-scheme: light;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-  --bg: #f7f7f9;                                        /* indigo 6.06:1 */
-  --bg-elevated: #f7f7f9;
-  --surface: #f7f7f9;
-  --surface-hover: color-mix(in srgb, #beabcc 26%, #f7f7f9);
-  --chrome: #f7f7f9;
+  --bg: #1b2220;                                        /* stone 10.35:1 */
+  --bg-elevated: #344745;
+  --surface: #344745;                                   /* stone 6.29 / white 9.75 */
+  --surface-hover: color-mix(in srgb, #78857c 26%, #344745);
+  --chrome: color-mix(in srgb, #344745 62%, #1b2220);
+  --chrome-hover: color-mix(in srgb, #78857c 24%, #344745);
 
-  --border: color-mix(in srgb, #8e8ac9 76%, #5055ac);   /* 3.24 on the page */
-  --rule: color-mix(in srgb, #9b9dd1 70%, #5055ac);
-  --rule-heavy: color-mix(in srgb, #8e8ac9 60%, #5055ac);
-  --border-strong: #5055ac;
+  --border: #78857c;                                    /* 4.20 on the page */
+  --rule: color-mix(in srgb, #78857c 62%, #1b2220);
+  --rule-heavy: #78857c;
+  --border-strong: #fefefd;
 
-  --text: #5055ac;                                      /* 6.06:1 */
-  --text-muted: color-mix(in srgb, #5055ac 88%, #f7f7f9);
-  --text-faint: color-mix(in srgb, #5055ac 88%, #f7f7f9);   /* 4.69 */
+  --text: #fefefd;                                      /* 16.05 page / 9.75 card */
+  --text-muted: #d1cfc2;                                /* 10.35 page / 6.29 card */
+  /* Tuned against the fern card, which is the lighter of the two grounds it
+     lands on: aimed at the page it read 4.55 there and 4.26 on a card. */
+  --text-faint: color-mix(in srgb, #d1cfc2 86%, #344745);   /* 5.35 on a card */
 
-  --focus: color-mix(in srgb, #bb799e 74%, #5055ac);
-  --focus-ring: color-mix(in srgb, #bb799e 30%, #f7f7f9);
+  --focus: #cbe0d2;                                     /* 11.67 page / 7.09 card */
+  --focus-ring: color-mix(in srgb, #cbe0d2 30%, #1b2220);
 
-  --accent: color-mix(in srgb, #bb799e 62%, #5055ac);   /* page on it 4.66 */
-  /* Darker on hover here, the mirror of the dark side: this label is the light
-     one, so the fill has to fall for it. */
-  --accent-strong: color-mix(in srgb, #bb799e 40%, #5055ac);
-  --accent-soft: color-mix(in srgb, #f8d6d1 46%, #f7f7f9);
-  --accent-plain: #5055ac;
-  --on-fill: #f7f7f9;
+  --accent: #cbe0d2;                                    /* ink on it 11.67 */
+  --accent-strong: color-mix(in srgb, #cbe0d2 80%, #fefefd);
+  --accent-soft: color-mix(in srgb, #cbe0d2 24%, #1b2220);
+  /* On this side the mint IS the primary: it reads on the page at 11.67 and
+     carries the ink at the same, which is the pairing the palette named. */
+  --accent-solid: #cbe0d2;
+  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
+  --on-fill: #1b2220;
+  --on-solid: #1b2220;
 
-  --muted-fill: #bb799e;
-  --muted-fill-2: #beabcc;
-  --muted-fill-3: #8e8ac9;
+  --muted-fill: #78857c;
+  --muted-fill-2: #d1cfc2;
 
-  /* The same three, falling toward the indigo rather than rising toward the
-     white, because on this side the label is the light one. */
-  --success: color-mix(in srgb, #8e8ac9 40%, #5055ac);  /* page on it 4.51 */
-  --warning: color-mix(in srgb, #bb799e 40%, #5055ac);  /* page on it 4.70 */
-  --danger: color-mix(in srgb, #e9a6b1 30%, #5055ac);
+  --success: #cbe0d2;
+  --warning: #d1cfc2;                                   /* ink on it 10.35 */
+  --danger: color-mix(in srgb, #78857c 62%, #fefefd);   /* ink on it 8.4 */
+}
+
+/*
+   The fern band is a dark region inside a light page — which is what this
+   design's "mixed light/dark" actually is — so it carries the dark side's text
+   levels rather than the page's. Scoped here rather than spelled out on each
+   element, so anything that lands in the chrome is right by default.
+*/
+.topbar,
+.filters {
+  --text: #fefefd;                                      /* 9.75 on the fern */
+  --text-muted: #d1cfc2;                                /* 6.29 */
+  --text-faint: color-mix(in srgb, #d1cfc2 82%, #344745);   /* 5.04 */
+  --border: color-mix(in srgb, #d1cfc2 70%, #344745);   /* 4.32 */
+  --surface: color-mix(in srgb, #78857c 26%, #344745);
+  --surface-hover: color-mix(in srgb, #78857c 44%, #344745);
+  --focus: #cbe0d2;                                     /* 7.09 on the fern */
+  /* And here the mint finally is the primary the palette named it. On the fern
+     it is 7.09 as a shape and carries the ink at 11.67 — the pairing that
+     could not work anywhere on the light page. */
+  --accent-solid: #cbe0d2;
+  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
+  --on-solid: #1b2220;
+  color: var(--text);
+}
+
+/* On the dark side the chrome is already the page's own family, so it inherits
+   the theme and only the fern's own levels need restating. */
+:root[data-theme='dark'] .topbar,
+:root[data-theme='dark'] .filters {
+  --text: #fefefd;
+  --text-muted: #d1cfc2;
+  --text-faint: color-mix(in srgb, #d1cfc2 82%, #344745);
+  --border: color-mix(in srgb, #d1cfc2 70%, #344745);
+  --surface: color-mix(in srgb, #78857c 26%, #344745);
+  --surface-hover: color-mix(in srgb, #78857c 44%, #344745);
+  --focus: #cbe0d2;
+  --accent-solid: #cbe0d2;
+  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
+  --on-solid: #1b2220;
 }
 
 * {
@@ -315,18 +344,20 @@ select {
   cursor: not-allowed;
 }
 
-/* The capture measured its button at #f7f7f9, and that is the strongest fill
-   this palette has: the indigo reads on it at 6.06 against the blush's 4.80. */
+/* Not the accent. The mint is 1.13 on the page and 1.38 on a card, and this
+   design has no border and no shadow to give it an edge, so a mint button
+   would be a label floating on nothing. The fern is 6.29 as a shape and 9.75
+   under its label. */
 .btn-primary {
-  background: var(--accent-plain);
-  border-color: var(--accent-plain);
-  color: var(--on-fill);
+  background: var(--accent-solid);
+  border-color: var(--accent-solid);
+  color: var(--on-solid);
   font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-solid-hover);
+  border-color: var(--accent-solid-hover);
 }
 
 .btn-ghost {
@@ -425,11 +456,10 @@ select {
      where it can still be read on: the ink is 15.8:1 at the top of it and
      11.38:1 at the foot. */
   background: var(--chrome);
-  /* No blur: the spec's convention for what a flat capture cannot show is that
-     surfaces are opaque here, and an opaque masthead needs no backdrop.
-     One of the three rules the design measured — and the only thing that shows
-     against this page besides the type, at 4.22. */
-  border-bottom: 2px solid var(--rule-heavy);
+  /* No rule under it and no blur, because this design measured neither: nine
+     blocks, none bordered, none raised. The fern band separates itself from
+     the stone page by being 6.29:1 away from it. */
+  border-bottom: 0;
 }
 
 .brand {
@@ -511,7 +541,9 @@ select {
   gap: var(--s2);
   flex-wrap: wrap;
   padding: var(--s3) var(--s5);
-  border-bottom: 1px solid var(--rule);
+  /* Continuous with the masthead: one fern band, which is close to the quarter
+     of the canvas the fern was measured at, ending where the stone begins. */
+  border-bottom: 0;
   background: var(--chrome);
 }
 
@@ -772,10 +804,16 @@ select {
   opacity: 1;
 }
 
+/*
+   Inset far enough to clear the corner. At 80px the arc reaches a long way in,
+   and the first version put the chip row and the palette bar straight through
+   it — a measured radius this large is a constraint on the padding, not just a
+   look. The bottom takes more than the sides because the last row is the one
+   the arc crosses.
+*/
 .card-footer {
   flex: 0 0 auto;
-  padding: var(--s3) var(--s3) var(--s4);
-  border-top: 1px solid var(--border);
+  padding: var(--s3) var(--s5) var(--s6);
   line-height: var(--s4);
 }
 

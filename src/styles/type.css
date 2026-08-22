@@ -2,50 +2,41 @@
    and so nothing about opening the app is visible to a font CDN.
    Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
 
-/* Cormorant Garamond for the display sizes. The design is called an
-   invitation and reads like one — an indigo ground, blush and rose, nothing
-   raised — and this is the letterform of that: old-style, high contrast, long
-   extenders. One weight, and never asked to run at text sizes, where its
-   hairlines would disappear against the indigo. */
+/* Fraunces for the display sizes, cut soft and wonky — SOFT at 100, WONK on,
+   optical size 144. This design is 80px corners, a muted sage palette and 73%
+   flat space; a serif with rounded terminals and a deliberate wobble is the
+   letterform of that, where a rational one would fight it. */
 @font-face {
-  font-family: 'Cormorant Garamond';
+  font-family: 'Fraunces';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('./fonts/cormorant-600.woff2') format('woff2');
+  src: url('./fonts/fraunces-600.woff2') format('woff2');
 }
 
-/* Manrope underneath. Soft, near-geometric, with generous counters that hold
-   up as light type on a dark ground — which is what all of this app's text is
-   here, since the page is the darkest colour in the palette. */
+/* DM Sans underneath. Near-geometric with generous round forms, which is what
+   sits under 80px radii without arguing with them, and it holds at the 12px
+   labels this app is full of. */
 @font-face {
-  font-family: 'Manrope';
+  font-family: 'DM Sans';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./fonts/manrope-400.woff2') format('woff2');
+  src: url('./fonts/dm-sans-400.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Manrope';
+  font-family: 'DM Sans';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('./fonts/manrope-500.woff2') format('woff2');
+  src: url('./fonts/dm-sans-500.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./fonts/manrope-600.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Manrope';
+  font-family: 'DM Sans';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/manrope-700.woff2') format('woff2');
+  src: url('./fonts/dm-sans-700.woff2') format('woff2');
 }
