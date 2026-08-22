@@ -495,6 +495,21 @@ export function measureBlockEdge(
       */
       let backwards = 0;
       for (let k = 1; k < profile.length; k++) if (profile[k] < profile[k - 1] - 2) backwards++;
+      /*
+         A falloff is gradual. Where the whole rise happens in one or two
+         pixels the profile is not a shadow settling, it is flat ground and
+         then a STEP onto whatever is next — which is exactly what the walker
+         found between the rows of a flat list: page for twelve pixels, then
+         the next white row. Every one of those rows reported "a 12px shadow
+         at 19/255", the spread being the gap to its neighbour and the
+         strength being the page it crossed. A genuine shadow's largest single
+         step is a small fraction of its total rise; a step is all of it.
+      */
+      let biggest = 0;
+      for (let k = 1; k < profile.length; k++) {
+        biggest = Math.max(biggest, profile[k] - profile[k - 1]);
+      }
+      if (biggest > rise * 0.5) continue;
       if (reach >= 6 && reach < profile.length - 1 && backwards <= 2 && rise < 110) {
         spreads.push(reach);
         strengths.push(rise);

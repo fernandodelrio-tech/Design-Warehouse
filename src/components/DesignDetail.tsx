@@ -702,6 +702,13 @@ export function DesignDetail({
 
             <Section title="Behaviour & accessibility">
               <TextArea
+                label="How it behaves"
+                value={draft.spec.uxNotes}
+                rows={10}
+                placeholder="What each measured component is for, its states, and what has to be true underneath it…"
+                onChange={(value) => setSpec((s) => ({ ...s, uxNotes: value }))}
+              />
+              <TextArea
                 label="Interactions"
                 value={draft.spec.interactions}
                 placeholder="Hover states, focus rings, sticky header, scroll reveals…"

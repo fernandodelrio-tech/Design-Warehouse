@@ -3,6 +3,7 @@ import { estimateLayout } from './layout';
 import { findBlocks, findGradientBlocks, measureDetail, solidBlocks } from './measure';
 import { measureStructure } from './structure';
 import { extractPalette } from './palette';
+import { uxNotes } from './ux';
 import type {
   AutoAnalysis,
   ColorToken,
@@ -11,7 +12,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 5;
+export const ANALYZER_VERSION = 6;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -481,6 +482,23 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
     );
   }
 
+  /*
+     What those components DO. Everything above this line describes how the
+     design looks; without this the reader gets the colour of a button and the
+     radius of a field and has to invent every state, every keyboard path and
+     every piece of structure underneath — which is most of what separates an
+     interface from a picture of one. Keyed to the roles actually found, so a
+     page with no dialog is not told how dialogs behave.
+  */
+  const ux = s
+    ? uxNotes(s.roles, {
+        accent,
+        radius: radius || '',
+        bordered: (e?.withBorder ?? 0) > 0,
+        raised: (e?.withShadow ?? 0) > 0,
+      })
+    : '';
+
   const interactions = s
     ? [
         'Convention, not measured — a screenshot has one state. Derived from the measured tokens:',
@@ -508,6 +526,7 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
     blur,
     animation,
     components,
+    ux,
     interactions,
   };
 }
@@ -550,6 +569,7 @@ export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
       )} capture at ${image.width}x${image.height}.`,
     },
     components: built.components,
+    uxNotes: built.ux,
     effects: {
       shadows: measured.shadows,
       gradients: built.gradients,
@@ -596,6 +616,7 @@ export function reseedSpec(spec: DesignSpec, previous: DesignSpec, next: DesignS
       notes: adopt(spec.layout.notes, previous.layout.notes, next.layout.notes),
     },
     components: adopt(spec.components, previous.components, next.components),
+    uxNotes: adopt(spec.uxNotes, previous.uxNotes, next.uxNotes),
     effects: {
       shadows: adopt(spec.effects.shadows, previous.effects.shadows, next.effects.shadows),
       gradients: adopt(spec.effects.gradients, previous.effects.gradients, next.effects.gradients),

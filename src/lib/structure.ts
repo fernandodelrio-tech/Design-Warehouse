@@ -1,6 +1,6 @@
 import { solidBlocks } from './measure';
 import type { Block } from './measure';
-import type { StructureMeasurement } from './types';
+import type { ComponentRole, StructureMeasurement } from './types';
 
 /**
  * The rest of what a screenshot will tell you: how wide the content sits, what
@@ -436,6 +436,39 @@ function repeats(blocks: Block[], tolerance = 0.12) {
 }
 
 /**
+ * Blocks that sit on one baseline, which is what makes a row of controls a
+ * row rather than a coincidence.
+ *
+ * A toolbar, a tab strip and a pair of buttons are all "small blocks of the
+ * same height", and geometry alone will not tell them apart. What does tell
+ * them apart is how they are spaced: tabs touch, a toolbar breathes, and two
+ * buttons are two buttons. So the grouping is by shared top edge and matching
+ * height, and the naming is left to the caller, which knows how many there
+ * are and how far apart.
+ */
+function baselineRow(blocks: Block[], tolerance = 0.15): Block[][] {
+  const rows: Block[][] = [];
+  for (const b of blocks.slice().sort((p, q) => p.x - q.x)) {
+    const row = rows.find(
+      (r) =>
+        Math.abs(r[0].y - b.y) <= 6 &&
+        Math.abs(r[0].h - b.h) <= Math.max(3, r[0].h * tolerance),
+    );
+    if (row) row.push(b);
+    else rows.push([b]);
+  }
+  return rows.sort((a, b) => b.length - a.length);
+}
+
+/** The median gap between neighbours in a row, left to right. */
+function rowGap(row: Block[]): number {
+  const gaps: number[] = [];
+  const byX = row.slice().sort((a, b) => a.x - b.x);
+  for (let i = 1; i < byX.length; i++) gaps.push(byX[i].x - (byX[i - 1].x + byX[i - 1].w));
+  return gaps.length ? median(gaps) : 0;
+}
+
+/**
  * The component inventory, from geometry alone.
  *
  * Only patterns with real evidence behind them are named — a band across the
@@ -570,6 +603,18 @@ function measureComponents(
   const wide = (b: Block) => b.w >= w * 0.85;
   const pool = solidBlocks(blocks, w, h);
   const found: string[] = [];
+  /*
+     The same inventory, kept as data as well as prose. The line of text is
+     what a person reads; the role is what the export needs in order to say
+     how the thing BEHAVES — a band across the top and a row of pills are
+     different geometry and different interaction, and only the noun says
+     which is which.
+  */
+  const roles: ComponentRole[] = [];
+  const add = (role: string, count: number, detail: string) => {
+    found.push(`${role} — ${detail}`);
+    roles.push({ role, count });
+  };
 
   /*
      Each block is claimed by at most one name, largest structure first. The
@@ -589,7 +634,7 @@ function measureComponents(
   const bar = first((b) => wide(b) && b.y <= h * 0.04 && b.h <= h * 0.16 && b.h >= 16);
   if (bar) {
     claim(bar);
-    found.push(`top navigation — full-width band ~${px(bar.h)}px tall in ${fillOf(bar)}${edging(bar)}`);
+    add('top navigation', 1, `full-width band ~${px(bar.h)}px tall in ${fillOf(bar)}${edging(bar)}`);
   }
 
   const rail = first(
@@ -598,21 +643,29 @@ function measureComponents(
   if (rail) {
     claim(rail);
     const side = rail.x <= w * 0.03 ? 'left' : 'right';
-    found.push(`sidebar navigation — ${side} rail ~${px(rail.w)}px wide in ${fillOf(rail)}${edging(rail)}`);
+    add('sidebar navigation', 1, `${side} rail ~${px(rail.w)}px wide in ${fillOf(rail)}${edging(rail)}`);
   }
 
   const foot = first((b) => wide(b) && b.y + b.h >= h * 0.96 && b.h <= h * 0.3 && b.h >= 24);
   if (foot) {
     claim(foot);
-    found.push(`footer — full-width band ~${px(foot.h)}px tall in ${fillOf(foot)}${edging(foot)}`);
+    add('footer', 1, `full-width band ~${px(foot.h)}px tall in ${fillOf(foot)}${edging(foot)}`);
   }
 
-  if (!bar) {
-    const hero = first((b) => b.w >= w * 0.6 && b.h >= h * 0.2 && b.y <= h * 0.25);
-    if (hero) {
-      claim(hero);
-      found.push(`hero section — ~${px(hero.w)}×${px(hero.h)}px block in ${fillOf(hero)}${edging(hero)}`);
-    }
+  /*
+     A hero is no longer conditional on there being no top bar. It was, and
+     that was a mistake of convenience rather than of evidence: a page with a
+     nav band AND a hero under it is the commonest arrangement there is, and
+     the rule silently threw the hero away on every one of them. What keeps
+     the two apart is that the bar is claimed first, so a hero is whatever
+     wide block is left under it.
+  */
+  const hero = first(
+    (b) => b.w >= w * 0.6 && b.h >= h * 0.2 && b.y <= h * 0.35 && b.h <= h * 0.75,
+  );
+  if (hero) {
+    claim(hero);
+    add('hero', 1, `~${px(hero.w)}×${px(hero.h)}px block in ${fillOf(hero)}${edging(hero)}`);
   }
 
   const cards = repeats(
@@ -621,8 +674,10 @@ function measureComponents(
   if (cards && cards.length >= 3) {
     claim(cards);
     const columns = new Set(cards.map((c) => Math.round(c.x / Math.max(1, cards[0].w * 0.5)))).size;
-    found.push(
-      `card grid — ${cards.length} blocks of ~${px(cards[0].w)}×${px(cards[0].h)}px` +
+    add(
+      'card grid',
+      cards.length,
+      `${cards.length} blocks of ~${px(cards[0].w)}×${px(cards[0].h)}px` +
         (columns > 1 ? ` across ${columns} columns` : ' stacked') +
         ` in ${fillOf(cards)}` +
         spacingOf(cards) +
@@ -633,10 +688,102 @@ function measureComponents(
   const rows = repeats(free().filter((b) => b.w >= w * 0.5 && b.h <= 80 && b.h >= 20))[0];
   if (rows && rows.length >= 4) {
     claim(rows);
-    found.push(
-      `data table / list — ${rows.length} rows of ~${px(rows[0].h)}px in ${fillOf(rows)}` +
-        spacingOf(rows) +
-        edging(rows),
+    add(
+      'data table / list',
+      rows.length,
+      `${rows.length} rows of ~${px(rows[0].h)}px in ${fillOf(rows)}` + spacingOf(rows) + edging(rows),
+    );
+  }
+
+  /*
+     A block that floats: away from every edge, near the middle, and big enough
+     to be the thing you are looking at rather than a card in a grid. That is a
+     dialog, and it is worth naming separately because nothing else on a page
+     behaves like one — it takes the focus, it traps it, and it closes.
+  */
+  const dialog = first(
+    (b) =>
+      b.area >= w * h * 0.12 &&
+      b.area <= w * h * 0.7 &&
+      b.x >= w * 0.04 &&
+      b.y >= h * 0.04 &&
+      b.x + b.w <= w * 0.96 &&
+      b.y + b.h <= h * 0.96 &&
+      Math.abs(b.x + b.w / 2 - w / 2) <= w * 0.08,
+  );
+  if (dialog) {
+    claim(dialog);
+    add(
+      'modal / dialog',
+      1,
+      `~${px(dialog.w)}×${px(dialog.h)}px, centred and clear of every edge, in ` +
+        `${fillOf(dialog)}${spacingOf([dialog])}${edging(dialog)}`,
+    );
+  }
+
+  /*
+     Rows of same-height controls, told apart by their spacing rather than by
+     their shape, because their shape is identical. Tabs touch or nearly touch;
+     a toolbar leaves room between its controls. Tested in that order, tightest
+     first, so a tab strip is never reported as a toolbar.
+  */
+  /*
+     Wider than tall by half again, which is what keeps a row of icon buttons
+     out of here. A square in a row of squares is an icon button — it was being
+     reported as a filter row, and "3 controls of ~44x44px" is a sentence that
+     describes the right pixels under the wrong noun.
+  */
+  const controlRows = baselineRow(
+    free().filter((b) => b.h >= 20 && b.h <= 72 && b.w >= b.h * 1.5 && b.w <= w * 0.5),
+  ).filter((r) => r.length >= 3);
+
+  const tabs = controlRows.find((r) => rowGap(r) <= 8);
+  if (tabs) {
+    claim(tabs);
+    add(
+      'tabs / segmented control',
+      tabs.length,
+      `${tabs.length} segments of ~${px(tabs[0].w)}×${px(tabs[0].h)}px, ` +
+        `${px(rowGap(tabs))}px apart — close enough to read as one control — in ` +
+        `${fillOf(tabs)}${edging(tabs)}`,
+    );
+  }
+
+  const toolbar = controlRows.find((r) => !claimed.has(r[0]) && rowGap(r) > 8);
+  if (toolbar) {
+    claim(toolbar);
+    const span = Math.max(...toolbar.map((b) => b.x + b.w)) - Math.min(...toolbar.map((b) => b.x));
+    add(
+      'toolbar / filter row',
+      toolbar.length,
+      `${toolbar.length} controls of ~${px(toolbar[0].w)}×${px(toolbar[0].h)}px on one baseline, ` +
+        `${px(rowGap(toolbar))}px apart, spanning ~${px(span)}px in ${fillOf(toolbar)}` +
+        edging(toolbar),
+    );
+  }
+
+  /*
+     A field is a long, short, BORDERED box. The border is what does the work
+     here: a fill of the same shape is a button, and the thing that tells a
+     person they may type into it is the rule around the empty space. Without
+     that test this rule named every wide pill an input.
+  */
+  const fields = free().filter(
+    (b) =>
+      b.edge?.border &&
+      b.h >= 24 &&
+      b.h <= 64 &&
+      b.w >= b.h * 3.5 &&
+      b.w <= w * 0.9,
+  );
+  if (fields.length) {
+    claim(fields);
+    const f = fields[0];
+    add(
+      'input / search field',
+      fields.length,
+      `${fields.length} of ~${px(f.w)}×${px(f.h)}px in ${fillOf(fields)}${spacingOf(fields)}` +
+        edging(fields),
     );
   }
 
@@ -650,9 +797,10 @@ function measureComponents(
   )[0];
   if (pills && pills.length >= 2) {
     claim(pills);
-    found.push(
-      `badge / pill — ${pills.length} of ~${px(pills[0].w)}×${px(pills[0].h)}px in ` +
-        `${fillOf(pills[0])}${edging(pills)}`,
+    add(
+      'badge / pill',
+      pills.length,
+      `${pills.length} of ~${px(pills[0].w)}×${px(pills[0].h)}px in ${fillOf(pills[0])}${edging(pills)}`,
     );
   }
 
@@ -665,11 +813,39 @@ function measureComponents(
       buttons[0].radius !== null && buttons[0].radius >= buttons[0].h * 0.45
         ? 'fully rounded'
         : `~${px(buttons[0].radius ?? 0)}px corners`;
-    found.push(
-      `button — ${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${fillOf(buttons[0])}` +
+    add(
+      'button',
+      buttons.length,
+      `${shape}, ~${px(buttons[0].w)}×${px(buttons[0].h)}px in ${fillOf(buttons[0])}` +
         spacingOf(buttons) +
         edging(buttons) +
         (buttons.length > 1 ? ` (${buttons.length} of them)` : ''),
+    );
+  }
+
+  /*
+     Square, small, filled, and standing in a row — an icon button. Kept apart
+     from the avatar rule below by its corners: an avatar is a circle and an
+     icon button is not, and where the radius says circle the avatar rule
+     should have it.
+  */
+  const iconRow = baselineRow(
+    free().filter(
+      (b) =>
+        Math.abs(b.w - b.h) <= b.w * 0.2 &&
+        b.w >= 22 &&
+        b.w <= 64 &&
+        b.fill > 0.85 &&
+        (b.radius === null || b.radius < b.w * 0.42),
+    ),
+  ).find((r) => r.length >= 2);
+  if (iconRow) {
+    claim(iconRow);
+    add(
+      'icon button',
+      iconRow.length,
+      `${iconRow.length} squares of ~${px(iconRow[0].w)}px, ${px(rowGap(iconRow))}px apart in ` +
+        `${fillOf(iconRow)}${edging(iconRow)}`,
     );
   }
 
@@ -680,13 +856,14 @@ function measureComponents(
   );
   if (avatars.length >= 2) {
     claim(avatars);
-    found.push(
-      `avatar — ${avatars.length} circles of ~${px(avatars[0].w)}px in ${fillOf(avatars)}` +
-        edging(avatars),
+    add(
+      'avatar',
+      avatars.length,
+      `${avatars.length} circles of ~${px(avatars[0].w)}px in ${fillOf(avatars)}` + edging(avatars),
     );
   }
 
-  return { found, samples: pool.length };
+  return { found, roles, samples: pool.length };
 }
 
 /**
@@ -766,6 +943,7 @@ export function measureStructure(
     gradient: measureGradient(data, w, h),
     imagery: measureImagery(data, w, h, scale),
     components: components.found,
+    roles: components.roles,
     blocks: components.samples,
     icons: measureIcons(blocks, scale),
   };

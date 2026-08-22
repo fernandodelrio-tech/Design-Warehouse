@@ -145,6 +145,13 @@ export interface StructureMeasurement {
   } | null;
   /** Named patterns with their measured sizes, empty when nothing repeated. */
   components: string[];
+  /**
+   * The same inventory as data. The prose line is what a person reads; the
+   * role is what the export needs to say how a thing behaves, since a band
+   * across the top and a row of pills interact in completely different ways
+   * and only the noun says which is which.
+   */
+  roles: ComponentRole[];
   /** How many solid blocks the inventory was drawn from. */
   blocks: number;
   /**
@@ -202,6 +209,12 @@ export interface LayoutSpec {
   notes: string;
 }
 
+/** One named component, with how many of it were found. */
+export interface ComponentRole {
+  role: string;
+  count: number;
+}
+
 export interface ColorToken {
   name: string;
   value: string;
@@ -225,6 +238,11 @@ export interface DesignSpec {
   typography: TypographySpec;
   layout: LayoutSpec;
   components: string[];
+  /**
+   * How the measured components behave: states, structure, keyboard. Seeded
+   * from the roles the analyzer named, and editable like every other field.
+   */
+  uxNotes: string;
   effects: EffectsSpec;
   interactions: string;
   accessibilityNotes: string;

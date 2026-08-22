@@ -152,6 +152,13 @@ export function toMarkdownSpec(record: DesignRecord): string {
     spec.components.length ? spec.components.map((c) => `- ${c}`) : [],
   );
 
+  /*
+     Placed straight after the inventory, because it is about the things in it.
+     A reader who has just been told a page has a dialog and a filter row needs
+     to know how those behave before being told about shadows.
+  */
+  const ux = section('How it behaves', [has(spec.uxNotes) ? spec.uxNotes.trim() : null]);
+
   const behaviour = section('Behaviour', [
     has(spec.interactions) ? spec.interactions.trim() : null,
   ]);
@@ -170,6 +177,7 @@ export function toMarkdownSpec(record: DesignRecord): string {
     typeSection,
     layoutSection,
     componentsSection,
+    ux,
     effects,
     behaviour,
     a11y,
@@ -388,6 +396,10 @@ export function toTokens(record: DesignRecord): Record<string, unknown> {
       measured: auto.layout,
     },
     components: spec.components,
+    /* The roles as data, so a consumer of the JSON can key off the noun
+       rather than parsing it back out of the prose. */
+    roles: auto.structure?.roles ?? [],
+    behaviour: spec.uxNotes || undefined,
     effects: spec.effects,
   };
 }
