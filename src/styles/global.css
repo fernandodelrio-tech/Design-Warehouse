@@ -1106,6 +1106,7 @@ kbd {
   -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   width: min(640px, 100%);
   max-height: 100%;
   margin: auto;
@@ -1284,11 +1285,32 @@ kbd {
   }
 }
 
+/*
+   `min-height: 0` on this and on everything down to the scrolling pane, and
+   it is not decoration.
+
+   A grid item and a flex item both have an automatic minimum size: by default
+   they refuse to be smaller than their content. Blink resolves that to zero
+   for anything that is itself a scroll container, so the panes below were
+   capped by this panel's max-height and scrolled correctly — in Chromium, at
+   every size, in every test here.
+
+   WebKit does not apply that carve-out reliably, and an iPad is WebKit in
+   every browser on it, Chrome included. There the side column grew to its
+   content instead of being capped, so the pane inside it never had any
+   overflow to scroll: the spec was clipped by an ancestor and no gesture had
+   anywhere to take it. Declaring the zero explicitly is the fix, and it costs
+   Blink nothing because that is what Blink was already computing.
+
+   The stacked layout below 760px sets these too, which is why a phone worked
+   while an iPad did not.
+*/
 .detail {
   display: grid;
   grid-template-columns: minmax(320px, 1.15fr) minmax(380px, 0.85fr);
   width: min(1400px, 100%);
   max-height: 100%;
+  min-height: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
@@ -1300,6 +1322,8 @@ kbd {
   overscroll-behavior: contain;
   /* iOS before 13 does not scroll an overflow pane without it. */
   -webkit-overflow-scrolling: touch;
+  /* A grid item that scrolls; see the note on .detail. */
+  min-height: 0;
   background: var(--bg);
   border-right: 1px solid var(--border);
   overflow: auto;
@@ -1324,6 +1348,8 @@ kbd {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* A grid item, and the one WebKit was letting grow past its track. */
+  min-height: 0;
 }
 
 .detail-head {
@@ -1402,6 +1428,9 @@ kbd {
   /* iOS before 13 does not scroll an overflow pane without it. */
   -webkit-overflow-scrolling: touch;
   flex: 1;
+  /* A flex item. Without this it sizes to its content and never overflows,
+     which is the same as never scrolling. */
+  min-height: 0;
   overflow-y: auto;
   padding: var(--s1) var(--s5) var(--s5);
 }
