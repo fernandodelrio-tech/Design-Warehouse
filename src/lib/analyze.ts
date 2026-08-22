@@ -531,7 +531,41 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
   };
 }
 
-export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
+/**
+ * An older record's analysis, made safe to read with today's seeder.
+ *
+ * Re-analyze is fed an arbitrarily old shape BY DEFINITION: it seeds from the
+ * record's stored analysis to learn which fields the person edited, and that
+ * stored analysis was written by whatever version catalogued it. So every
+ * collection this file added after v1 is missing on something out there, and
+ * reading one of them straight throws — which is exactly what happened. A
+ * record stored before roles existed crashed the moment re-analysis iterated
+ * them, and the person got "undefined is not an object" for their trouble.
+ *
+ * Filling the gaps in one place rather than guarding at each read site is the
+ * difference between remembering this once and remembering it every time a
+ * measurement is added. An absent collection becomes an empty one, which every
+ * caller already handles: empty means nothing was measured, which is the
+ * truth about a version that never measured it.
+ */
+function withDefaults(auto: AutoAnalysis): AutoAnalysis {
+  const s = auto.structure;
+  if (!s) return auto;
+  return {
+    ...auto,
+    structure: {
+      ...s,
+      components: s.components ?? [],
+      roles: s.roles ?? [],
+      grain: s.grain ?? null,
+      imagery: s.imagery ? { ...s.imagery, regions: s.imagery.regions ?? [] } : s.imagery,
+      icons: s.icons ? { ...s.icons, stroke: s.icons.stroke ?? null } : s.icons,
+    },
+  };
+}
+
+export function seedSpec(image: ImageMeta, stored: AutoAnalysis): DesignSpec {
+  const auto = withDefaults(stored);
   const { category, platform } = guessCategory(image, auto);
   const m = auto.layout.margins;
   const measured = seedFromDetail(auto.detail);
