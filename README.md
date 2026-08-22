@@ -49,42 +49,42 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Cinnabar Invitation**, a design catalogued in the app itself and then
+The app wears **Saffron Broadsheet**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#bfa9ca` `#4d52a8` `#c27ea0` `#d8c9da` `#9790ca` `#fcfcfc` `#7773c0` `#f6ccc8` |
+| **Colour** | Eight measured tokens, exact — `#fefefe` `#2d0a03` `#faf5e1` `#6c4426` `#876544` `#c67237` `#d1c6ca` `#eed165` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
 | **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale so both land on one grid |
-| **Corners** | 8 / 12 / 24, drawn from the spacing scale |
-| **Faces** | Cormorant Garamond for the wordmark and headings, Manrope for everything else |
+| **Corners** | Zero, everywhere — no radius in the stylesheet bypasses the token |
+| **Faces** | Petrona for the wordmark and headings, IBM Plex Sans for everything read or operated, IBM Plex Mono for the hex readouts |
 
-**This palette cannot carry text, and the numbers say so.** Of the 28 pairs its eight
-colours can form, exactly **two** clear 4.5:1, and both need `#4d52a8` as the type:
-6.63:1 on the near-white, 4.66:1 on the blush accent. Every other pair fails —
-including the spec's own text-on-background, which measures 3.16:1 and is good for
-large text only. All four mid-tones carry no type at all; the best any of them
-manages against either extreme is 4.10:1.
+This palette is generous where the last one was not: **11 of the 28 pairs its colours
+can form clear 4.5:1**, and its ladder of browns supplies a complete text hierarchy
+with nothing derived — `#2d0a03` at 18.01:1 on the page, `#6c4426` at 8.35, `#876544`
+at 5.24. Three measured levels.
 
-So the type lives on near-white and the colour lives everywhere else: a lilac ground
-with white cards raised off it, deeper-tinted chrome bands, violet boundaries, a blush
-accent that is always a fill with the ink knocked out of it. That is what the design's
-own guidance says to do with a colour that fails — keep the hex, and spend it as a
-fill, a rule or a mark.
+**What did not survive is the analyser's role assignment.** It filed `#faf5e1` as the
+accent — "primary action, links, highlights" — but that is a cream at 20% of the canvas
+and 1.08:1 against the page, which describes a field, not a highlight. The vivid tokens
+it filed under *muted* are the accents, and are used as such; the cream became the band
+it plainly is, carrying the top bar and the filter bar.
 
-The palette spans 6.63:1 end to end, so after AA there is 1.47× of headroom — enough
-for **two** text levels, not three. The third tier of hierarchy is carried by weight
-and size instead of colour.
+Cards are ruled rather than shaded, and the corners are square, for the same measured
+reason: a surface token worth 2% of the canvas describes a design that separates its
+blocks with lines instead of tones.
 
-**The evening edition.** The darkest colour this design has is `#4d52a8`, an indigo
-rather than a black. The dark theme grounds on it and separates panels with rules,
-because there is no darker shade in the palette to reach for.
+**The late edition.** `#2d0a03` is a near-black brown rather than an indigo or a grey,
+so the dark theme is genuinely dark. All three text levels survive the inversion, two of
+them measured. Brown panels were tried and dropped — `#6c4426` holds the primary text at
+8.35:1 but drops the faint level to 3.00, and a card you cannot put a caption on is not
+worth the tone.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
 
-The two faces are self-hosted from `src/styles/fonts/` — 100 KB of latin-subset woff2,
+The three faces are self-hosted from `src/styles/fonts/` — 129 KB of latin-subset woff2,
 six static instances. The app has to work with the network switched off, and opening it
 should not tell a font CDN that you did.
 

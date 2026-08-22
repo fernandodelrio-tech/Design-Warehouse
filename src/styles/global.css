@@ -1,19 +1,17 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Cinnabar Invitation".
+   Design Warehouse — application shell, wearing "Saffron Broadsheet".
 
-   This palette is hostile to a text-bearing interface and the numbers say so.
-   Of the 28 pairs its eight colours can form, exactly TWO clear 4.5:1, and both
-   need #4d52a8 as the text: on #fcfcfc it reads 6.63, on the #f6ccc8 accent
-   4.66. Everything else fails, including the spec's own text-on-background,
-   which measures 3.16 — large text only.
+   A generous palette, unlike the last one: 11 of the 28 pairs its eight colours
+   can form clear 4.5:1, and the ladder of browns hands over a complete text
+   hierarchy with nothing derived — #2d0a03 at 18.01:1 on the page, #6c4426 at
+   8.35, #876544 at 5.24. Three measured levels, which is the first time one of
+   these designs has supplied all three.
 
-   So the four mid-tones (#bfa9ca, #9790ca, #c27ea0, #7773c0) carry no type at
-   all here. They are fills, rules, marks and boundaries, which is what the
-   spec's own guidance says to do with a colour that fails. The type lives on
-   near-white; the colour lives everywhere else.
-
-   Every derived value is a mix of measured colours, and each says what it
-   measures against the surface it actually lands on.
+   The one thing that does not survive is the analyser's role assignment. It
+   named #faf5e1 the accent — "primary action, links, highlights" — but that is
+   a cream at 20% of the canvas and 1.08:1 against the page, which is a field,
+   not a highlight. The vivid tokens it filed under "muted" are the accents, and
+   they are used as such here; the cream becomes the band it plainly is.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
@@ -22,68 +20,61 @@
   color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     background #bfa9ca 16%   text    #4d52a8 16%   muted   #c27ea0 15%
-     muted-2    #d8c9da 13%   surface #9790ca 13%   muted-3 #fcfcfc  9%
-     muted-4    #7773c0  9%   accent  #f6ccc8  8%                        */
+     background #fefefe 28%   text    #2d0a03 24%   accent  #faf5e1 20%
+     muted      #6c4426 13%   muted-2 #876544  7%   muted-3 #c67237  4%
+     surface    #d1c6ca  2%   muted-4 #eed165  2%                        */
 
-  /* Ground and cards. White cards raised off a tinted cloth: the palette's own
-     near-white is the only surface its text token clears comfortably, and a
-     lilac ground keeps the design's colour where the eye lands first. */
-  --bg: color-mix(in srgb, #d8c9da 25%, #fcfcfc);      /* text 5.98:1 */
-  --bg-elevated: #fcfcfc;
-  --surface: #fcfcfc;                                   /* text 6.63:1 */
-  --surface-hover: color-mix(in srgb, #d8c9da 18%, #fcfcfc);
-  /* The bands — top bar, filter bar — carry a deeper tint. 35% is the limit:
-     at 50% the secondary text level drops to 4.47 and stops clearing AA. */
-  --chrome: color-mix(in srgb, #d8c9da 35%, #fcfcfc);
+  --bg: #fefefe;
+  --bg-elevated: #fefefe;
+  /* Cards are ruled, not shaded. The surface token is 2% of the whole canvas,
+     which is a design that separates its blocks with lines rather than tones —
+     so the card ground is the page ground and a brown hairline does the work. */
+  --surface: #fefefe;                                   /* text 18.01:1 */
+  --surface-hover: #faf5e1;                             /* text 16.62:1 */
+  /* The 20% cream, spent as what it measures: a large flat field. The top bar
+     and the filter bar are the only large flat fields this app has. */
+  --chrome: #faf5e1;
 
-  /* muted-4 is the only token that clears 3:1 on these grounds, so it is the
-     only one that can be a boundary a viewer must be able to see. */
-  --border: #7773c0;                                    /* 3.69 on the page */
-  --border-strong: #4d52a8;
+  --border: #876544;                                    /* 5.24 on the page */
+  --border-strong: #2d0a03;
 
-  --text: #4d52a8;                                      /* 6.63 on a card */
-  /* Derived: text 92% toward the near-white. The palette spans 6.63:1 end to
-     end, so after AA there is only 1.47x of room — enough for two text levels,
-     not three. --text-faint is therefore the same colour, and the third tier
-     of hierarchy is carried by weight and size instead. */
-  --text-muted: color-mix(in srgb, #4d52a8 92%, #fcfcfc);
-  --text-faint: color-mix(in srgb, #4d52a8 92%, #fcfcfc);
+  --text: #2d0a03;                                      /* 18.01:1 — AAA */
+  --text-muted: #6c4426;                                /*  8.35:1 — AAA */
+  --text-faint: #876544;                                /*  5.24:1 — AA  */
 
-  /* The accent is a fill with the text knocked out of it at 4.66:1. It cannot
-     be type on the page, at 1.48:1, and it is nearly invisible against the
-     ground at 1.08:1 — so every accent fill carries an ink boundary. */
-  --accent: #f6ccc8;
-  /* Derived toward the light, not the dark: carrying the accent toward the ink
-     drops the ink on it to 4.10 and below, so the hover state brightens. */
-  --accent-strong: color-mix(in srgb, #f6ccc8 55%, #fcfcfc);
-  --accent-soft: color-mix(in srgb, #f6ccc8 30%, #fcfcfc);
-  /* Whatever sits on a fixed fill is fixed too, in both themes. */
-  --on-fill: #4d52a8;
+  /* The burnt orange is the primary action: the largest of the vivid tokens,
+     and the ink knocked out of it reads 5.07. */
+  --accent: #c67237;
+  /* Derived toward the saffron rather than the ink. Carrying the orange darker
+     drops its label to 4.36 and below before the shift is even visible, so the
+     hover has to move toward the light — the same constraint the last two
+     designs turned out to have, for the same reason. */
+  --accent-strong: color-mix(in srgb, #c67237 60%, #eed165);
+  --accent-soft: color-mix(in srgb, #c67237 20%, #fefefe);
+  --on-fill: #2d0a03;
 
-  --muted-fill: #bfa9ca;      /* the measured background, as a mark */
-  --muted-fill-2: #9790ca;    /* the measured surface, as a mark */
+  --muted-fill: #d1c6ca;      /* the 2% surface token, as an inset */
+  --muted-fill-2: #eed165;    /* saffron, as a mark */
 
-  /* The palette has no green, no amber and no red. Success is the accent, the
-     one warm affirmative it owns. Warning is the rose lightened until the text
-     clears it at 4.69. Danger is the rose carried toward the darkest token —
-     the only direction that darkens anything here — reaching 4.76 on the page
-     while staying visibly plum rather than indigo. */
-  --success: #f6ccc8;
-  --warning: color-mix(in srgb, #c27ea0 35%, #fcfcfc);
-  --danger: color-mix(in srgb, #c27ea0 30%, #4d52a8);
+  /* The palette is entirely warm — browns, orange, saffron — so there is no
+     hue distance to spend on semantics. Saffron is the affirmative, the orange
+     the caution, and danger is the orange carried toward the ink until it
+     clears 4.5 as type on both the page and the cream band. */
+  --success: #eed165;                                   /* ink on it 12.06 */
+  --warning: #c67237;                                   /* ink on it  5.07 */
+  --danger: color-mix(in srgb, #c67237 65%, #2d0a03);   /* 6.31 on the page */
 
   /* --- chosen: corners ---------------------------------------------------
-     The spec is silent. An invitation is a card, so these are generous and
-     drawn from the spacing scale, which puts shape and space on one grid. */
-  --radius-sm: 8px;
-  --radius: 12px;
-  --radius-lg: 24px;
+     Zero, and for the reason the spec itself gives: a surface token worth 2%
+     of the canvas describes a design that rules its blocks apart instead of
+     shading them, and rules meet at square corners. */
+  --radius-sm: 0;
+  --radius: 0;
+  --radius-lg: 0;
 
-  /* Soft, low and tinted with the darkest measured colour rather than black. */
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #4d52a8 10%, transparent);
-  --shadow: 0 8px 24px color-mix(in srgb, #4d52a8 12%, transparent);
-  --shadow-lg: 0 24px 64px color-mix(in srgb, #4d52a8 20%, transparent);
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: none;
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -95,10 +86,7 @@
   --s7: 48px;
   --s8: 64px;
 
-  /* --- chosen: type scale -------------------------------------------------
-     Unchanged: the same 12/14/16/20/24/32 steps, which already share four with
-     the measured spacing scale. This spec is silent on type too, and there is
-     no reason to move a scale that already resolves against the grid. */
+  /* --- chosen: type scale ------------------------------------------------- */
   --t-label: 12px;
   --t-small: 14px;
   --t-body: 16px;
@@ -106,56 +94,61 @@
   --t-sub: 24px;
   --t-head: 32px;
 
-  /* --- chosen: two voices -------------------------------------------------
-     Cormorant Garamond for the wordmark and headings — a high-contrast
-     old-style with the manners of an engraved invitation. Manrope everywhere
-     else: geometric, even-coloured, and legible down at the 12px labels a
-     dense catalog needs. An invitation has fewer voices than a newspaper. */
-  --font: 'Manrope', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-ui: 'Manrope', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Cormorant Garamond', 'Hoefler Text', Garamond, Georgia, serif;
-  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+  /* --- chosen: three voices -----------------------------------------------
+     Petrona for the wordmark and headings — a warm, slightly irregular serif
+     that suits ink on paper better than a cold one. IBM Plex Sans for
+     everything read or operated, which holds its colour down at the 12px
+     labels a dense catalog needs. IBM Plex Mono for the hex readouts, so the
+     figures and the interface are drawn by the same hand. */
+  --font: 'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'IBM Plex Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Petrona', 'Hoefler Text', 'Iowan Old Style', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --topbar-height: 60px;
 }
 
-/* --- the evening edition ----------------------------------------------------
-   The design measured a mixed light/dark scheme, and its darkest colour is
-   #4d52a8 — an indigo, not a black. That is the whole of the dark this palette
-   has, so the night edition grounds on it and separates panels with rules
-   rather than with a darker shade, because there is no darker shade to reach
-   for. Only the two levels the ink leaves room for are derived. */
+/* --- the late edition -------------------------------------------------------
+   Grounded on #2d0a03, which is a near-black brown rather than an indigo or a
+   grey, so the night edition of this design is genuinely dark. All three text
+   levels survive the inversion, two of them measured; only the faintest needs
+   lifting, because #876544 lands at 3.44 on the ink and just misses.
+
+   Cards stay ruled here too. Brown panels were tried and dropped: #6c4426 is a
+   fine ground for the primary text at 8.35, but the faint level falls to 3.00
+   on it, and a card you cannot put a caption on is not worth the tone. */
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #4d52a8;
-  --bg-elevated: #4d52a8;
-  --surface: #4d52a8;
-  --surface-hover: color-mix(in srgb, #4d52a8 88%, #fcfcfc);
-  --chrome: #4d52a8;
+  --bg: #2d0a03;
+  --bg-elevated: #2d0a03;
+  --surface: #2d0a03;
+  /* A whisper of the brown, enough to register under the pointer and light
+     enough that every text level still clears on it. */
+  --surface-hover: color-mix(in srgb, #6c4426 28%, #2d0a03);
+  --chrome: #2d0a03;
 
-  --border: #bfa9ca;          /* 3.16 on the ink ground — the only one that clears */
-  --border-strong: #d8c9da;
+  --border: #876544;          /* 3.44 on the ink — clears the 3:1 for a boundary */
+  --border-strong: #d1c6ca;
 
-  --text: #fcfcfc;            /* 6.63:1 */
-  /* Derived: the lilac lifted 20% toward the near-white. The lilac alone reads
-     4.30 on this ground, just under AA. */
-  --text-muted: color-mix(in srgb, #d8c9da 80%, #fcfcfc);
-  --text-faint: color-mix(in srgb, #d8c9da 80%, #fcfcfc);
+  --text: #fefefe;            /* 18.01:1 */
+  --text-muted: #d1c6ca;      /* 10.93:1 */
+  /* Derived: the tan carried halfway to the warm grey. The tan alone reads
+     3.44 here, short of AA. */
+  --text-faint: color-mix(in srgb, #876544 50%, #d1c6ca);
 
-  --accent: #f6ccc8;          /* 4.66 as type here, and a fill carrying the ink */
-  --accent-strong: color-mix(in srgb, #f6ccc8 70%, #fcfcfc);
-  --accent-soft: color-mix(in srgb, #f6ccc8 30%, #4d52a8);
-  --on-fill: #4d52a8;
+  --accent: #c67237;          /* 5.07 as type here, and a fill carrying the ink */
+  --accent-strong: color-mix(in srgb, #c67237 60%, #eed165);
+  --accent-soft: color-mix(in srgb, #c67237 30%, #2d0a03);
+  --on-fill: #2d0a03;
 
-  --muted-fill: #9790ca;
-  --muted-fill-2: #7773c0;
+  --muted-fill: #6c4426;
+  --muted-fill-2: #eed165;
 
-  --success: #f6ccc8;
-  --warning: #d8c9da;
-  --danger: color-mix(in srgb, #c27ea0 55%, #fcfcfc);
+  --success: #eed165;
+  --warning: #c67237;
+  --danger: color-mix(in srgb, #c67237 80%, #eed165);   /* 6.10 on the ink */
 }
 
 * {
@@ -1017,7 +1010,7 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: 150;
-  background: color-mix(in srgb, #4d52a8 62%, transparent);
+  background: color-mix(in srgb, #2d0a03 66%, transparent);
   display: flex;
   justify-content: center;
   padding: var(--s5);
