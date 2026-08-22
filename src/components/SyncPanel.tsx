@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useOverlay } from '../lib/overlay';
 import { adoptLocalCatalog, countLocalCatalog } from '../lib/session';
 import type { Account } from '../lib/accounts';
 import {
@@ -40,6 +41,7 @@ export function SyncPanel({
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [strayCount, setStrayCount] = useState(0);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Re-read after every sync as well as at launch: a token lasts about an hour,
   // and the panel saying "connected" while the token behind it has expired is
@@ -59,13 +61,8 @@ export function SyncPanel({
     void countLocalCatalog().then(setStrayCount);
   }, [account]);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Scroll lock, focus trap, Escape and focus restore — see lib/overlay.
+  useOverlay(overlayRef, onClose);
 
   if (!settings) return null;
 
@@ -122,6 +119,8 @@ export function SyncPanel({
       role="dialog"
       aria-modal="true"
       aria-label="Google Drive sync"
+      ref={overlayRef}
+      tabIndex={-1}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

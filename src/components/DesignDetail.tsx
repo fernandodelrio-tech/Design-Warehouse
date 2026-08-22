@@ -3,6 +3,7 @@ import { useFullImageUrl } from '../hooks/useImageUrl';
 import { ANALYZER_VERSION } from '../lib/analyze';
 import { readableOn } from '../lib/color';
 import { describeAspect, formatBytes } from '../lib/image';
+import { useOverlay } from '../lib/overlay';
 import {
   slugify,
   toClaudePrompt,
@@ -68,6 +69,7 @@ export function DesignDetail({
   // Tracks whether the user has actually changed something, so closing an
   // untouched drawer never writes a pointless revision to the database.
   const dirty = useRef(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Reset when a different design is opened, or when the analyzer rewrites this one.
   useEffect(() => {
@@ -95,13 +97,8 @@ export function DesignDetail({
     [onChange],
   );
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  // Scroll lock, focus trap, Escape and focus restore — see lib/overlay.
+  useOverlay(overlayRef, onClose);
 
   const patch = (updater: (current: DesignRecord) => DesignRecord) => {
     dirty.current = true;
@@ -147,6 +144,8 @@ export function DesignDetail({
       role="dialog"
       aria-modal="true"
       aria-label={draft.title}
+      ref={overlayRef}
+      tabIndex={-1}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

@@ -1101,6 +1101,7 @@ kbd {
 /* --- sync ---------------------------------------------------------------- */
 
 .sync-panel {
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   width: min(640px, 100%);
@@ -1237,6 +1238,19 @@ kbd {
   position: fixed;
   inset: 0;
   z-index: 150;
+  /*
+     Nothing a gesture does in here reaches the page behind it. The scroll
+     lock in lib/overlay is the belt; this is the braces, and it is the half
+     that works during the drag rather than after it — without it a flick
+     inside a pane already at its end hands the rest of the momentum to the
+     document, which is what made the catalog move under a drawer that would
+     not.
+  */
+  overscroll-behavior: contain;
+  /* The overlay itself is the last resort scroller: at a small enough height
+     the panel inside it can still exceed the screen, and a modal you cannot
+     reach the bottom of is a modal with a hidden Close button. */
+  overflow: auto;
   background: color-mix(in srgb, #2b1b21 66%, transparent);
   display: flex;
   justify-content: center;
@@ -1263,6 +1277,7 @@ kbd {
 }
 
 .detail-preview {
+  overscroll-behavior: contain;
   background: var(--bg);
   border-right: 1px solid var(--border);
   overflow: auto;
@@ -1361,6 +1376,7 @@ kbd {
 }
 
 .detail-body {
+  overscroll-behavior: contain;
   flex: 1;
   overflow-y: auto;
   padding: var(--s1) var(--s5) var(--s5);
@@ -1651,17 +1667,48 @@ kbd {
    -------------------------------------------------------------------------- */
 
 @media (max-width: 900px) {
+  /*
+     One scroller, not three.
+     
+     Stacking the two columns kept the desktop arrangement underneath: a fixed
+     preview, a fixed head, and the spec scrolling in whatever was left. On a
+     phone what was left measured 131 pixels. The head alone — title, target
+     field and seven wrapped action buttons — took 320 of the 727 available,
+     so the drawer was mostly furniture with a letterbox at the bottom of it,
+     and every part a thumb naturally lands on was one of the parts that do
+     not move.
+
+     So on a narrow screen the whole drawer scrolls as one column and nothing
+     inside it scrolls separately. The preview scrolls away, the head scrolls
+     away, and the spec runs to the bottom.
+  */
   .detail {
     grid-template-columns: 1fr;
-    /* The preview keeps a readable share of the height but the spec, which is
-       what you came to edit, gets the rest and scrolls. */
-    grid-template-rows: minmax(160px, 38%) 1fr;
+    grid-template-rows: auto auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .detail-preview,
+  .detail-side,
+  .detail-body {
+    overflow: visible;
+    min-height: 0;
   }
 
   .detail-preview {
     border-right: 0;
     border-bottom: 1px solid var(--border);
     padding: var(--s4);
+    /* Enough to judge the design by, not so much that the spec starts below
+       the fold. */
+    max-height: 50vh;
+  }
+
+  .detail-preview img {
+    max-height: calc(50vh - var(--s6));
+    width: auto;
+    object-fit: contain;
   }
 
   .search {
