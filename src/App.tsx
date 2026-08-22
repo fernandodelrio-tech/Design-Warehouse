@@ -119,7 +119,7 @@ export default function App() {
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
   /**
@@ -763,12 +763,12 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* Four measured colours of the design, on the one ground where
-                all four of them show: the near-black chrome. */}
-            <span style={{ background: 'var(--accent)' }} />
-            <span style={{ background: 'var(--text)' }} />
+            {/* Four measured mid-tones, spent as a mark. None of them carries
+                type in this design, and a brand mark asks none of them to. */}
+            <span style={{ background: 'var(--muted-fill-3)' }} />
+            <span style={{ background: 'var(--muted-fill-2)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
-            <span style={{ background: 'var(--text-muted)' }} />
+            <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
           <span className="brand-count">

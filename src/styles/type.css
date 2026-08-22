@@ -2,50 +2,50 @@
    and so nothing about opening the app is visible to a font CDN.
    Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
 
-/* Instrument Serif for the display sizes. This design measured a 74px ink
-   height against a 14px body — a ratio of five — and a face with that much
-   stroke contrast is what a jump like it is for: at 84px the thins are
-   hairlines and the whole page turns on the masthead. One weight, no italic;
-   it is never asked to run at text sizes. */
+/* Cormorant Garamond for the display sizes. The design is called an
+   invitation and reads like one — an indigo ground, blush and rose, nothing
+   raised — and this is the letterform of that: old-style, high contrast, long
+   extenders. One weight, and never asked to run at text sizes, where its
+   hairlines would disappear against the indigo. */
 @font-face {
-  font-family: 'Instrument Serif';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/instrument-serif-400.woff2') format('woff2');
-}
-
-/* Inter underneath it. The capture is 48% detail and 34% flat space — the
-   densest of the six — so the text face is chosen for how it holds at 12px in
-   a crowded column rather than for how it looks large. */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/inter-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('./fonts/inter-500.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Inter';
+  font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('./fonts/inter-600.woff2') format('woff2');
+  src: url('./fonts/cormorant-600.woff2') format('woff2');
+}
+
+/* Manrope underneath. Soft, near-geometric, with generous counters that hold
+   up as light type on a dark ground — which is what all of this app's text is
+   here, since the page is the darkest colour in the palette. */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/manrope-400.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Inter';
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/manrope-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/manrope-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/inter-700.woff2') format('woff2');
+  src: url('./fonts/manrope-700.woff2') format('woff2');
 }
