@@ -1108,9 +1108,10 @@ kbd {
   flex-direction: column;
   min-height: 0;
   width: min(640px, 100%);
-  /* The same absolute cap as the drawer; see the note on .detail. */
+  /* The same measured cap as the drawer; see the note on .detail. */
   max-height: calc(100vh - var(--s5) * 2);
   max-height: calc(100dvh - var(--s5) * 2);
+  max-height: calc(var(--overlay-h, 100dvh) - var(--s5) * 2);
   margin: auto;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
@@ -1293,8 +1294,16 @@ kbd {
      and its lower edge — along with part of whatever is scrolling inside it —
      sits under the chrome. It reads as a drawer cut off at the bottom.
   */
+  /*
+     Measured, not expressed. `--overlay-h` is visualViewport.height, written
+     by lib/overlay while an overlay is open — the pixels the browser says are
+     visible, rather than a unit whose meaning depends on the engine. The two
+     ahead of it are what a browser gets before the script has run, in
+     increasing order of how right they usually are.
+  */
   height: 100vh;
   height: 100dvh;
+  height: var(--overlay-h, 100dvh);
   padding: var(--s5);
   animation: fade-in 0.15s ease;
 }
@@ -1346,6 +1355,7 @@ kbd {
   */
   max-height: calc(100vh - var(--s5) * 2);
   max-height: calc(100dvh - var(--s5) * 2);
+  max-height: calc(var(--overlay-h, 100dvh) - var(--s5) * 2);
   min-height: 0;
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
@@ -1979,8 +1989,8 @@ kbd {
        container. */
     height: 100vh;
     height: 100dvh;
-    max-height: 100vh;
-    max-height: 100dvh;
+    height: var(--overlay-h, 100dvh);
+    max-height: var(--overlay-h, 100dvh);
     border: 0;
     border-radius: var(--radius);
   }

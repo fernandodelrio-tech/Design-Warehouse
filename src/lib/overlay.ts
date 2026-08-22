@@ -38,6 +38,45 @@ import type { RefObject } from 'react';
 */
 let locks = 0;
 
+/*
+   The overlay's height, MEASURED rather than expressed in a unit.
+
+   Every CSS answer to "how tall is the screen" has been tried against an iPad
+   and been wrong. `inset: 0` and `100vh` resolve against a layout viewport
+   that includes the strip behind Safari's toolbars, so the panel stretches
+   taller than what can be shown and its lower half — the half that scrolls —
+   sits under the chrome, cut off. `100dvh` is meant to fix exactly that and
+   reportedly still did not.
+
+   `visualViewport.height` is not a unit with semantics to argue about. It is
+   the browser reporting the pixels a person can actually see, it updates when
+   the toolbars slide or a keyboard opens, and iOS has supported it since 13.
+   Read it, put it in a custom property, and let the CSS use that.
+*/
+function measureViewport() {
+  const vv = window.visualViewport;
+  const height = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty('--overlay-h', `${Math.round(height)}px`);
+}
+
+function watchViewport(): () => void {
+  measureViewport();
+  const vv = window.visualViewport;
+  vv?.addEventListener('resize', measureViewport);
+  // The toolbars slide on scroll, which changes the visible height without
+  // firing a resize.
+  vv?.addEventListener('scroll', measureViewport);
+  window.addEventListener('resize', measureViewport);
+  window.addEventListener('orientationchange', measureViewport);
+  return () => {
+    vv?.removeEventListener('resize', measureViewport);
+    vv?.removeEventListener('scroll', measureViewport);
+    window.removeEventListener('resize', measureViewport);
+    window.removeEventListener('orientationchange', measureViewport);
+    document.documentElement.style.removeProperty('--overlay-h');
+  };
+}
+
 function lockScroll() {
   if (locks++ > 0) return;
   document.documentElement.style.overflow = 'hidden';
@@ -58,7 +97,11 @@ const FOCUSABLE =
 export function useOverlay(ref: RefObject<HTMLElement | null>, onClose: () => void): void {
   useEffect(() => {
     lockScroll();
-    return unlockScroll;
+    const stopWatching = watchViewport();
+    return () => {
+      stopWatching();
+      unlockScroll();
+    };
   }, []);
 
   useEffect(() => {
