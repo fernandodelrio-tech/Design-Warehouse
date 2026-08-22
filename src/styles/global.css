@@ -2036,3 +2036,77 @@ kbd {
     display: none;
   }
 }
+
+/*
+   On a touch device the DIALOG scrolls, not the panes inside it.
+
+   Four attempts at this have all been variations on one bet: that the panel
+   can be given a definite height, and that the panes inside it will then
+   resolve against it and scroll. On an iPad that bet keeps losing, in ways
+   that are hard to see from here and impossible to reproduce in a browser
+   built on a different engine. Every failure looks the same to the reader —
+   a drawer cut off at the bottom, no scrollbar in either pane, no gesture
+   that does anything — because they all end the same way: no pane ever
+   becomes a scroll container, so there is nothing to scroll and no bar to
+   show.
+
+   So this drops the bet. The overlay scrolls and the panel is simply as tall
+   as it needs to be. Nothing needs a definite height, nothing resolves a
+   percentage, and no engine has to agree with another about what a viewport
+   is: it is a long box inside a scrolling one, which is the oldest and least
+   breakable arrangement on the web.
+
+   The columns stay. What changes is that the picture scrolls away with the
+   spec rather than staying put beside it, which is a smaller loss than a
+   drawer that cannot be read.
+*/
+@media (pointer: coarse) {
+  .overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .detail,
+  .sync-panel {
+    height: auto;
+    max-height: none;
+  }
+
+  /* One arrangement for every touch size, phone included: the width queries
+     above set up panes that scroll on their own, and this undoes that rather
+     than leaving two ways for a drawer to behave. */
+
+  .detail,
+  .detail-preview,
+  .detail-side,
+  .detail-body,
+  .sync-panel .detail-body {
+    overflow: visible;
+    max-height: none;
+  }
+
+  /* Bounded so a tall capture cannot push the spec a screen and a half down
+     before it starts. The image scales rather than being cropped. */
+  .detail-preview img {
+    max-height: 70vh;
+    max-height: 70dvh;
+    width: auto;
+    object-fit: contain;
+  }
+}
+
+/*
+   And where there are two columns, the picture stays put while the spec runs
+   past it — which is what the desktop does, and the thing the whole-dialog
+   scroll would otherwise have cost. Sticky needs no definite height from
+   anybody, so it does not reintroduce the assumption this arrangement exists
+   to avoid. `align-self: start` because a stretched grid item cannot stick.
+*/
+@media (pointer: coarse) and (min-width: 761px) {
+  .detail-preview {
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+}
