@@ -49,43 +49,41 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Saffron Broadsheet**, a design catalogued in the app itself and then
+The app wears **Scarlet Threshold**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#fefefe` `#2d0a03` `#faf5e1` `#6c4426` `#876544` `#c67237` `#d1c6ca` `#eed165` |
+| **Colour** | Eight measured tokens, exact — `#555358` `#817879` `#313235` `#ae564c` `#1b1b1d` `#010101` `#d2d1d2` `#c82c2f` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
-| **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale so both land on one grid |
-| **Corners** | Zero, everywhere — no radius in the stylesheet bypasses the token |
-| **Faces** | Petrona for the wordmark and headings, IBM Plex Sans for everything read or operated, IBM Plex Mono for the hex readouts |
+| **Page inset** | 11% left and right, taken literally on a wide screen |
+| **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale |
+| **Corners** | 4px — enough to soften an edge, not enough to make a ruled block a card |
+| **Faces** | Bricolage Grotesque for the wordmark and headings, Familjen Grotesk for everything else |
 
-This palette is generous where the last one was not: **11 of the 28 pairs its colours
-can form clear 4.5:1**, and its ladder of browns supplies a complete text hierarchy
-with nothing derived — `#2d0a03` at 18.01:1 on the page, `#6c4426` at 8.35, `#876544`
-at 5.24. Three measured levels.
+**This is the first of these designs that measured dark**, so for the first time the
+dark theme *is* the design and the light one is derived. The app opens dark to match.
 
-**What did not survive is the analyser's role assignment.** It filed `#faf5e1` as the
-accent — "primary action, links, highlights" — but that is a cream at 20% of the canvas
-and 1.08:1 against the page, which describes a field, not a highlight. The vivid tokens
-it filed under *muted* are the accents, and are used as such; the cream became the band
-it plainly is, carrying the top bar and the filter bar.
+Two measurements shape the rest. **Only `#d2d1d2` can be type** — it is the sole token
+clearing 4.5:1 on any ground — and the palette's four darks make a proper ladder beneath
+it: 13.71:1 on the black, 11.29 on the near-black, 8.42 on the slate, and 4.99 on the
+measured background, which is the weakest ground of the four despite being 35% of the
+canvas.
 
-Cards are ruled rather than shaded, and the corners are square, for the same measured
-reason: a surface token worth 2% of the canvas describes a design that separates its
-blocks with lines instead of tones.
+**And nothing at all reads on the scarlet.** The best the palette manages against
+`#c82c2f` is 3.58:1, so it is never a filled button here: it is the *line* around one, at
+3.16:1 on the page, with a dark tint of itself inside carrying the pale label. The
+measured hex stays exactly what it is and does the work a 4% accent should.
 
-**The late edition.** `#2d0a03` is a near-black brown rather than an indigo or a grey,
-so the dark theme is genuinely dark. All three text levels survive the inversion, two of
-them measured. Brown panels were tried and dropped — `#6c4426` holds the primary text at
-8.35:1 but drops the faint level to 3.00, and a card you cannot put a caption on is not
-worth the tone.
+**The daylight edition.** The palette has nothing lighter than `#d2d1d2`, so daylight
+grounds on that and lifts its panels *up* to it rather than above it. It is a warm grey
+interface rather than a white one, which is the only direction the measurements allow.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
 
-The three faces are self-hosted from `src/styles/fonts/` — 129 KB of latin-subset woff2,
-six static instances. The app has to work with the network switched off, and opening it
+The two faces are self-hosted from `src/styles/fonts/` — 68 KB of latin-subset woff2,
+five static instances. The app has to work with the network switched off, and opening it
 should not tell a font CDN that you did.
 
 ## Getting designs in

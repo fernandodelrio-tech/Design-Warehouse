@@ -119,7 +119,7 @@ export default function App() {
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
   /**
