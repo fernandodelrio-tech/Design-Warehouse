@@ -1,101 +1,109 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Fern Overture".
+   Design Warehouse — application shell, wearing "Marigold Scroll".
 
-   Six tokens, and unusually for these palettes almost all of them work. THREE
-   separate grounds carry text: the stone page (ink 10.35, fern 6.29), the
-   white card (ink 16.05, fern 9.75) and the fern itself, which is a quarter of
-   the canvas and carries white at 9.75, stone at 6.29 and mint at 7.09. That
-   is what "mixed light/dark" means here — not a theme toggle but a dark band
-   living inside a light page, so the chrome is the fern and the catalog is the
-   stone.
+   The tightest palette of the eight. Five pairs in the whole set clear 4.5:1
+   and only three of them are usable, all against the page: the ramp head
+   #d0af8e at 6.53, the hairline #aba081 at 5.17 and the token the spec calls
+   text, #949d83, at 4.74. Everything else — the sage, the teal, the green, the
+   olive brown, the accent — fails as type on every ground here.
 
-   The exception is the accent. The mint is 1% of the canvas and fails as type
-   on both light grounds — 1.13 on the page, 1.38 on a card — and this design
-   has no borders and no shadows to give it an edge instead. So the mint cannot
-   be the primary button the palette names it, because a button whose only cue
-   is its label is not identifiable as one. The primary is the fern: 6.29
-   against the page as a shape, 9.75 under its label. The mint goes where it
-   does show, which is on the fern (7.09) and as the soft wash on a white card.
+   Two consequences, and both are reassignments worth stating.
 
-   Nothing is bordered and nothing is raised — all nine blocks measured
-   borderless and flat — so the whole structure is carried by three fills and
-   the space between them. Which is the other half of this design: 73% of the
-   canvas is flat, the gutter is 10px, and the corners are 80px. Big soft
-   shapes packed close on a lot of empty ground.
+   The measured "text" is the BOTTOM of the ladder, not the top. At 4.74 it
+   leaves nothing beneath it, so the three levels run upward instead: the ramp
+   head is the ink, the hairline is the second level and #949d83 is the third.
+   Which makes the design's name literal — the marigold is what you read.
 
-   The hover convention is followed as written, and is right twice over: the
-   mint carries a dark label so lightening raises it, and the fern carries a
-   light one so darkening raises that. Both move away from their label.
+   And the measured "surface" #2d533f cannot be one. The spec's own text on it
+   is 3.06, and nothing else in the palette does better, so there are no raised
+   panels: everything sits on the page. That agrees with what the design does
+   anyway — eighteen blocks, none of them raised, seventeen of them borderless.
+
+   The accent #4e3524 is DARKER than the page, at 1.19, so it can be neither
+   type nor a fill with an edge. What it can do is hold the marigold at 5.49,
+   which is what the chrome does with it.
+
+   The measured ramp is on the chrome rather than on the cards it was measured
+   on, and carried halfway to the page first. At full strength the marigold
+   reads 3.08 on its light end; at half it reads 4.60 and 5.99. Even then it
+   carries exactly ONE of the three levels, which is why everything in the
+   chrome is the marigold and the hierarchy there is made by size and weight
+   rather than by tone.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
   /* --- measured, exact ---------------------------------------------------
-     background #d1cfc2 26%   muted #344745 25%   muted-2 #78857c 17%
-     surface    #fefefd 17%   text  #1b2220 13%   accent  #cbe0d2  1%
-     no borders on any of 9 blocks · no elevation · no gradients
-     radius 80px · gutter 10px · 7 icon shapes at ~18px                  */
+     background #1a3425 19%   muted   #5b8469 18%   text  #949d83 15%
+     muted-2    #716345 14%   surface #2d533f 14%   accent #4e3524 10%
+     muted-3    #326358  5%   muted-4 #37765f  5%
+     hairline #aba081 1px, on 1 of 18 blocks · no elevation on any
+     ramp #d0af8e -> #a38467 diagonal, on 3 · card ramp #7f5642 -> #563524
+     avatar #74887d 60px · radius 33px · 26 icon shapes at ~22px          */
 
-  --bg: #d1cfc2;                                        /* ink 10.35:1 — AAA */
-  --bg-elevated: #fefefd;
-  --surface: #fefefd;                                   /* ink 16.05:1 — AAA */
-  --surface-hover: color-mix(in srgb, #d1cfc2 12%, #fefefd);
-  /* The fern, at close to the quarter of the canvas it was measured at. */
-  --chrome: #344745;                                    /* white on it 9.75 */
-  --chrome-hover: color-mix(in srgb, #78857c 28%, #344745);
+  --bg: #1a3425;                                        /* marigold 6.53:1 */
+  /* Not raised, and not raisable: the measured surface takes the spec's own
+     text to 3.06 and nothing in the palette reads on it. */
+  --bg-elevated: #1a3425;
+  --surface: #1a3425;
+  --surface-hover: color-mix(in srgb, #2d533f 62%, #1a3425);
+  --chrome: color-mix(in srgb, #4e3524 60%, #1a3425);
+  --ramp: linear-gradient(
+    135deg,
+    color-mix(in srgb, #7f5642 50%, #1a3425),
+    color-mix(in srgb, #563524 50%, #1a3425)
+  );
 
-  /* Nothing is bordered in this design, so these are for the two places the
-     app needs a boundary rather than for anything the capture had: a form
-     control, which must reach 3:1 to be findable, and a focus ring. */
-  --border: #344745;                                    /* 6.29 on the page */
-  --rule: color-mix(in srgb, #344745 34%, #d1cfc2);
-  --rule-heavy: #344745;
-  --border-strong: #1b2220;
+  /* Seventeen of eighteen blocks are borderless, so this is for the one place
+     the app needs a boundary the capture did not have: a form control, which
+     must reach 3:1 to be findable. The measured hairline does, at 5.17. */
+  --border: #aba081;                                    /* 5.17 on the page */
+  --rule: color-mix(in srgb, #aba081 42%, #1a3425);
+  --rule-heavy: #aba081;
+  --border-strong: #d0af8e;
 
-  --text: #1b2220;                                      /* 10.35 page / 16.05 card */
-  /* Measured, not mixed: the fern is exactly the second level. */
-  --text-muted: #344745;                                /* 6.29 page / 9.75 card */
-  /* Derived: the ink carried a third of the way to the page. */
-  --text-faint: color-mix(in srgb, #1b2220 70%, #d1cfc2);   /* 4.78 page / 7.41 card */
+  /* Three measured levels, running upward from the token the spec calls text
+     because that one is the floor rather than the ceiling. */
+  --text: #d0af8e;                                      /* 6.53 on the page */
+  --text-muted: #aba081;                                /* 5.17 */
+  --text-faint: #949d83;                                /* 4.74 */
 
-  --focus: #344745;                                     /* 6.29 on the page */
-  --focus-ring: color-mix(in srgb, #344745 26%, #d1cfc2);
+  --focus: #d0af8e;                                     /* 6.53 */
+  --focus-ring: color-mix(in srgb, #d0af8e 34%, #1a3425);
 
-  /* The mint. A fill and a mark, never type on a light ground. */
-  --accent: #cbe0d2;                                    /* ink on it 11.67 */
-  /* Toward the light, as the spec's convention says, and right here: the
-     label is the ink, so lifting the fill raises it to 12.47. */
-  --accent-strong: color-mix(in srgb, #cbe0d2 80%, #fefefd);
-  --accent-soft: color-mix(in srgb, #cbe0d2 52%, #fefefd);
-  /* What the primary button actually is, since the mint cannot be one. */
-  --accent-solid: #344745;                              /* white on it 9.75 */
-  --accent-solid-hover: color-mix(in srgb, #344745 78%, #1b2220);   /* label 10.9 */
-  --on-fill: #1b2220;
-  --on-solid: #fefefd;
+  /* The marigold is the fill that works: 6.53 as a shape against the page and
+     6.53 again under a page-coloured label. */
+  --accent: #d0af8e;
+  /* Toward the light, as the spec's convention says and as is right here: the
+     label is the dark page, so lifting the fill raises it to 7.36. */
+  --accent-strong: color-mix(in srgb, #d0af8e 82%, #fefefe);
+  --accent-soft: color-mix(in srgb, #d0af8e 22%, #1a3425);
+  /* The measured accent, which is darker than the page and holds the marigold
+     at 5.49 — a well to sink things into rather than a colour to see. */
+  --accent-deep: #4e3524;
+  --on-fill: #1a3425;
 
-  --muted-fill: #78857c;              /* the sage, as a mark; ink on it 4.20 */
-  --muted-fill-2: color-mix(in srgb, #78857c 60%, #fefefd);   /* ink 7.74 */
+  --muted-fill: #5b8469;              /* the sage, as a mark; nothing reads on it */
+  --muted-fill-2: #37765f;
+  --muted-fill-3: #326358;
 
-  /* One family and no warm colour at all, so the semantics cannot separate by
-     hue and separate by depth instead: mint is settled, the lightened sage is
-     caution, the ink is alarm. Each checked against its own label. */
-  --success: #cbe0d2;                                   /* ink on it 11.67 */
-  --warning: color-mix(in srgb, #78857c 60%, #fefefd);  /* ink on it 7.74 */
-  --danger: #1b2220;                                    /* page on it 10.35 */
+  /* Not one of the greens carries the page as a label — 3.17, 2.51, 1.96 — so
+     each is lifted toward the marigold until it does, keeping its hue. The
+     hairline needs no help. */
+  --success: color-mix(in srgb, #5b8469 48%, #d0af8e);  /* page on it 4.66 */
+  --warning: #aba081;                                   /* page on it 5.17 */
+  --danger: color-mix(in srgb, #7f5642 34%, #d0af8e);   /* page on it 4.57 */
 
-  /* --- measured: corners --------------------------------------------------
-     Eighty. The largest of the seven by a long way, and the browser clamps it
-     to half the short side, so a panel keeps 80px and anything control-height
-     becomes a true pill. */
-  --radius-sm: 80px;
-  --radius: 80px;
-  --radius-lg: 80px;
+  /* --- measured: corners -------------------------------------------------- */
+  --radius-sm: 33px;
+  --radius: 33px;
+  --radius-lg: 33px;
 
   /* --- measured: elevation ------------------------------------------------
-     None, on any of the nine blocks. No shadow anywhere in this skin. */
+     None, on any of the eighteen blocks. */
   --shadow-sm: none;
   --shadow: none;
   --shadow-lg: none;
@@ -111,129 +119,117 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     971px of content in a 1024px capture, and a 10px gutter — the tightest of
-     the seven, against the largest corners. The margins came out asymmetric,
-     52px left and 1px right; a one-pixel right margin is where the capture was
-     cropped rather than how the page was laid out, so the 5% is applied to
-     both sides. */
-  --page-inset: 5%;
-  --gutter: 10px;
+     1011px of content in a 1012px capture and no margin on either side. A
+     full-page capture of a page that runs to its own edges, so the inset is
+     the one step off the spacing scale that keeps a tile off the window edge
+     rather than a percentage of it. The gutter is from the scale too: no
+     column gap was measured, and the design is 30% detail. */
+  --page-inset: 16px;
+  --gutter: 16px;
 
   /* --- measured: type scale -----------------------------------------------
-     Three ink heights: 17, 12 and 7, steps of 1.42 and 1.71. Body is 17 and
-     the ladder runs up on 1.42. The leadings disagree — 1.75 on the Small
-     rows, 2.29 on the Caption, 2.65 on the Body — and 2.65 is not a leading,
-     it is rows with space between them, so the line height takes the Small
-     row's 1.75, which is the one that reads as leading. */
+     Two ink heights, 15 and 8, a step of 1.875 — the widest of the eight. The
+     leadings are 6.9 and 3.9 times their ink, which are not leadings; they are
+     rows with a lot of space between them, which is what a scroll is. So the
+     step transfers and the line height does not. */
   --t-label: 12px;
   --t-small: 14px;
-  --t-body: 17px;
-  --t-lede: 21px;
-  --t-sub: 24px;
-  --t-head: clamp(30px, 5vw, 34px);
+  --t-body: 16px;
+  --t-lede: 20px;
+  --t-sub: 30px;
+  --t-head: clamp(38px, 6vw, 56px);
 
   /* --- chosen: two voices -------------------------------------------------
-     Nothing was recorded for the families. Fraunces cut soft and wonky for
-     display — rounded terminals and a deliberate wobble, which is the
-     letterform of 80px corners and a muted sage. DM Sans underneath: near
-     geometric, generously round, and it does not argue with those corners. */
-  --font: 'DM Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-ui: 'DM Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Fraunces', 'Hoefler Text', Georgia, serif;
+     Nothing was recorded for the families. Newsreader at its display optical
+     size, cut for a long column read top to bottom and sharpening rather than
+     thinning as it grows, which matters on a dark ground. Public Sans
+     underneath: plain, tightly fitted, and open enough to hold as marigold on
+     forest green at 12px. */
+  --font: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Newsreader', 'Hoefler Text', Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
   --topbar-height: 60px;
 }
 
-/* --- nightfall --------------------------------------------------------------
-   Derived, and this palette inverts more cleanly than any of the others,
-   because the fern is already a working dark ground with three levels on it.
-   So the dark theme is the fern grown into the whole page: the ink becomes the
-   deepest well, the stone becomes the type, and the mint — which could not be
-   seen at all on the light side's page — finally becomes what the palette
-   called it, a legible accent at 7.09. */
+/* --- daybreak ---------------------------------------------------------------
+   Derived, and it has to invert further than the others because this palette
+   has no light colour at all: the lightest thing measured is the ramp head at
+   luminance 0.46, which is a mid-tone. So the light theme's ground is the ramp
+   head carried most of the way to white, and the forest becomes the ink, where
+   it reads at 10.4 — better than anything the dark side could manage. */
 
-:root[data-theme='dark'] {
-  color-scheme: dark;
+:root[data-theme='light'] {
+  color-scheme: light;
 
-  --bg: #1b2220;                                        /* stone 10.35:1 */
-  --bg-elevated: #344745;
-  --surface: #344745;                                   /* stone 6.29 / white 9.75 */
-  --surface-hover: color-mix(in srgb, #78857c 26%, #344745);
-  --chrome: color-mix(in srgb, #344745 62%, #1b2220);
-  --chrome-hover: color-mix(in srgb, #78857c 24%, #344745);
+  --bg: color-mix(in srgb, #d0af8e 26%, #fefefe);
+  --bg-elevated: color-mix(in srgb, #d0af8e 12%, #fefefe);
+  --surface: color-mix(in srgb, #d0af8e 12%, #fefefe);
+  --surface-hover: color-mix(in srgb, #d0af8e 34%, #fefefe);
+  --chrome: #1a3425;
+  --ramp: linear-gradient(135deg, #7f5642, #563524);
 
-  --border: #78857c;                                    /* 4.20 on the page */
-  --rule: color-mix(in srgb, #78857c 62%, #1b2220);
-  --rule-heavy: #78857c;
-  --border-strong: #fefefd;
+  --border: color-mix(in srgb, #4e3524 72%, #d0af8e);
+  --rule: color-mix(in srgb, #4e3524 34%, #d0af8e);
+  --rule-heavy: #1a3425;
+  --border-strong: #1a3425;
 
-  --text: #fefefd;                                      /* 16.05 page / 9.75 card */
-  --text-muted: #d1cfc2;                                /* 10.35 page / 6.29 card */
-  /* Tuned against the fern card, which is the lighter of the two grounds it
-     lands on: aimed at the page it read 4.55 there and 4.26 on a card. */
-  --text-faint: color-mix(in srgb, #d1cfc2 86%, #344745);   /* 5.35 on a card */
+  --text: #1a3425;
+  --text-muted: color-mix(in srgb, #4e3524 88%, #d0af8e);
+  --text-faint: color-mix(in srgb, #4e3524 70%, #d0af8e);
 
-  --focus: #cbe0d2;                                     /* 11.67 page / 7.09 card */
-  --focus-ring: color-mix(in srgb, #cbe0d2 30%, #1b2220);
+  --focus: #4e3524;
+  --focus-ring: color-mix(in srgb, #4e3524 26%, #fefefe);
 
-  --accent: #cbe0d2;                                    /* ink on it 11.67 */
-  --accent-strong: color-mix(in srgb, #cbe0d2 80%, #fefefd);
-  --accent-soft: color-mix(in srgb, #cbe0d2 24%, #1b2220);
-  /* On this side the mint IS the primary: it reads on the page at 11.67 and
-     carries the ink at the same, which is the pairing the palette named. */
-  --accent-solid: #cbe0d2;
-  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
-  --on-fill: #1b2220;
-  --on-solid: #1b2220;
+  --accent: #4e3524;
+  /* Darker on hover here, the mirror of the dark side: this label is the light
+     one, so the fill has to fall for it. */
+  --accent-strong: color-mix(in srgb, #4e3524 74%, #1a3425);
+  --accent-soft: color-mix(in srgb, #d0af8e 44%, #fefefe);
+  --accent-deep: #1a3425;
+  --on-fill: color-mix(in srgb, #d0af8e 20%, #fefefe);
 
-  --muted-fill: #78857c;
-  --muted-fill-2: #d1cfc2;
+  --muted-fill: #5b8469;
+  --muted-fill-2: #37765f;
+  --muted-fill-3: #326358;
 
-  --success: #cbe0d2;
-  --warning: #d1cfc2;                                   /* ink on it 10.35 */
-  --danger: color-mix(in srgb, #78857c 62%, #fefefd);   /* ink on it 8.4 */
+  --success: color-mix(in srgb, #37765f 76%, #1a3425);
+  --warning: color-mix(in srgb, #716345 84%, #1a3425);
+  --danger: color-mix(in srgb, #7f5642 74%, #1a3425);
 }
 
 /*
-   The fern band is a dark region inside a light page — which is what this
-   design's "mixed light/dark" actually is — so it carries the dark side's text
-   levels rather than the page's. Scoped here rather than spelled out on each
-   element, so anything that lands in the chrome is right by default.
+   The chrome carries the measured ramp, and a ramp this dark holds exactly one
+   of the three text levels: the marigold, at 4.60 on its light end and 5.99 on
+   its dark one. The hairline falls to 3.64 there and the olive to 3.34. So
+   every level in the chrome collapses to the marigold, and the hierarchy there
+   is made by size and weight instead of by tone — which is the honest way to
+   spend a ground that only carries one colour.
 */
 .topbar,
 .filters {
-  --text: #fefefd;                                      /* 9.75 on the fern */
-  --text-muted: #d1cfc2;                                /* 6.29 */
-  --text-faint: color-mix(in srgb, #d1cfc2 82%, #344745);   /* 5.04 */
-  --border: color-mix(in srgb, #d1cfc2 70%, #344745);   /* 4.32 */
-  --surface: color-mix(in srgb, #78857c 26%, #344745);
-  --surface-hover: color-mix(in srgb, #78857c 44%, #344745);
-  --focus: #cbe0d2;                                     /* 7.09 on the fern */
-  /* And here the mint finally is the primary the palette named it. On the fern
-     it is 7.09 as a shape and carries the ink at 11.67 — the pairing that
-     could not work anywhere on the light page. */
-  --accent-solid: #cbe0d2;
-  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
-  --on-solid: #1b2220;
+  --text: #d0af8e;
+  --text-muted: #d0af8e;
+  --text-faint: #d0af8e;
+  --border: #d0af8e;
+  --surface: color-mix(in srgb, #4e3524 68%, #1a3425);
+  --surface-hover: color-mix(in srgb, #4e3524 40%, #1a3425);
+  --focus: #d0af8e;
+  background: var(--ramp);
   color: var(--text);
 }
 
-/* On the dark side the chrome is already the page's own family, so it inherits
-   the theme and only the fern's own levels need restating. */
-:root[data-theme='dark'] .topbar,
-:root[data-theme='dark'] .filters {
-  --text: #fefefd;
-  --text-muted: #d1cfc2;
-  --text-faint: color-mix(in srgb, #d1cfc2 82%, #344745);
-  --border: color-mix(in srgb, #d1cfc2 70%, #344745);
-  --surface: color-mix(in srgb, #78857c 26%, #344745);
-  --surface-hover: color-mix(in srgb, #78857c 44%, #344745);
-  --focus: #cbe0d2;
-  --accent-solid: #cbe0d2;
-  --accent-solid-hover: color-mix(in srgb, #cbe0d2 80%, #fefefd);
-  --on-solid: #1b2220;
+:root[data-theme='light'] .topbar,
+:root[data-theme='light'] .filters {
+  --text: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --text-muted: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --text-faint: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --border: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --surface: color-mix(in srgb, #7f5642 46%, #1a3425);
+  --surface-hover: color-mix(in srgb, #7f5642 66%, #1a3425);
+  --focus: #d0af8e;
 }
 
 * {
@@ -344,20 +340,18 @@ select {
   cursor: not-allowed;
 }
 
-/* Not the accent. The mint is 1.13 on the page and 1.38 on a card, and this
-   design has no border and no shadow to give it an edge, so a mint button
-   would be a label floating on nothing. The fern is 6.29 as a shape and 9.75
-   under its label. */
+/* The marigold, which is the one fill in this palette that both shows against
+   the page and carries a label: 6.53 either way round. */
 .btn-primary {
-  background: var(--accent-solid);
-  border-color: var(--accent-solid);
-  color: var(--on-solid);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-fill);
   font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: var(--accent-solid-hover);
-  border-color: var(--accent-solid-hover);
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
 }
 
 .btn-ghost {
@@ -455,10 +449,8 @@ select {
   /* One of the two ramps the design carries, spent where it shows most and
      where it can still be read on: the ink is 15.8:1 at the top of it and
      11.38:1 at the foot. */
-  background: var(--chrome);
-  /* No rule under it and no blur, because this design measured neither: nine
-     blocks, none bordered, none raised. The fern band separates itself from
-     the stone page by being 6.29:1 away from it. */
+  /* The ramp comes from the scoped block above. No rule under it and no blur:
+     eighteen blocks, one bordered, none raised. */
   border-bottom: 0;
 }
 
@@ -541,10 +533,9 @@ select {
   gap: var(--s2);
   flex-wrap: wrap;
   padding: var(--s3) var(--s5);
-  /* Continuous with the masthead: one fern band, which is close to the quarter
-     of the canvas the fern was measured at, ending where the stone begins. */
+  /* Continuous with the masthead: one ramped band ending where the page
+     begins, which is the whole of this design's structure. */
   border-bottom: 0;
-  background: var(--chrome);
 }
 
 .filters select {
@@ -804,16 +795,11 @@ select {
   opacity: 1;
 }
 
-/*
-   Inset far enough to clear the corner. At 80px the arc reaches a long way in,
-   and the first version put the chip row and the palette bar straight through
-   it — a measured radius this large is a constraint on the padding, not just a
-   look. The bottom takes more than the sides because the last row is the one
-   the arc crosses.
-*/
+/* Inset to clear the corner arc: 33px reaches less far in than the last
+   design's 80px, so the sides come back to the scale's third step. */
 .card-footer {
   flex: 0 0 auto;
-  padding: var(--s3) var(--s5) var(--s6);
+  padding: var(--s3) var(--s3) var(--s5);
   line-height: var(--s4);
 }
 

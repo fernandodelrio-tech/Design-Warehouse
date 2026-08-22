@@ -2,41 +2,41 @@
    and so nothing about opening the app is visible to a font CDN.
    Latin subset, static instances (every axis pinned), pulled from Google Fonts. */
 
-/* Fraunces for the display sizes, cut soft and wonky — SOFT at 100, WONK on,
-   optical size 144. This design is 80px corners, a muted sage palette and 73%
-   flat space; a serif with rounded terminals and a deliberate wobble is the
-   letterform of that, where a rational one would fight it. */
+/* Newsreader at its display optical size for the headings. This design is a
+   1012x1779 scroll — a long column read top to bottom — and Newsreader is cut
+   for exactly that: a text serif with a display size that sharpens rather than
+   thins, which matters on a dark ground where hairlines vanish. */
 @font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./fonts/fraunces-600.woff2') format('woff2');
-}
-
-/* DM Sans underneath. Near-geometric with generous round forms, which is what
-   sits under 80px radii without arguing with them, and it holds at the 12px
-   labels this app is full of. */
-@font-face {
-  font-family: 'DM Sans';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/dm-sans-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'DM Sans';
+  font-family: 'Newsreader';
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('./fonts/dm-sans-500.woff2') format('woff2');
+  src: url('./fonts/newsreader-500.woff2') format('woff2');
+}
+
+/* Public Sans underneath. Plain, tightly fitted and legible small, which is
+   what a page carrying detail across 30% of its canvas needs — and its shapes
+   stay open in marigold on forest green, where a lighter face would smear. */
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/public-sans-400.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'DM Sans';
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/public-sans-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Public Sans';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/dm-sans-700.woff2') format('woff2');
+  src: url('./fonts/public-sans-700.woff2') format('woff2');
 }

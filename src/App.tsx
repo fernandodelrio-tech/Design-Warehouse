@@ -119,7 +119,7 @@ export default function App() {
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
   /**
@@ -763,12 +763,12 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* The four measured colours that are not the ground, on the fern
-                band where every one of them shows. */}
-            <span style={{ background: 'var(--accent)' }} />
+            {/* The three greens, which carry no type anywhere in this design,
+                and the marigold that carries all of it. */}
+            <span style={{ background: 'var(--muted-fill-3)' }} />
+            <span style={{ background: 'var(--muted-fill-2)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
-            <span style={{ background: 'var(--text-muted)' }} />
-            <span style={{ background: 'var(--text)' }} />
+            <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
           <span className="brand-count">
