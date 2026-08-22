@@ -1,28 +1,37 @@
 /* ---------------------------------------------------------------------------
    Design Warehouse — application shell, wearing "Saffron Broadsheet".
 
-   The most generous palette of the six: fourteen of its twenty-eight pairs
-   clear 4.5:1, and for the first time the three text levels are all MEASURED
-   rather than mixed. The ink at 18.01, the brown at 8.59, the mid-brown at
-   5.30 — a full hierarchy straight off the pixels, on the page and on the card
-   alike. Nothing here had to be derived to make text legible.
+   Re-analysed, and the second reading changed the skin more than the palette.
+   The first export measured one hairline and one elevation for the whole page.
+   This one measures them per element, and the design turns out to be almost
+   entirely BORDERLESS and almost entirely FLAT: 39 of 41 blocks carry no rule,
+   38 of 41 cast no shadow. The first skin put a rule on every card, chip and
+   button, which is not what the design does at all — it separates things by
+   fill, space and type, and spends a line or a shadow on the two or three
+   elements that earn one.
 
-   The saffron is unusual too: at 5.20:1 on the page it is the first accent in
-   the six that is legible AS TYPE, so links can be the accent colour instead
-   of the ink. It also carries a white label at 5.20, so it is a button ground
-   in the same breath.
+   So the rules are gone from the panels. What is left of them: the masthead
+   rule, and the hairline on form controls only. A text field with no boundary
+   fails the 3:1 a control needs to be findable, so those keep the measured
+   #a08996 — which, unlike the #dbdbdb the first pass reported, actually clears
+   it at 3.20 on the page.
 
-   That last fact inverts the hover convention. The spec says to shift the
-   accent toward the light, because darkening one usually kills its own label
-   first — but that reasoning assumes a DARK label. This label is white, so
-   lightening is what kills it: twelve percent toward the page takes the button
-   from 5.20 to 4.29 and out of AA before the shift is visible. Hover therefore
-   darkens here, and the note is in --accent-strong.
+   The re-analysis also found a gradient the page-wide test could not see: a
+   vertical saffron ramp, #fdf0b1 to #eec95f, on 2 of the 41 blocks. It carries
+   the ink at 15.8 and 11.38, so it is spent where it shows and can still be
+   read on — the masthead.
 
-   The other thing this design measured is elevation — 19px of falloff at
-   20/255 — and it needs it, because the page and the card are 1.07:1 apart.
-   The two largest tokens are both near-white, so a panel here is defined by
-   its shadow rather than by its tone, which is what the measurement is for.
+   Unchanged, because it was right the first time: all three text levels are
+   measured rather than mixed (18.01, 8.59, 5.30), the saffron accent is
+   legible as type at 5.20 AND carries a white label at 5.20, and hover darkens
+   rather than lightens, against this spec's own convention, because that
+   convention assumes a dark label and this one is white.
+
+   What this palette still cannot do is separate a panel from the page by tone:
+   its two largest tokens are both near-white, 1.07 apart, and every derived
+   page dark enough to lift a card off it drops the third text level below AA.
+   That is the reason the design is borderless AND the reason its three raised
+   elements are the ones that get the 37px shadow.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
@@ -33,7 +42,9 @@
   /* --- measured, exact ---------------------------------------------------
      background #fefefe 31%   text    #2d0a03 24%   muted   #fbf7e1 18%
      muted-2    #664429 11%   muted-3 #876442  7%   muted-4 #c18b53  3%
-     muted-5    #e2cc9d  3%   accent  #c0410c  2%   hairline #dbdbdb 1px  */
+     muted-5    #e2cc9d  3%   accent  #c0410c  2%
+     hairline #a08996 1px, on 2 of 41 blocks · elevation 37px @ 20/255, on 3
+     ramp #fdf0b1 -> #eec95f vertical, on 2 · badge #bf793a · avatar #ffdf98 */
 
   --bg: #fefefe;                                        /* ink 18.01:1 — AAA */
   --bg-elevated: #fbf7e1;
@@ -41,12 +52,12 @@
   --surface-hover: color-mix(in srgb, #e2cc9d 34%, #fbf7e1);
   --chrome: #fbf7e1;
 
-  /* The measured hairline is #dbdbdb, and it is 1.37:1 on the page — fine for
-     a divider, invisible as the edge of a control. So the general border is
-     the measured mid-brown, which is a real rule at 5.30, and the hairline
-     keeps the job it was measured doing. */
-  --border: #876442;                                    /* 5.30 page / 4.96 card */
-  --rule: #dbdbdb;                                      /* the measured hairline */
+  /* The measured hairline, and this time it is a usable one: 3.20 on the page,
+     which is what a control boundary needs. It is spent on form controls and
+     on the two structural rules, and on nothing else — the design puts a rule
+     on 2 of its 41 elements. */
+  --border: #a08996;                                    /* 3.20 page / 2.99 card */
+  --rule: #a08996;
   /* A broadsheet's rules are its structure. This is the heavy one, under the
      masthead and under each section heading, in the ink itself. */
   --rule-heavy: #2d0a03;
@@ -69,7 +80,15 @@
   --on-fill: #fefefe;
 
   --muted-fill: #c18b53;                                /* ink on it 6.13 */
-  --muted-fill-2: #e2cc9d;                              /* ink on it 11.55 */
+  --muted-fill-2: #ffdf98;                     /* the measured avatar; ink 14.06 */
+  --muted-fill-3: #e2cc9d;                              /* ink on it 11.55 */
+
+  /* The measured ramp: vertical, #fdf0b1 to #eec95f, on 2 of the 41 blocks.
+     It carries the ink at 15.8 at the top and 11.38 at the foot, so it is a
+     surface that can be read on and not only a decoration. */
+  --ramp-from: #fdf0b1;
+  --ramp-to: #eec95f;
+  --ramp: linear-gradient(180deg, #fdf0b1, #eec95f);
 
   /* One warm family, so the semantics separate by depth rather than by hue:
      the brown is settled, the measured badge colour is caution, the saffron is
@@ -79,19 +98,21 @@
   --danger: #c0410c;                                    /* white on it 5.20 */
 
   /* --- measured: corners --------------------------------------------------
-     Forty-two. One value everywhere, because the browser clamps it to half the
-     short side: 42px on a panel, and a true pill on anything control-height —
-     which is exactly what the capture holds, 35x23px badges and 41px circles. */
-  --radius-sm: 42px;
-  --radius: 42px;
-  --radius-lg: 42px;
+     Thirty-seven on the re-read, down from the first pass's 42. One value
+     everywhere, because the browser clamps it to half the short side: 37px on
+     a panel, and a true pill on anything control-height — which is what the
+     capture holds, 35x23px badges and 41px circles. */
+  --radius-sm: 37px;
+  --radius: 37px;
+  --radius-lg: 37px;
 
   /* --- measured: elevation ------------------------------------------------
-     19px of falloff reaching 20/255, ~8% of the ink. Load-bearing here: it is
-     what separates a cream card from a white page 1.07:1 away. */
-  --shadow-sm: 0 2px 10px rgb(45 10 3 / 0.08);
-  --shadow: 0 6px 19px rgb(45 10 3 / 0.08);
-  --shadow-lg: 0 12px 38px rgb(45 10 3 / 0.08);
+     37px of falloff reaching 20/255, on 3 of the 41 blocks. Deep and rare, so
+     it is spent on the three surfaces that genuinely float — the drawer, the
+     toasts, the drop target — and on nothing that merely sits on the page. */
+  --shadow-sm: 0 3px 14px rgb(45 10 3 / 0.08);
+  --shadow: 0 8px 37px rgb(45 10 3 / 0.08);
+  --shadow-lg: 0 14px 56px rgb(45 10 3 / 0.08);
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -176,7 +197,20 @@
   --on-fill: #2d0a03;
 
   --muted-fill: #c18b53;                                /* ink on it 6.13 */
-  --muted-fill-2: #e2cc9d;                              /* ink on it 11.55 */
+  --muted-fill-2: #ffdf98;                              /* ink on it 14.06 */
+  --muted-fill-3: #e2cc9d;                              /* ink on it 11.55 */
+
+  /* The ramp, laid on the ink rather than on the page. Its head is held at
+     28% rather than 34% because the muted level reads at 4.16 on the lighter
+     mix and 5.13 on this one — the contrast walker measures text against every
+     stop of a ramp, which is how that was caught. */
+  --ramp-from: color-mix(in srgb, #fdf0b1 28%, #2d0a03);
+  --ramp-to: color-mix(in srgb, #eec95f 26%, #2d0a03);
+  --ramp: linear-gradient(
+    180deg,
+    color-mix(in srgb, #fdf0b1 28%, #2d0a03),
+    color-mix(in srgb, #eec95f 26%, #2d0a03)
+  );
 
   --success: #e2cc9d;                                   /* ink on it 11.55 */
   --warning: #c18b53;                                   /* ink on it 6.13 */
@@ -222,11 +256,22 @@ select,
   font-family: var(--font-ui);
 }
 
-h1, h2 {
+h1, h2, h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  letter-spacing: -0.01em;
   text-wrap: balance;
+  /*
+     Unitless, and tight. The body's 28px pitch is a measurement and is set in
+     pixels, which every element inherits — at 84px display that line box is a
+     third of the glyphs and the masthead ran through the paragraph under it.
+
+     The measured pitches for the heading rows (187px on a 74px ink height,
+     69px on 30px) are not leading: a heading that occupies one row cannot
+     reveal its own leading, so what those numbers describe is the space
+     between blocks. They are honoured as spacing, not as line-height.
+  */
+  line-height: 1.06;
 }
 
 button {
@@ -255,7 +300,9 @@ select {
   padding: var(--s2) var(--s3);
   letter-spacing: 0.04em;
   background: var(--surface);
-  border: 1px solid var(--border);
+  /* Borderless, like 39 of the 41 blocks measured. A button here is a shape
+     cut out of the page by its fill, not a rectangle drawn with a line. */
+  border: 1px solid transparent;
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: var(--t-small);
@@ -319,8 +366,8 @@ select {
   gap: var(--s1);
   padding: var(--s1) var(--s2);
   border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border: 1px solid transparent;
+  background: var(--surface-hover);
   color: var(--text-muted);
   font-size: var(--t-label);
   line-height: var(--s4);
@@ -379,8 +426,19 @@ select {
   align-items: center;
   gap: var(--s3);
   padding: 0 var(--s5);
-  background: color-mix(in srgb, var(--chrome) 94%, transparent);
-  backdrop-filter: blur(12px);
+  /* One of the two ramps the design carries, spent where it shows most and
+     where it can still be read on: the ink is 15.8:1 at the top of it and
+     11.38:1 at the foot. */
+  background: var(--ramp);
+  /*
+     The ramp is a darker ground than the page, so it carries one text level
+     fewer: the ink reads at 11.38 on its foot and the brown at 5.43, but the
+     mid-brown falls to 3.35 there. The faint level therefore collapses into
+     the muted one for anything sitting on the masthead.
+  */
+  --text-faint: var(--text-muted);
+  /* No blur: the spec's convention for what a flat capture cannot show is that
+     surfaces are opaque here, and an opaque masthead needs no backdrop. */
   /* The masthead rule. */
   border-bottom: 3px solid var(--rule-heavy);
 }
@@ -558,8 +616,7 @@ select {
 .group-count {
   padding: var(--s1) var(--s2);
   border-radius: var(--radius);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-hover);
   color: var(--text-faint);
   font-size: var(--t-label);
   font-weight: 500;
@@ -575,23 +632,29 @@ select {
   flex-direction: column;
   min-width: 0;
   height: var(--card-height, 400px);
+  /*
+     No rule and no shadow, because 39 of the 41 measured blocks have neither.
+     A tile is a warm field on a white page, told from it by its fill and by
+     the 39px gutter, and anchored by the screenshot at its head. This palette
+     could not have drawn the boundary anyway: its two largest tokens are
+     1.07:1 apart.
+  */
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: var(--radius);
   overflow: hidden;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow);
+  background: var(--surface-hover);
 }
 
-/* A card's edge falls on the page ground, where the measured scarlet is
-   2.29:1 and a selection ring has to reach 3:1. The lifted one does, at 3.38. */
+/* Selection is the one state that must be unmistakable, so it is the accent,
+   which is 5.20:1 on the page — the only thing here that clears 3:1 on it. */
 .card.selected {
   border-color: var(--focus);
-  box-shadow: 0 0 0 1px var(--focus);
+  box-shadow: 0 0 0 2px var(--focus);
 }
 
 /* Takes whatever height the footer leaves, which is what makes the tiles equal. */
@@ -633,9 +696,10 @@ select {
   bottom: var(--s2);
   padding: var(--s1) var(--s2);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--bg) 76%, transparent);
-  backdrop-filter: blur(6px);
-  border: 1px solid var(--border);
+  /* Opaque, per the spec's convention: no translucency anywhere, and depth
+     comes from elevation rather than from glass. */
+  background: var(--bg);
+  border: 1px solid transparent;
   color: var(--text-muted);
   font-size: var(--t-label);
   line-height: 1.5;
@@ -681,9 +745,8 @@ select {
 }
 
 .card-hover-actions .btn {
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(8px);
-  border-color: var(--border-strong);
+  background: var(--bg);
+  box-shadow: var(--shadow-sm);
 }
 
 /*
@@ -832,12 +895,10 @@ select {
 }
 
 .empty h1 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.01em;
   font-size: var(--t-head);
-  letter-spacing: 0;
-  margin: 0 0 var(--s2);
+  letter-spacing: -0.02em;
+  /* The measured 187px pitch between display rows, as the space it is. */
+  margin: 0 0 var(--s5);
 }
 
 .empty p {
@@ -888,8 +949,10 @@ kbd {
   z-index: 100;
   display: grid;
   place-items: center;
-  background: color-mix(in srgb, var(--bg) 78%, transparent);
-  backdrop-filter: blur(6px);
+  /* The one translucency left, and it is a veil over the app rather than a
+     surface of its own — the spec's "surfaces are opaque" is about the second
+     kind. The blur is gone either way. */
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
   pointer-events: none;
 }
 
