@@ -208,11 +208,14 @@ export function toMarkdownSpec(record: DesignRecord): string {
 function unrecorded(record: DesignRecord): string[] {
   const { typography: type, layout, effects, components, interactions } = record.spec;
   const gaps: string[] = [];
-  const anyType =
-    has(type.headingFamily) || has(type.bodyFamily) || has(type.monoFamily) ||
-    has(type.baseSize) || has(type.notes) ||
-    type.scale.some((step) => has(step.size) || has(step.weight) || has(step.lineHeight));
-  if (!anyType) gaps.push('a type scale or any font');
+  // Fonts and sizes are separate questions: sizes are measurable off a bitmap
+  // and families are not, so the app measures one and never guesses the other.
+  if (!has(type.headingFamily) && !has(type.bodyFamily) && !has(type.monoFamily)) {
+    gaps.push('the font families, which cannot be read off a bitmap');
+  }
+  if (!type.scale.some((step) => has(step.size)) && !has(type.baseSize)) {
+    gaps.push('a type scale');
+  }
   if (!has(layout.radius)) gaps.push('corner radii');
   if (!has(layout.borders)) gaps.push('border styles');
   if (!has(layout.maxWidth) && !has(layout.gutter) && !has(layout.breakpoints)) {

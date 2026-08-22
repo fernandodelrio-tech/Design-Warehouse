@@ -65,6 +65,27 @@ export interface ImageMeta {
   mimeType: string;
 }
 
+/** Fine detail measured off a near-native sample: see lib/measure.ts. */
+export interface DetailMeasurement {
+  /** Corner radius in source pixels, and how many corners agreed. */
+  radius: { px: number; samples: number } | null;
+  /** The modal hairline: its width in source pixels and its colour. */
+  border: { px: number; hex: string; samples: number } | null;
+  /** Elevation: how far the shadow reaches and how dark it gets, 0..255. */
+  shadow: { spread: number; strength: number; samples: number } | null;
+  /**
+   * Text rows. `inkHeights` are the heights of the glyph runs themselves, which
+   * understate font size — a line with no ascenders has none to measure — so
+   * the ratios between them carry more than the absolute figures do.
+   */
+  text: {
+    /** One entry per distinct row height, with how many rows had it. */
+    steps: Array<{ px: number; rows: number }>;
+    leading: number[];
+    samples: number;
+  } | null;
+}
+
 export interface AutoAnalysis {
   /** Bumped when the analyzer changes so stale records can be re-run. */
   version: number;
@@ -75,6 +96,8 @@ export interface AutoAnalysis {
   saturation: 'muted' | 'moderate' | 'vivid';
   contrastPairs: ContrastPair[];
   layout: LayoutEstimate;
+  /** Absent on records analysed before the detail pass existed. */
+  detail?: DetailMeasurement;
 }
 
 export interface TypeStep {

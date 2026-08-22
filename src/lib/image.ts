@@ -84,6 +84,39 @@ export function samplePixels(bitmap: Bitmap, maxEdge = 320): ImageData {
   return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
+export interface DetailSample extends ImageData {
+  /** Multiply a measurement in this sample by `scale` to get source pixels. */
+  scale: number;
+}
+
+/**
+ * A second, much finer sample for measuring fine detail.
+ *
+ * The 320px sample the palette and layout run on is far too coarse for this: a
+ * 1px hairline in a 1024-wide capture survives it as three tenths of a pixel.
+ * Geometry needs something close to native, so this scales by a pixel budget
+ * rather than by the longest edge — a very tall full-page capture keeps its
+ * horizontal resolution, which is where borders and corners live.
+ */
+export function sampleDetail(bitmap: Bitmap, maxPixels = 4_000_000): DetailSample {
+  const total = bitmap.width * bitmap.height;
+  const scale = total > maxPixels ? Math.sqrt(maxPixels / total) : 1;
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('Canvas 2D is unavailable in this browser.');
+  // Nearest-neighbour: smoothing would blur a hairline into the two regions it
+  // separates, which is precisely the thing being measured.
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(bitmap.source, 0, 0, width, height);
+  const data = ctx.getImageData(0, 0, width, height) as DetailSample;
+  data.scale = bitmap.width / width;
+  return data;
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;

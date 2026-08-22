@@ -1,5 +1,6 @@
-import { describeAspect, loadBitmap, makeThumbnail, samplePixels } from './image';
+import { describeAspect, loadBitmap, makeThumbnail, sampleDetail, samplePixels } from './image';
 import { estimateLayout } from './layout';
+import { measureDetail } from './measure';
 import { extractPalette } from './palette';
 import type {
   AutoAnalysis,
@@ -9,7 +10,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 1;
+export const ANALYZER_VERSION = 2;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -24,6 +25,9 @@ export async function analyzeBlob(blob: Blob): Promise<AnalysisResult> {
     const sample = samplePixels(bitmap);
     const paletteResult = extractPalette(sample.data, sample.width, sample.height);
     const layout = estimateLayout(sample.data, sample.width, sample.height);
+    // A second, much finer pass: radius, hairlines, elevation and text sizes
+    // are all invisible at the 320px the palette and layout run on.
+    const detail = measureDetail(sampleDetail(bitmap));
 
     const image: ImageMeta = {
       width: bitmap.width,
@@ -48,6 +52,7 @@ export async function analyzeBlob(blob: Blob): Promise<AnalysisResult> {
       saturation: paletteResult.saturation,
       contrastPairs: paletteResult.contrastPairs,
       layout,
+      detail,
     };
 
     return { image, auto, thumb };
@@ -114,9 +119,65 @@ function guessStyleKeywords(auto: AutoAnalysis): string[] {
  * font families above all — is left blank rather than invented, so a spec is
  * never confidently wrong when Claude reads it back.
  */
+/**
+ * The measured detail, written into the editable spec.
+ *
+ * These fields used to start blank, so every prompt the app exported told its
+ * reader to choose a radius, a border and a type scale. They are measurements
+ * now, and still text fields — correct any of them and the correction is what
+ * exports.
+ */
+function seedFromDetail(detail: AutoAnalysis['detail']) {
+  const radius = detail?.radius ? `${detail.radius.px}px` : '';
+  const borders = detail?.border ? `${detail.border.px}px ${detail.border.hex}` : '';
+  const shadows = detail?.shadow
+    ? `Soft elevation, about ${detail.shadow.spread}px of falloff at ${detail.shadow.strength}/255 at its darkest`
+    : detail
+      ? 'No elevation measured — blocks step straight to the page'
+      : '';
+
+  /*
+     The named steps are anchored on the body, not on the top of the ladder.
+     Assigning the largest measured row to "Display" called a 19px heading a
+     display size in a design whose largest text was 19px — the ladder has to
+     be placed by what the page mostly is, and the row height occurring on the
+     most lines is the body.
+  */
+  const steps = (detail?.text?.steps ?? []).slice().sort((a, b) => b.px - a.px);
+  const leading = (detail?.text?.leading ?? []).slice().sort((a, b) => b - a);
+  const bodyIndex = TYPE_STEPS.indexOf('Body');
+  let mostRows = 0;
+  let bodyStep = -1;
+  steps.forEach((step, i) => {
+    if (step.rows > mostRows) ((mostRows = step.rows), (bodyStep = i));
+  });
+  const offset = bodyStep >= 0 ? bodyIndex - bodyStep : 0;
+  const scale = TYPE_STEPS.map((name, i) => {
+    const step = steps[i - offset];
+    return {
+      name,
+      size: step ? `~${step.px}px` : '',
+      weight: '',
+      lineHeight: step && leading[i - offset] !== undefined ? `~${leading[i - offset]}px` : '',
+      letterSpacing: '',
+    };
+  });
+
+  const notes = detail?.text
+    ? `${detail.text.samples} text rows measured, the most common one taken as Body. ` +
+      'The sizes above are ink heights — the height of the glyphs themselves — which ' +
+      'understates font size, since a line with no ascenders has none to measure. Treat ' +
+      'the ratios between the steps as firmer than the absolute figures. Font families ' +
+      'cannot be read off a bitmap and are not guessed.'
+    : '';
+
+  return { radius, borders, shadows, scale, notes };
+}
+
 export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
   const { category, platform } = guessCategory(image, auto);
   const m = auto.layout.margins;
+  const measured = seedFromDetail(auto.detail);
   return {
     category,
     platform,
@@ -127,14 +188,8 @@ export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
       bodyFamily: '',
       monoFamily: '',
       baseSize: '',
-      scale: TYPE_STEPS.map((name) => ({
-        name,
-        size: '',
-        weight: '',
-        lineHeight: '',
-        letterSpacing: '',
-      })),
-      notes: '',
+      scale: measured.scale,
+      notes: measured.notes,
     },
     layout: {
       structure:
@@ -145,8 +200,8 @@ export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
       maxWidth: '',
       gutter: '',
       spacingScale: '4, 8, 12, 16, 24, 32, 48, 64',
-      radius: '',
-      borders: '',
+      radius: measured.radius,
+      borders: measured.borders,
       breakpoints: '',
       notes: `Estimated from the screenshot — outer margins ~${Math.round(m.left * 100)}% left / ${Math.round(
         m.right * 100,
@@ -157,7 +212,7 @@ export function seedSpec(image: ImageMeta, auto: AutoAnalysis): DesignSpec {
     },
     components: [],
     effects: {
-      shadows: '',
+      shadows: measured.shadows,
       gradients: '',
       blur: '',
       animation: '',

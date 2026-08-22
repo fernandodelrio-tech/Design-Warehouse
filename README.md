@@ -137,8 +137,28 @@ Every image is analysed on arrival, on a downsampled copy of the pixels:
   (how much of the canvas carries detail versus flat space).
 - **Capture facts** — dimensions, aspect ratio, orientation, file size and type.
 
+A second, near-native pass measures the fine detail the 320px analysis pass cannot see,
+since a 1px hairline in a 1024-wide capture survives that downsample as three tenths of
+a pixel:
+
+- **Corner radius** — from how far a filled block is cut back at its bounding box. On a
+  quarter circle of radius *r* the boundary sits at *r*(1 − 1/√2) along the diagonal, so
+  walking that diagonal until the fill starts gives *r* with no curve fitting. Blocks are
+  judged rectangular by whether their four edges are solid, not by how much of their box
+  they fill — a card is a rectangle with content on it, and the content punches holes.
+- **Borders** — the modal width and colour of short runs flanked by two long ones. A
+  candidate must also run unbroken for a long stretch, or the stem of a letter counts as
+  a hairline.
+- **Elevation** — a luminance ramp outside a block edge that climbs back to the page over
+  at least six pixels. Fewer than that is the antialiasing on the edge itself.
+- **Type scale** — rows of text found by horizontal change across each row, clustered
+  into steps and anchored on the most common row as the body. What this measures is *ink
+  height*, the height of the glyphs, which understates font size; the ratios between the
+  steps are the firmer part, and the spec says so. Font families are still never guessed.
+
 These are heuristics on pixels, labelled as measured or estimated in the output, and
-every one of them is editable.
+every one of them is editable. They are checked against ground truth: a canvas painted
+to a known radius, hairline, elevation and set of text sizes, measured back.
 
 ## What you fill in
 
@@ -217,13 +237,11 @@ From a card, hover and hit the copy icon. From the detail drawer:
   mixing the measured colours rather than inventing new ones, and to keep a measured
   hex even where its contrast fails while never using that pair for text.
 
-  It also names its own gaps. Colours, contrast and layout figures are measured off the
-  pixels and are always there; typography, corner radius, borders, effects and
-  components are fields *you* fill in, and a design you never annotated exports without
-  them. Since the exporter drops empty fields, the prompt would otherwise read as though
-  the design had no typography rather than as though nobody wrote it down — so it lists
-  what was never recorded and says plainly that absence is not a claim about the design.
-  Fill those fields in and the list shrinks; fill them all and it disappears.
+  It also names its own gaps — of which there are now far fewer, because most of what
+  used to be blank is measured (see below). What is left genuinely cannot be read off a
+  bitmap: font families, a component inventory, interaction notes. The prompt lists them
+  and says plainly that absence means nobody wrote them down, not that the design lacks
+  them. Fill those fields in and the list shrinks; fill them all and it disappears.
 
 - **Spec** — the same spec as plain markdown
 - **JSON** — a design-token document (color, typography, layout, effects, plus the
