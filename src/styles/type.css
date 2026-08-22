@@ -3,57 +3,49 @@
    Latin subset, static instances, pulled from Google Fonts. */
 
 @font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('./fonts/fraunces-700.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Fraunces';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('./fonts/fraunces-900.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Newsreader';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/newsreader-400.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Newsreader';
+  font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('./fonts/newsreader-600.woff2') format('woff2');
+  src: url('./fonts/cormorant-garamond-600.woff2') format('woff2');
 }
 
 @font-face {
-  font-family: 'Newsreader';
-  font-style: italic;
-  font-weight: 400;
-  font-display: swap;
-  src: url('./fonts/newsreader-400-italic.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Archivo Narrow';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./fonts/archivo-narrow-600.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Archivo Narrow';
+  font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('./fonts/archivo-narrow-700.woff2') format('woff2');
+  src: url('./fonts/cormorant-garamond-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fonts/manrope-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./fonts/manrope-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./fonts/manrope-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fonts/manrope-700.woff2') format('woff2');
 }
