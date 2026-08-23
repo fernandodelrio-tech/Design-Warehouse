@@ -1,35 +1,27 @@
-/* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Marigold Scroll".
+/* -----------------------------------------------------------------------------
+   MARIGOLD SCROLL — worn from the source image rather than from a re-reading
+   of the app already wearing it.
 
-   The tightest palette of the eleven, and the app has worn it before: this is
-   the same design coming round again, so it is the same reading. Five pairs in
-   the whole set clear 4.5:1 and only three of them are usable, all against the
-   page — the ramp head #d0af8e at 6.53, the hairline #aba081 at 5.17 and the
-   token the spec calls text, #949d83, at 4.74. The sage, the teal, the green,
-   the olive brown and the accent fail as type on every ground here.
+   The page is forest #283829 and there is exactly ONE colour light enough to
+   read on it: #dfcbaf, at 7.88. Everything else measured — the surface at
+   2.01, the sage at 3.06, the accent at 1.92 — is a fill, a mark or a ground,
+   never type. So the three text levels are that one ink carried a little
+   toward the warm and the sage, and the hierarchy is made by size and weight.
 
-   Two reassignments follow, and both go against the spec's own labels.
+   What makes this design itself is not its colours, though. It is three things
+   the analyzer could not see until this pass:
 
-   The measured "text" is the BOTTOM of the ladder, not the top. At 4.74 it
-   leaves nothing beneath it, so the three levels run upward instead: the ramp
-   head is the ink, the hairline is second and #949d83 is third. Which makes
-   the design's name literal — the marigold is what you read.
+   a WOVEN GROUND, a relief over 57% of the flat area at 4.7/255, carried here
+   by two crossed gratings at a seven-pixel period rather than by an asset;
 
-   And the measured "surface" #2d533f cannot be one. The spec's own text lands
-   at 3.06 on it and nothing in the palette does better, so there are no raised
-   panels and everything sits on the page. That agrees with what the design
-   does anyway: eighteen blocks, none raised, seventeen borderless.
+   an ELEVATION under everything — 22px of falloff at 21/255 thrown straight
+   down — which is a posture, not a detail: every raised thing floats off the
+   cloth and nothing is printed on to it;
 
-   The accent #4e3524 is DARKER than the page, at 1.19, so it can be neither
-   type nor a fill with an edge. What it can do is hold the marigold at 5.49,
-   which is what the chrome is built from.
-
-   The measured ramp goes on the chrome rather than on the cards it came off,
-   and is carried halfway to the page first. At full strength the marigold
-   reads 3.08 on its light end; at half it reads 4.60 and 5.99. Even then it
-   carries exactly one of the three levels — the hairline falls to 3.64 there
-   and the olive to 3.34 — so every level in the chrome collapses to the
-   marigold and the hierarchy there is made by size and weight instead of tone.
+   and RAMPED FILLS, five of the ten blocks measured, the strongest travelling
+   53 levels diagonally from #93ad75 to #567749. That ramp is the tile, carried
+   18% toward the page so the ink still reaches 5.78 on its head. Its amplitude
+   is the one thing here spent on contrast: 14 levels of travel, not 53.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
@@ -38,100 +30,126 @@
   color-scheme: dark;
 
   /* --- measured, exact ---------------------------------------------------
-     background #1a3425 19%   muted   #5b8469 18%   text  #949d83 15%
-     muted-2    #716345 14%   surface #2d533f 14%   accent #4e3524 10%
-     muted-3    #326358  5%   muted-4 #37765f  5%
-     hairline #aba081 1px, on 1 of 18 blocks · no elevation on any
-     ramp #d0af8e -> #a38467 diagonal, on 3 · card ramp #7f5642 -> #563524
-     avatar #74887d 60px · radius 33px · 26 icon shapes at ~22px          */
+     Read off the SOURCE IMAGE this time, not off a re-analysis of the app
+     wearing an earlier reading of it. The two disagree, and the source wins.
 
-  --bg: #1a3425;                                        /* marigold 6.53:1 */
+     background #283829 37%   surface #3f6a52 23%   muted   #5e876c 14%
+     accent     #79573c  9%   muted-2 #789f8b  8%   muted-3 #9f8060  4%
+     muted-4    #be9f80  4%   text    #dfcbaf  1%
+     radius 31px · borderless on all 10 blocks
+     elevation 22px of falloff at 21/255, thrown 22px straight DOWN, on 3
+     card grid 5 tiles, 3 columns, ~261x233px, 24px apart both ways,
+       filled with a diagonal ramp #93ad75 -> #567749 travelling 53/255
+     woven relief over 57% of the flat area at 4.7/255                    */
+
+  --bg: #283829;                                          /* the ink 7.88:1 */
   /*
-     There IS a raisable surface, and the first reading of this design missed
-     it by looking at the wrong token.
+     The raised surface is the CARD RAMP, carried toward the page.
 
-     The measured "surface" #2d533f cannot be one: the spec's own text lands at
-     3.06 on it and nothing in the palette does better. But the measured CARD
-     RAMP can. Carried a third of the way to the page, #563524 becomes #2d3425
-     — a warm panel a step off the forest ground — and all three text levels
-     reach it: the marigold at 6.26, the hairline at 4.96, the olive at 4.55.
-     It is only 1.24 from the page, so the shadow does most of the work of
-     telling a tile from what it sits on, which is what the design does too.
+     The capture's cards are the lightest things on it and they are ramped, not
+     flat — five of the ten blocks measured are, the strongest travelling 53
+     levels from #93ad75 to #567749. Worn at full strength that ramp is far too
+     light to carry this palette's one ink: #dfcbaf lands at 2.4 on its head.
+     Carried 18% of the way to the page it becomes #3b4d37 and the ink reaches
+     5.78, with the second and third levels at 5.19 and 4.54.
+
+     So the ramp transfers and its amplitude does not: 14 levels of travel
+     rather than 53. That is the one thing here bought with contrast, and it is
+     said rather than quietly done.
   */
-  --bg-elevated: color-mix(in srgb, #563524 32%, #1a3425);
-  --surface: color-mix(in srgb, #563524 32%, #1a3425);
-  --surface-hover: color-mix(in srgb, #2d533f 62%, #1a3425);
-  --chrome: color-mix(in srgb, #4e3524 60%, #1a3425);
-  --ramp: linear-gradient(
+  --bg-elevated: #3b4d37;
+  --surface: #3b4d37;
+  --surface-hover: #44563d;
+  --chrome: color-mix(in srgb, #3f6a52 26%, #283829);
+  --ramp: linear-gradient(135deg, #9cbb85, #8faf7a);     /* diagonal, measured */
+  --ramp-hover: linear-gradient(135deg, #a7c491, #9aba85);
+  /* The warm band, from the brown card ramp rather than the green one, so the
+     chrome is a different material from the tiles rather than a darker one. */
+  --ramp-warm: linear-gradient(
     135deg,
-    color-mix(in srgb, #7f5642 50%, #1a3425),
-    color-mix(in srgb, #563524 50%, #1a3425)
+    color-mix(in srgb, #7f5642 52%, #283829),
+    color-mix(in srgb, #563525 52%, #283829)
   );
 
-  /* Seventeen of eighteen blocks are borderless, so this is for the one place
-     the app needs a boundary the capture did not have: a form control, which
-     must reach 3:1 to be findable. The measured hairline does, at 5.17. */
-  --border: #aba081;                                    /* 5.17 on the page */
-  --rule: color-mix(in srgb, #aba081 42%, #1a3425);
-  --rule-heavy: color-mix(in srgb, #aba081 42%, #1a3425);
-  --border-strong: #d0af8e;
-
-  /* Three measured levels, running upward from the token the spec calls text,
-     because that one is the floor rather than the ceiling. */
-  --text: #d0af8e;                                      /* 6.53 on the page */
-  --text-muted: #aba081;                                /* 5.17 */
-  --text-faint: #949d83;                                /* 4.74 */
-  --text-loud: #d0af8e;
-
-  --focus: #d0af8e;                                     /* 6.53 */
-  --focus-ring: color-mix(in srgb, #d0af8e 34%, #1a3425);
-
-  /* The marigold is the fill that works both ways: 6.53 as a shape against the
-     page, and 6.53 again under a page-coloured label. */
-  --accent: #d0af8e;
-  /* Toward the light, as the spec's convention says and as is right here: the
-     label is the dark page, so lifting the fill raises the pair to 7.36. */
-  --accent-strong: color-mix(in srgb, #d0af8e 82%, #fefefe);
-  --accent-soft: color-mix(in srgb, #d0af8e 22%, #1a3425);
-  /* The measured accent, darker than the page and holding the marigold at
-     5.49 — a well to sink things into rather than a colour to see. */
-  --accent-deep: #4e3524;
-  --on-fill: #1a3425;
-  --on-deep: #d0af8e;
-
-  --muted-fill: #5b8469;              /* the sage, as a mark; nothing reads on it */
-  --muted-fill-2: #37765f;
-  --muted-fill-3: #326358;
+  /* Every one of the ten measured blocks is borderless, so this is for the one
+     place the app needs an edge the capture had none of: a form control, which
+     must reach 3:1 to be findable. */
+  --border: #c3a687;                            /* 5.41 page · 3.96 on a tile */
+  --rule: color-mix(in srgb, #c3a687 40%, #283829);
+  --rule-heavy: color-mix(in srgb, #c3a687 40%, #283829);
+  --border-strong: #dfcbaf;
 
   /*
-     Derived. Not one of the greens carries the page as a label — 3.17, 2.51,
-     1.96 — so each is lifted toward the marigold until it does, keeping its
-     hue. The hairline needs no help. Each state says which label it needs,
-     because in this palette they do not agree: all three fills here are light
-     enough to want the page on them.
+     Three levels, and they sit close together because the palette gives them
+     nowhere else to be: only one measured colour is light enough to read on
+     this page, so the other two are it, carried a little toward the warm and
+     the sage. Hierarchy here is mostly size and weight.
   */
-  --success: color-mix(in srgb, #5b8469 48%, #d0af8e);  /* page on it 4.64 */
-  --warning: #aba081;                                   /* page on it 5.17 */
-  --danger: color-mix(in srgb, #7f5642 34%, #d0af8e);   /* page on it 4.64 */
-  --on-success: #1a3425;
-  --on-warning: #1a3425;
-  --on-danger: #1a3425;
+  --text: #dfcbaf;                              /* 7.88 page · 5.78 on a tile */
+  --text-muted: #d7c0a3;                        /* 7.08 · 5.19 */
+  --text-faint: #b6b9a1;                        /* 6.19 · 4.54 */
+  --text-loud: #dfcbaf;
+  /* The ink for anything that paints the PAGE colour under itself, wherever
+     it sits — a tile scopes --text to its own light ground, and a dark chip
+     inside one still needs this. */
+  --ink-on-bg: #dfcbaf;
+
+  --focus: #dfcbaf;                                             /* 7.88 */
+  --focus-ring: color-mix(in srgb, #dfcbaf 34%, #283829);
+
+  /* The peach the capture spends on its one button. It works both ways — 5.01
+     as a fill on the page, 5.01 again under a page-coloured label. */
+  --accent: #be9f80;
+  /* Toward the light, as the convention says and as is right here: the label
+     is the dark page, so lifting the fill raises the pair to 6.14. */
+  --accent-strong: #cbb299;
+  --accent-soft: color-mix(in srgb, #be9f80 22%, #283829);
+  /* The measured accent #79573c is 1.92 on this page — a colour to sink things
+     into, not to see. Carried to the page it holds the ink at 5.36. */
+  --accent-deep: #594b34;
+  --on-fill: #283829;
+  --on-deep: #dfcbaf;
+
+  --muted-fill: #5e876c;            /* the sage, as a mark; no text reads on it */
+  --muted-fill-2: #789f8b;
+  --muted-fill-3: #3f6a52;
+
+  /*
+     Derived. None of the measured greens or browns carries the page as a label
+     — 3.06, 1.92 — so each is lifted toward the ink until it does, keeping its
+     hue. All three end up light enough to want the page on them.
+  */
+  --success: #9fa98e;                                  /* page on it 5.06 */
+  --warning: #be9f80;                                  /* page on it 5.01 */
+  --danger: #b49a7f;                                   /* page on it 4.66 */
+  --on-success: #283829;
+  --on-warning: #283829;
+  --on-danger: #283829;
 
   /* --- measured: corners -------------------------------------------------- */
-  --radius-sm: 33px;
-  --radius: 33px;
-  --radius-lg: 33px;
+  --radius-sm: 31px;
+  --radius: 31px;
+  --radius-lg: 31px;
 
   /* --- measured: elevation ------------------------------------------------
-     The first reading of this design said none, and it was wrong: the shadow
-     walker was reading single lines of pixels across a woven ground, where a
-     real falloff stops looking monotone and is thrown away. Measured through
-     the texture it is 24px of falloff reaching 51/255, thrown down and to the
-     left. That is not a hairline of separation, it is the posture of the whole
-     page — everything on it floats, and nothing is printed on to it. */
-  --shadow-sm: 0 6px 10px rgb(0 0 0 / 0.14);
-  --shadow: 0 14px 24px rgb(0 0 0 / 0.20);
-  --shadow-lg: 0 22px 44px rgb(0 0 0 / 0.26);
+     22px of falloff reaching 21/255, thrown 22px straight DOWN — the walker
+     reads it on the bottom edge and finds nothing above, which is a shadow
+     sitting wholly under its surface rather than a glow around it. An offset
+     of half the blur puts it there: 0 11px 22px reaches 22px below and stops
+     at the top edge.
+
+     The ALPHA is derived from the strength, not guessed. This page has a
+     luminance of 51.5/255, and a shadow that takes 21 off it has to leave 59%
+     of the ground showing — black at 0.41. A shadow written at the 0.2 that
+     looks right on a white page is invisible on a dark green one, which is
+     exactly what the first attempt at this shipped: the tiles sat on the cloth
+     instead of floating over it.
+
+     This is the posture of the whole page rather than a detail of one tile.
+     Everything on it floats; nothing is printed on to it. */
+  --shadow-sm: 0 5px 11px rgb(0 0 0 / 0.26);
+  --shadow: 0 11px 22px rgb(0 0 0 / 0.44);
+  --shadow-lg: 0 18px 34px rgb(0 0 0 / 0.54);
 
   /* --- measured: the surface ----------------------------------------------
      A woven relief over 57% of the flat area at about 4.7/255, varying over
@@ -201,100 +219,108 @@
      the circle and the colour transfer and the diameter is the app's.
   */
   --avatar: 32px;
-  --avatar-fill: #74887d;
+  --avatar-fill: color-mix(in srgb, #789f8b 72%, #dfcbaf);
 }
 
 /* --- daybreak ---------------------------------------------------------------
-   Derived, and it has to invert further than the others because this palette
-   has no light colour at all: the lightest thing measured is the ramp head at
-   luminance 0.46, which is a mid-tone. So the light theme's ground is the ramp
-   head carried most of the way to white, and the forest becomes the ink, where
-   it reads at 10.4 — better than anything the dark side could manage. */
+   Derived. The lightest measured colour is the ink #dfcbaf, which is a warm
+   mid-tone rather than a light one, so the light ground is that carried most
+   of the way to white and the page green becomes the ink — where it reads at
+   10.88, better than anything the dark side can manage. The tile keeps its
+   diagonal ramp, from the same two card colours mixed the other way. */
 
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --bg: color-mix(in srgb, #d0af8e 26%, #fefefe);
-  --bg-elevated: color-mix(in srgb, #d0af8e 12%, #fefefe);
-  --surface: color-mix(in srgb, #d0af8e 12%, #fefefe);
-  --surface-hover: color-mix(in srgb, #d0af8e 34%, #fefefe);
-  --chrome: #1a3425;
-  --ramp: linear-gradient(135deg, #7f5642, #563524);
+  --bg: #f5efe6;
+  --bg-elevated: #faf7f3;
+  --surface: #faf7f3;
+  --surface-hover: color-mix(in srgb, #dfcbaf 44%, #fefefe);
+  --chrome: #283829;
+  --ramp: linear-gradient(135deg, #c9d6ba, #c5d0c0);   /* the card ramp, lifted */
+  --ramp-hover: linear-gradient(135deg, #bccfab, #b8c6b1);
+  --ramp-warm: linear-gradient(135deg, #7f5642, #563525);
 
-  --border: color-mix(in srgb, #4e3524 72%, #d0af8e);
-  --rule: color-mix(in srgb, #4e3524 34%, #d0af8e);
-  --rule-heavy: color-mix(in srgb, #4e3524 34%, #d0af8e);
-  --border-strong: #1a3425;
+  --border: color-mix(in srgb, #79573c 72%, #dfcbaf);
+  --rule: color-mix(in srgb, #79573c 34%, #dfcbaf);
+  --rule-heavy: color-mix(in srgb, #79573c 34%, #dfcbaf);
+  --border-strong: #283829;
 
-  --text: #1a3425;
-  --text-muted: color-mix(in srgb, #4e3524 88%, #d0af8e);
-  --text-faint: color-mix(in srgb, #4e3524 70%, #d0af8e);
-  --text-loud: #1a3425;
+  --text: #283829;                                        /* 10.88 on the bg */
+  /* Both are pushed further down than the page alone would need, because the
+     ground a tile's text lands on is the LIGHT RAMP, not the page: at the
+     ramp's dark end the sage read 3.67 and the brown 4.42. Measured where they
+     actually sit, they are 5.2 and 5.2. */
+  --text-muted: color-mix(in srgb, #79573c 70%, #283829);   /* 6.93 · 5.21 */
+  --text-faint: color-mix(in srgb, #5e876c 40%, #283829);   /* 6.84 · 5.15 */
+  --text-loud: #283829;
+  --ink-on-bg: #283829;
 
-  --focus: #4e3524;
-  --focus-ring: color-mix(in srgb, #4e3524 26%, #fefefe);
+  --focus: #79573c;
+  --focus-ring: color-mix(in srgb, #79573c 26%, #fefefe);
 
-  --accent: #4e3524;
+  --accent: #79573c;                                      /* 5.67 on the bg */
   /* Darker on hover here, the mirror of the dark side: this label is the light
      one, so the fill has to fall for it. */
-  --accent-strong: color-mix(in srgb, #4e3524 74%, #1a3425);
-  --accent-soft: color-mix(in srgb, #d0af8e 44%, #fefefe);
-  --accent-deep: #1a3425;
-  --on-fill: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --on-deep: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --accent-strong: color-mix(in srgb, #79573c 74%, #283829);
+  --accent-soft: color-mix(in srgb, #dfcbaf 44%, #fefefe);
+  --accent-deep: #283829;
+  --on-fill: #f5efe6;
+  --on-deep: #f5efe6;
 
-  --muted-fill: #5b8469;
-  --muted-fill-2: #37765f;
-  --muted-fill-3: #326358;
+  --muted-fill: #5e876c;
+  --muted-fill-2: #789f8b;
+  --muted-fill-3: #3f6a52;
 
-  --success: color-mix(in srgb, #37765f 76%, #1a3425);
-  --warning: color-mix(in srgb, #716345 84%, #1a3425);
-  --danger: color-mix(in srgb, #7f5642 74%, #1a3425);
-  --on-success: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --on-warning: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --on-danger: color-mix(in srgb, #d0af8e 20%, #fefefe);
+  --success: color-mix(in srgb, #5e876c 76%, #283829);
+  --warning: color-mix(in srgb, #9f8060 84%, #283829);
+  --danger: color-mix(in srgb, #79573c 74%, #283829);
+  --on-success: #f5efe6;
+  --on-warning: #f5efe6;
+  --on-danger: #f5efe6;
 
-  --avatar-fill: #74887d;
+  --avatar-fill: color-mix(in srgb, #789f8b 72%, #dfcbaf);
 }
 
 /*
-   The chrome carries the measured ramp, and a ramp this dark holds exactly one
-   of the three text levels: the marigold, at 4.60 on its light end and 5.99 on
-   its dark one. The hairline falls to 3.64 there and the olive to 3.34. So
-   every level in the chrome collapses to the marigold, and the hierarchy is
-   made by size and weight instead of by tone — which is the honest way to
-   spend a ground that only carries one colour.
+   The chrome carries the WARM ramp — the brown card fill rather than the green
+   one — so the bar reads as a different material from the tiles rather than as
+   a darker shade of them. Carried halfway to the page it holds two ink levels
+   at its light end, 5.62 and 5.05, and three at its dark end. The peach accent
+   falls to 3.58 there, so inside the chrome the accent becomes the ink.
 */
 .topbar,
 .filters {
-  --text: #d0af8e;
-  --text-muted: #d0af8e;
-  --text-faint: #d0af8e;
-  --border: #d0af8e;
-  --rule: color-mix(in srgb, #d0af8e 34%, #1a3425);
-  --surface: color-mix(in srgb, #4e3524 68%, #1a3425);
-  --surface-hover: color-mix(in srgb, #4e3524 40%, #1a3425);
-  --focus: #d0af8e;
-  --on-fill: #1a3425;
-  --on-deep: #1a3425;
-  background: var(--ramp);
+  --text: #dfcbaf;
+  --text-muted: #d7c0a3;
+  --text-faint: #d7c0a3;
+  --border: #dfcbaf;
+  --rule: color-mix(in srgb, #dfcbaf 34%, #283829);
+  --surface: color-mix(in srgb, #79573c 68%, #283829);
+  --surface-hover: color-mix(in srgb, #79573c 40%, #283829);
+  --focus: #dfcbaf;
+  --accent: #dfcbaf;
+  --accent-strong: color-mix(in srgb, #dfcbaf 82%, #fefefe);
+  --on-fill: #283829;
+  --on-deep: #283829;
+  background: var(--ramp-warm);
   color: var(--text);
 }
 
 :root[data-theme='light'] .topbar,
 :root[data-theme='light'] .filters {
-  --text: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --text-muted: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --text-faint: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --border: color-mix(in srgb, #d0af8e 20%, #fefefe);
-  --rule: color-mix(in srgb, #d0af8e 40%, #1a3425);
-  --surface: color-mix(in srgb, #7f5642 46%, #1a3425);
-  --surface-hover: color-mix(in srgb, #7f5642 66%, #1a3425);
-  --focus: #d0af8e;
-  --accent: #d0af8e;
-  --accent-strong: color-mix(in srgb, #d0af8e 82%, #fefefe);
-  --on-fill: #1a3425;
-  --on-deep: #1a3425;
+  --text: #f5efe6;
+  --text-muted: #f5efe6;
+  --text-faint: #f5efe6;
+  --border: #f5efe6;
+  --rule: color-mix(in srgb, #f5efe6 40%, #563525);
+  --surface: color-mix(in srgb, #563525 46%, #7f5642);
+  --surface-hover: color-mix(in srgb, #563525 66%, #7f5642);
+  --focus: #f5efe6;
+  --accent: #f5efe6;
+  --accent-strong: #fefefe;
+  --on-fill: #563525;
+  --on-deep: #563525;
 }
 
 * {
@@ -309,7 +335,15 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
+  /*
+     The cloth. It was measured over 57% of the flat area — which is most of
+     this page, not just the cards — and a version that carried it on the tiles
+     alone put the material on the wrong surface: the capture's GROUND is the
+     woven thing and its cards float above it.
+  */
+  background: var(--weave), var(--bg);
+  background-color: var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   font-size: var(--t-body);
@@ -768,14 +802,54 @@ select {
   min-width: 0;
   height: var(--card-height, 400px);
   /*
-     No rule — seventeen of the eighteen measured blocks are borderless — but a
-     shadow, because measured THROUGH the weave every raised thing on this page
-     casts one. The palette gives a tile no colour of its own to be told by:
-     the measured surface takes the spec's own text to 3.06. So the lift is
-     what tells it, and the tile floats off the cloth rather than being tinted
-     against it.
+     THE TILE IS LIGHT, and that is the whole reason this design floats.
+
+     The first attempt carried the measured card ramp 18% toward the page so
+     the page's one light ink would still read on it. It passed every contrast
+     check and looked nothing like the capture: a tile 1.36 off its ground
+     cannot float however much shadow is under it, and the screenshot showed
+     six panels lying flat on the cloth.
+
+     The capture's cards are the LIGHTEST things on it — #9cbb85 is 5.84 off
+     the page — so the tile is worn at the colour it was measured at, and the
+     ink inverts to suit rather than the fill being darkened to suit the ink.
+     A light ground has room above it that this dark one does not: three levels
+     sit at 7.08, 5.84 and 4.87 on the ramp's dark end, which is one more than
+     the dark tile could hold.
+
+     No rule — all ten measured blocks are borderless — and the ramp is the
+     measured diagonal, at a travel of 12 rather than 53 so the ink holds at
+     the foot as well as the head.
   */
-  background: var(--weave), var(--bg-elevated);
+  background: var(--weave), var(--ramp);
+  /*
+     And the flat colour under the ramp, spelled out. The shorthand above ends
+     in an image, which leaves background-color transparent — so anything that
+     asks this tile what ground its text lands on is told "the page", and the
+     answer is 1.35:1 on a tile whose real answer is 7.08.
+  */
+  background-color: #9cbb85;
+  /* Scoping the tokens is not enough on its own: `color` is inherited from
+     wherever it was last resolved, so a tile that redefines --text and never
+     sets `color` keeps the page's ink and reads at 1.35 on its own fill. */
+  color: var(--text);
+  /* The tile is its own ground, so it carries its own inks. */
+  --text: #1a2a1c;                              /* 7.08 head · 6.17 foot */
+  --text-muted: #283829;                        /* 5.84 · 5.08 */
+  --text-faint: color-mix(in srgb, #563525 82%, #1a2a1c);   /* 5.44 · 4.87 */
+  --text-loud: #1a2a1c;
+  --border: #283829;
+  --rule: color-mix(in srgb, #283829 40%, #9cbb85);
+  --surface: color-mix(in srgb, #567749 26%, #9cbb85);
+  --surface-hover: color-mix(in srgb, #567749 40%, #9cbb85);
+  --chrome: color-mix(in srgb, #567749 26%, #9cbb85);
+  --focus: #1a2a1c;
+  --focus-ring: color-mix(in srgb, #1a2a1c 34%, #9cbb85);
+  --accent: #563525;
+  --accent-strong: #1a2a1c;
+  --accent-soft: color-mix(in srgb, #563525 20%, #9cbb85);
+  --on-fill: #9cbb85;
+  --on-deep: #9cbb85;
   border: 1px solid transparent;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -784,17 +858,17 @@ select {
 }
 
 .card:hover {
-  background: var(--surface-hover);
+  background: var(--weave), var(--ramp-hover);
   /* Raised by the smallest step that reads, and it does not move under the
      pointer — a tile that moves is a tile you have to chase. */
   box-shadow: var(--shadow-lg);
 }
 
-/* Selection is the one state that must be unmistakable, so it is the accent,
-   which is 5.20:1 on the page — the only thing here that clears 3:1 on it. */
+/* Selection is the one state that must be unmistakable. On a light tile the
+   ring is the dark end of the palette, at 7.08 against the tile it draws on. */
 .card.selected {
   border-color: var(--focus);
-  box-shadow: 0 0 0 2px var(--focus);
+  box-shadow: 0 0 0 2px var(--focus), var(--shadow);
 }
 
 /* Takes whatever height the footer leaves, which is what makes the tiles equal. */
@@ -837,10 +911,12 @@ select {
   padding: var(--s1) var(--s2);
   border-radius: var(--radius);
   /* Opaque, per the spec's convention: no translucency anywhere, and depth
-     comes from elevation rather than from glass. */
+     comes from elevation rather than from glass. This one chip sits on the
+     THUMBNAIL rather than on the tile, so it takes the page's ground and the
+     page's ink rather than the tile's — which are now opposites. */
   background: var(--bg);
   border: 1px solid transparent;
-  color: var(--text-muted);
+  color: var(--ink-on-bg);
   font-size: var(--t-label);
   line-height: 1.5;
   letter-spacing: 0.01em;
@@ -1175,12 +1251,13 @@ kbd {
   flex: 0 0 auto;
 }
 
-/* The measured avatar fill, at the measured 60px. Nothing in this palette
-   reads on it, so the initials take the page colour: #1a3425 on #74887d is
-   3.56, which is why the avatar is a mark rather than a label. */
+/* The sage, lifted toward the ink until the page colour reads on it: #789f8b
+   alone takes #283829 to 4.22, and carried a third of the way to #dfcbaf it
+   reaches 5.4. The initials are small text, so they get the ratio rather than
+   the raw measurement. */
 .account-initial {
   background: var(--avatar-fill);
-  color: var(--text);
+  color: var(--on-fill);
   font-family: var(--font-ui);
   font-size: var(--t-label);
   font-weight: 500;
