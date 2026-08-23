@@ -773,8 +773,20 @@ function measureComponents(
      reported as a filter row, and "3 controls of ~44x44px" is a sentence that
      describes the right pixels under the wrong noun.
   */
+  /*
+     Small and fully rounded is a badge, and it is tested for below. It has to
+     be excluded here as well, because a row of six of them is also a row of
+     same-height controls on one baseline — and being tested first, the toolbar
+     rule took them and described six labels as six filter controls. Shape is
+     the only thing that separates the two, so the more specific shape gets
+     first claim rather than the earlier rule.
+  */
+  const badgeShaped = (b: Block) =>
+    b.h <= 34 && b.radius !== null && b.radius >= b.h * 0.4;
   const controlRows = baselineRow(
-    free().filter((b) => b.h >= 20 && b.h <= 72 && b.w >= b.h * 1.5 && b.w <= w * 0.5),
+    free().filter(
+      (b) => b.h >= 20 && b.h <= 72 && b.w >= b.h * 1.5 && b.w <= w * 0.5 && !badgeShaped(b),
+    ),
   ).filter((r) => r.length >= 3);
 
   const tabs = controlRows.find((r) => rowGap(r) <= 8);
@@ -831,8 +843,7 @@ function measureComponents(
   const pills = repeats(
     free().filter(
       (b) =>
-        b.h >= 14 && b.h <= 34 && b.w >= b.h * 1.4 && b.w <= 220 &&
-        b.radius !== null && b.radius >= b.h * 0.4,
+        b.h >= 14 && b.w >= b.h * 1.4 && b.w <= 220 && badgeShaped(b),
     ),
   )[0];
   if (pills && pills.length >= 2) {

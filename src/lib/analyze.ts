@@ -12,7 +12,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 7;
+export const ANALYZER_VERSION = 8;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -406,8 +406,9 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
         `${e.gradient.from} to ${e.gradient.to}, travelling ${e.gradient.span}/255` +
         (e.blocks - e.withGradient > 0
           ? `. The other ${e.blocks - e.withGradient} ` +
-            `${e.blocks - e.withGradient === 1 ? 'is a flat fill' : 'are flat fills'} — do not ` +
-            'put a ramp on them.'
+            `${e.blocks - e.withGradient === 1
+              ? 'is a flat fill — do not put a ramp on it.'
+              : 'are flat fills — do not put a ramp on them.'}`
           : ' — every one of them ramps.')
       : e
         ? `All ${e.blocks} measured blocks are flat fills.`

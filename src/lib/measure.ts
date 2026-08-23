@@ -215,8 +215,25 @@ const CHROMA_STEP = 10;
  */
 export type FloodMode = 'flat' | 'smooth';
 
-/** Neighbour-to-neighbour tolerance in 'smooth' mode: four levels a channel. */
-const CONTINUOUS = 4 * 4 * 3;
+/**
+ * Neighbour-to-neighbour tolerances in 'smooth' mode, tightest first.
+ *
+ * One tolerance cannot segment a page whose elements sit on a textured or
+ * ramped ground. Four levels a channel is what a soft card fill needs to stay
+ * in one piece — and it is also enough for the ground to seep under a card's
+ * antialiased corner and come out the other side, at which point the flood
+ * swallows the card, the page and everything on it as one region. That region
+ * is then discarded for being most of the canvas, and because its pixels stay
+ * claimed, none of the cards inside it can ever be seeded again. A single leak
+ * cost six cards on a real capture: the analyzer reported two.
+ *
+ * So the pass runs the ladder instead. A tight flood cannot cross a corner
+ * seep, so it resolves the elements first and they are locked; a looser flood
+ * then runs on what is left, and can only claim what nothing tighter could.
+ * Locked pixels are walls, which is also what stops the late, greedy pass from
+ * flowing back through an element it has no business inside.
+ */
+const SMOOTH_LADDER = [2 * 2 * 3, 3 * 3 * 3, 4 * 4 * 3];
 
 export function findBlocks(
   d: Uint8ClampedArray,
@@ -227,6 +244,8 @@ export function findBlocks(
   mode: FloodMode = 'flat',
 ): Block[] {
   const seen = new Uint8Array(w * h);
+  /** Pixels an accepted block owns. Walls to every later pass of the ladder. */
+  const locked = new Uint8Array(w * h);
   const blocks: Block[] = [];
   const minArea = minSide * minSide;
   const stack = new Int32Array(w * h);
@@ -240,130 +259,170 @@ export function findBlocks(
   let stamp = 0;
 
   const step = Math.max(1, Math.floor(Math.min(w, h) / 120));
-  for (let sy = 0; sy < h; sy += step) {
-    for (let sx = 0; sx < w; sx += step) {
-      const seed = sy * w + sx;
-      if (seen[seed]) continue;
-      const colour = rgbAt(d, seed * 4);
+  // Flat mode measures every pixel against the seed, and a ladder would only
+  // repeat the same answer at looser thresholds; it runs the one tolerance.
+  const ladder = mode === 'smooth' ? SMOOTH_LADDER : [SAME];
+  for (const tolerance of ladder) {
+    if (tolerance !== ladder[0]) seen.fill(0);
+    for (let sy = 0; sy < h; sy += step) {
+      for (let sx = 0; sx < w; sx += step) {
+        const seed = sy * w + sx;
+        if (seen[seed] || locked[seed]) continue;
+        const colour = rgbAt(d, seed * 4);
 
-      // Flood the region of near-identical colour around this seed.
-      let top = 0;
-      stack[top++] = seed;
-      seen[seed] = 1;
-      let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
-      stamp++;
-      while (top > 0 && area < 4_000_000) {
-        const p = stack[--top];
-        const py = (p / w) | 0;
-        const px = p - py * w;
-        area++;
-        mask[p] = stamp;
-        if (px < minX) minX = px;
-        if (px > maxX) maxX = px;
-        if (py < minY) minY = py;
-        if (py > maxY) maxY = py;
-        const neighbours = [
-          px > 0 ? p - 1 : -1,
-          px < w - 1 ? p + 1 : -1,
-          py > 0 ? p - w : -1,
-          py < h - 1 ? p + w : -1,
+        // Flood the region of near-identical colour around this seed.
+        let top = 0;
+        stack[top++] = seed;
+        seen[seed] = 1;
+        let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
+        stamp++;
+        while (top > 0 && area < 4_000_000) {
+          const p = stack[--top];
+          const py = (p / w) | 0;
+          const px = p - py * w;
+          area++;
+          mask[p] = stamp;
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+          const neighbours = [
+            px > 0 ? p - 1 : -1,
+            px < w - 1 ? p + 1 : -1,
+            py > 0 ? p - w : -1,
+            py < h - 1 ? p + w : -1,
+          ];
+          const here = mode === 'smooth' ? rgbAt(d, p * 4) : colour;
+          for (const n of neighbours) {
+            if (n < 0 || seen[n] || locked[n]) continue;
+            if (dist2(rgbAt(d, n * 4), here) > tolerance) continue;
+            seen[n] = 1;
+            stack[top++] = n;
+          }
+        }
+
+        const bw = maxX - minX + 1;
+        const bh = maxY - minY + 1;
+        if (bw < minSide || bh < minSide || area < minArea) continue;
+        // A block filling its whole box to the edge of the canvas is the page,
+        // not a card — and neither is one covering half the canvas, which is
+        // also the expensive case to go on and test.
+        if (bw >= w - 2 && bh >= h - 2) continue;
+        if (area >= w * h * 0.45) continue;
+
+        /*
+           Rectangularity is judged on the block's own edges, not on how much of
+           its bounding box it fills. A card is a rectangle with content sitting
+           on it, and that content punches holes: the first version of this
+           measured 0.72 fill for a plain white card carrying two paragraphs and
+           threw every card away. The border rows and columns, though, are still
+           solid card colour except where the corners round off — so covering
+           three quarters of each of the four edges is the test.
+        */
+        const covered = (
+          fixed: number, from: number, to: number, horizontal: boolean,
+        ): number => {
+          let hit = 0;
+          let n = 0;
+          for (let i = from; i <= to; i++) {
+            n++;
+            if (mask[horizontal ? fixed * w + i : i * w + fixed] === stamp) hit++;
+          }
+          return n ? hit / n : 0;
+        };
+        /*
+           Taken a row or two in, not at the extreme.
+
+           The bounding box is set by the furthest pixel the flood reached, and
+           under a soft edge — an antialiased corner, a shadow's first step, a
+           card blurred into its ground — that pixel is a sliver in the middle
+           of the side. Judging the side by it scored a clean card at 0.42 and
+           threw it away; the true edge was two rows further in, at 0.87. A
+           hard-edged block reads the same at every offset, so taking the best
+           of the first few costs it nothing.
+        */
+        const depth = Math.min(3, Math.floor(Math.min(bw, bh) / 12));
+        const side = (
+          fixed: number, inward: number, from: number, to: number, horizontal: boolean,
+        ): number => {
+          let best = 0;
+          for (let k = 0; k <= depth; k++) {
+            best = Math.max(best, covered(fixed + inward * k, from, to, horizontal));
+          }
+          return best;
+        };
+        const edges = [
+          side(minY, 1, minX, maxX, true),
+          side(maxY, -1, minX, maxX, true),
+          side(minX, 1, minY, maxY, false),
+          side(maxX, -1, minY, maxY, false),
         ];
-        const here = mode === 'smooth' ? rgbAt(d, p * 4) : colour;
-        const tolerance = mode === 'smooth' ? CONTINUOUS : SAME;
-        for (const n of neighbours) {
-          if (n < 0 || seen[n]) continue;
-          if (dist2(rgbAt(d, n * 4), here) > tolerance) continue;
-          seen[n] = 1;
-          stack[top++] = n;
+        const container = edges.every((c) => c >= 0.75);
+
+        const limit = Math.min(maxRadius, Math.floor(Math.min(bw, bh) / 2));
+        const corners: number[] = [];
+        for (const [cx, cy, dx, dy] of [
+          [minX, minY, 1, 1],
+          [maxX, minY, -1, 1],
+          [minX, maxY, 1, -1],
+          [maxX, maxY, -1, -1],
+        ] as const) {
+          let k = 0;
+          while (k <= limit && mask[(cy + dy * k) * w + (cx + dx * k)] !== stamp) k++;
+          if (k > limit) continue;
+          corners.push(k * DIAGONAL_TO_RADIUS);
         }
-      }
 
-      const bw = maxX - minX + 1;
-      const bh = maxY - minY + 1;
-      if (bw < minSide || bh < minSide || area < minArea) continue;
-      // A block filling its whole box to the edge of the canvas is the page,
-      // not a card — and neither is one covering half the canvas, which is
-      // also the expensive case to go on and test.
-      if (bw >= w - 2 && bh >= h - 2) continue;
-      if (area >= w * h * 0.45) continue;
+        /*
+           Two shapes have to get through, and one test cannot pass both.
 
-      /*
-         Rectangularity is judged on the block's own edges, not on how much of
-         its bounding box it fills. A card is a rectangle with content sitting
-         on it, and that content punches holes: the first version of this
-         measured 0.72 fill for a plain white card carrying two paragraphs and
-         threw every card away. The border rows and columns, though, are still
-         solid card colour except where the corners round off — so covering
-         three quarters of each of the four edges is the test.
-      */
-      const covered = (
-        fixed: number, from: number, to: number, horizontal: boolean,
-      ): number => {
-        let hit = 0;
-        let n = 0;
-        for (let i = from; i <= to; i++) {
-          n++;
-          if (mask[horizontal ? fixed * w + i : i * w + fixed] === stamp) hit++;
+           A container — a card, a bar — carries content that punches holes in it,
+           so it is judged on its own edges, which stay solid. That works because
+           its radius is small next to its sides.
+
+           A control — a button, a pill, an avatar — has no content inside but is
+           rounded hard enough that the edge test is meaningless: on a fully
+           rounded pill the short edges are a single tangent pixel, so they score
+           near zero however perfect the shape. It is judged instead on area,
+           against what a rounded rectangle of the measured radius should have:
+           bw·bh − (4 − π)r². Nothing else lands that close.
+
+           Between them they also drop what neither is: a card's border ring
+           scores solid edges but only a few percent of the area it claims, so it
+           no longer counts as a second card sitting on the first.
+        */
+        const r = corners.length === 4 ? median(corners) : 0;
+        const predicted = bw * bh - (4 - Math.PI) * r * r;
+        const control = corners.length === 4 && Math.abs(area - predicted) <= bw * bh * 0.1;
+        if (!container && !control) continue;
+
+        /*
+           Accepted, so the region's pixels become walls. Later, looser passes
+           are then floods over the gaps between elements rather than floods
+           through them.
+        */
+        if (ladder.length > 1) {
+          for (let y = minY; y <= maxY; y++) {
+            for (let x = minX; x <= maxX; x++) {
+              const p = y * w + x;
+              if (mask[p] === stamp) locked[p] = 1;
+            }
+          }
         }
-        return n ? hit / n : 0;
-      };
-      const edges = [
-        covered(minY, minX, maxX, true),
-        covered(maxY, minX, maxX, true),
-        covered(minX, minY, maxY, false),
-        covered(maxX, minY, maxY, false),
-      ];
-      const container = edges.every((c) => c >= 0.75);
 
-      const limit = Math.min(maxRadius, Math.floor(Math.min(bw, bh) / 2));
-      const corners: number[] = [];
-      for (const [cx, cy, dx, dy] of [
-        [minX, minY, 1, 1],
-        [maxX, minY, -1, 1],
-        [minX, maxY, 1, -1],
-        [maxX, maxY, -1, -1],
-      ] as const) {
-        let k = 0;
-        while (k <= limit && mask[(cy + dy * k) * w + (cx + dx * k)] !== stamp) k++;
-        if (k > limit) continue;
-        corners.push(k * DIAGONAL_TO_RADIUS);
+        blocks.push({
+          x: minX,
+          y: minY,
+          w: bw,
+          h: bh,
+          area,
+          hex: hex(colour),
+          colour,
+          radius: corners.length ? median(corners) : null,
+          corners,
+          fill: area / (bw * bh),
+        });
       }
-
-      /*
-         Two shapes have to get through, and one test cannot pass both.
-
-         A container — a card, a bar — carries content that punches holes in it,
-         so it is judged on its own edges, which stay solid. That works because
-         its radius is small next to its sides.
-
-         A control — a button, a pill, an avatar — has no content inside but is
-         rounded hard enough that the edge test is meaningless: on a fully
-         rounded pill the short edges are a single tangent pixel, so they score
-         near zero however perfect the shape. It is judged instead on area,
-         against what a rounded rectangle of the measured radius should have:
-         bw·bh − (4 − π)r². Nothing else lands that close.
-
-         Between them they also drop what neither is: a card's border ring
-         scores solid edges but only a few percent of the area it claims, so it
-         no longer counts as a second card sitting on the first.
-      */
-      const r = corners.length === 4 ? median(corners) : 0;
-      const predicted = bw * bh - (4 - Math.PI) * r * r;
-      const control = corners.length === 4 && Math.abs(area - predicted) <= bw * bh * 0.1;
-      if (!container && !control) continue;
-
-      blocks.push({
-        x: minX,
-        y: minY,
-        w: bw,
-        h: bh,
-        area,
-        hex: hex(colour),
-        colour,
-        radius: corners.length ? median(corners) : null,
-        corners,
-        fill: area / (bw * bh),
-      });
     }
   }
   return blocks;
@@ -397,21 +456,58 @@ export function measureBlockEdge(
   h: number,
   b: Block,
   /*
-     Deep enough that a border does not eat the window. At 24 a bordered card
-     with a 20px shadow had only 22 pixels left to settle in, and its tail was
-     still 2.2 levels short of the page — so the shadow was measured on the
-     borderless card beside it and missed on this one.
+     Everything else on the page, so a walk can be stopped before it reaches
+     another element. Without them the window is a guess, and a guess that
+     overshoots reads the neighbour: a 240px card 60px from the next one had
+     its window set to 84 by its own size, walked 24px into the white card
+     beside it, and reported that card's edge as a 42px shadow. The step guard
+     did not catch it because smoothing the profile — which the same commit
+     added, to see through a weave — spreads a step over nine pixels and makes
+     it look exactly like a gentle ramp.
   */
-  look = 0,
+  others: Block[] = [],
 ): BlockEdge {
   /*
-     How far to look for a falloff. A fixed 34 was right for the tight shadows
-     these captures used to carry and far too short for a soft one: a 250px
-     card with a 40px blur under it has a ramp that is still falling when the
-     window ends, and a ramp that never settles is thrown away. It scales with
-     the block now, within bounds — big things cast far, small things cannot.
+     How far to look for a falloff, per edge.
+
+     Two things bound it. What the block could plausibly cast: a fixed 34 was
+     right for the tight shadows these captures used to carry and far too short
+     for a soft one, where a 250px card's ramp is still falling when the window
+     ends and a ramp that never settles is thrown away — so it scales with the
+     block, big things casting further than small ones. And what is actually
+     there to look at: a shadow lives in the gap between a block and whatever
+     is next, and no window can see past that however soft the shadow is. Where
+     the gap is the smaller of the two it wins, and the reading is honest about
+     being taken through a keyhole rather than confidently wrong.
   */
-  if (look <= 0) look = Math.min(90, Math.max(34, Math.round(Math.min(b.w, b.h) * 0.35)));
+  const ideal = Math.min(90, Math.max(34, Math.round(Math.min(b.w, b.h) * 0.35)));
+  const clearance = (edge: string): number => {
+    let gap =
+      edge === 'top' ? b.y
+        : edge === 'bottom' ? h - (b.y + b.h)
+          : edge === 'left' ? b.x
+            : w - (b.x + b.w);
+    for (const o of others) {
+      if (o === b) continue;
+      const sideways = edge === 'left' || edge === 'right';
+      // Only a block across the way can be walked into: one that does not
+      // overlap this edge's span is off to the side of the walk.
+      if (sideways) {
+        if (o.y + o.h <= b.y || o.y >= b.y + b.h) continue;
+      } else if (o.x + o.w <= b.x || o.x >= b.x + b.w) continue;
+      const away =
+        edge === 'top' ? b.y - (o.y + o.h)
+          : edge === 'bottom' ? o.y - (b.y + b.h)
+            : edge === 'left' ? b.x - (o.x + o.w)
+              : o.x - (b.x + b.w);
+      // Negative means it overlaps or encloses this block rather than sitting
+      // beyond the edge — nothing to walk into.
+      if (away >= 0) gap = Math.min(gap, away);
+    }
+    // Three pixels short of the neighbour, because its own antialiasing
+    // reaches back that far.
+    return Math.max(0, gap - 3);
+  };
   const widths: number[] = [];
   const colours: string[] = [];
   const spreads: number[] = [];
@@ -423,6 +519,8 @@ export function measureBlockEdge(
      the median threw it away and reported every shadow as symmetric.
   */
   const byEdge: Record<string, number[]> = { top: [], bottom: [], left: [], right: [] };
+  /** How many walks each edge got, so agreement can be judged per edge. */
+  const walked: Record<string, number> = { top: 0, bottom: 0, left: 0, right: 0 };
   let edgeName = 'top';
   let samples = 0;
 
@@ -435,11 +533,17 @@ export function measureBlockEdge(
    * position along it and a distance outward into a pixel index.
    */
   const walk = (along: number, at: (offset: number, k: number) => number) => {
+    const look = Math.min(ideal, clearance(edgeName));
     if (along - inset * 2 < 6) return;
+    // A falloff needs room to be one. Under a dozen pixels of clearance there
+    // is nothing to tell a shadow from the step onto the next element, which
+    // is how every row of a 12px-spaced list reported a 16px shadow.
+    if (look < 12) { samples += Math.min(12, Math.max(3, Math.floor((along - inset * 2) / 8))); return; }
     const count = Math.min(12, Math.max(3, Math.floor((along - inset * 2) / 8)));
     for (let i = 0; i < count; i++) {
       const offset = inset + Math.round((i * (along - inset * 2 - 1)) / (count - 1 || 1));
       samples++;
+      walked[edgeName]++;
 
       const track: Array<[number, number, number]> = [];
       let outside = false;
@@ -530,7 +634,7 @@ export function measureBlockEdge(
         }
         return sum / n;
       });
-      if (profile.length < 10) continue;
+      if (profile.length < 12) continue;
       const settled = profile[profile.length - 1];
       const rise = settled - profile[0];
       /*
@@ -570,12 +674,39 @@ export function measureBlockEdge(
          its own smoothing — so the threshold is set from it. A stripe or a
          neighbouring block still crosses far above that; a texture does not.
       */
+      /*
+         Reversals are measured as total backward travel, not as a count of
+         steps that each fall by more than some threshold.
+
+         A per-step test only sees a reversal that is sharp. A card on a
+         striped ground darkens back over twenty pixels at half a level each,
+         which no per-step threshold can be low enough to catch and high enough
+         to ignore a weave — and that page, with no elevation anywhere on it,
+         reported an 84px shadow. Travel does not care how the descent is
+         spread: a falloff that only ever gets lighter has none, and a ground
+         with a pattern in it has as much going back as coming forward.
+      */
+      let backwards = 0;
+      for (let k = 1; k < profile.length; k++) {
+        if (profile[k] < profile[k - 1]) backwards += profile[k - 1] - profile[k];
+      }
+      /*
+         How much of that travel the ground itself can account for.
+
+         What is left after smoothing is the texture too fine to smooth away,
+         and it is measurable: the difference between the profile and its own
+         smoothing. Each smoothing window can wobble about that far once, so a
+         profile spanning ten windows over cloth carries ten such excursions
+         and no threshold below them can be met. On a flat page the same
+         quantity is a third of a level and the test stays as strict as it was.
+         This is the difference between a shadow over a weave, which must still
+         be found, and a striped ground, whose reversals are the pattern itself
+         and survive any amount of smoothing.
+      */
       let noise = 0;
       for (let k = 0; k < profile.length; k++) noise += Math.abs(wide[k] - profile[k]);
       noise /= Math.max(1, profile.length);
-      const drop = Math.max(2, noise * 1.6);
-      let backwards = 0;
-      for (let k = 1; k < profile.length; k++) if (profile[k] < profile[k - 1] - drop) backwards++;
+      const wobble = (noise * profile.length) / 9;
       /*
          A falloff is gradual. Where the whole rise happens in one or two
          pixels the profile is not a shadow settling, it is flat ground and
@@ -591,7 +722,7 @@ export function measureBlockEdge(
         biggest = Math.max(biggest, profile[k] - profile[k - 1]);
       }
       if (biggest > rise * 0.5) continue;
-      if (reach >= 6 && reach < profile.length - 1 && backwards <= 2 && rise < 110) {
+      if (reach >= 6 && reach < profile.length - 1 && backwards <= rise * 0.25 + wobble && rise < 110) {
         spreads.push(reach);
         strengths.push(rise);
         byEdge[edgeName].push(reach);
@@ -618,8 +749,23 @@ export function measureBlockEdge(
       ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
       : null;
   const reachOn = (edge: string) => (byEdge[edge].length ? median(byEdge[edge]) : 0);
+  /*
+     Agreement is judged per edge, not across all four.
+
+     A shadow offset downward is not under the top of the block, and looking
+     for it there and finding nothing is the measurement working. Pooling the
+     four edges made that absence count against the shadow: the most an offset
+     one could ever score was about half, the threshold sat at 0.4, and on a
+     woven ground — where a fraction of the walks are lost to the texture
+     whatever else is true — every card on a page of floating cards came back
+     flat. One edge that agrees with itself is a shadow; nothing here needs all
+     four to.
+  */
+  const edgeShare = Math.max(
+    ...Object.keys(byEdge).map((e) => (walked[e] ? byEdge[e].length / walked[e] : 0)),
+  );
   const shadow =
-    agree(spreads.length) >= 0.4
+    edgeShare >= 0.5 && spreads.length >= 3
       ? {
           spread: Math.round(median(spreads)),
           strength: Math.round(median(strengths)),
@@ -631,7 +777,7 @@ export function measureBlockEdge(
   return {
     border,
     shadow,
-    confidence: Math.round(Math.max(agree(widths.length), agree(spreads.length)) * 100) / 100,
+    confidence: Math.round(Math.max(agree(widths.length), edgeShare) * 100) / 100,
   };
 }
 
@@ -1266,7 +1412,7 @@ export function measureEdges(
   const offsetsX: number[] = [];
   const offsetsY: number[] = [];
   for (const b of blocks) {
-    b.edge = measureBlockEdge(d, w, h, b);
+    b.edge = measureBlockEdge(d, w, h, b, blocks);
     // A reassembled element already knows its ramp; anything else is asked.
     if (b.gradient === undefined) b.gradient = measureBlockGradient(d, w, h, b);
     if (b.edge.border) {
