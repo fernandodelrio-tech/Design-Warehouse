@@ -126,10 +126,11 @@ export default function App() {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
-  // "Graphite Longform" is a dark design, so dark is the resting state and the
-  // light theme is the derived one.
+  // "Flint Panorama" is a light design — a #e2e1dd page with a black band and a
+  // near-black field punched into it — so light is the resting state and the
+  // dark theme is the derived one.
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
   );
 
   /**

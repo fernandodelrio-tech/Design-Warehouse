@@ -1,165 +1,136 @@
 /* -----------------------------------------------------------------------------
-   MARIGOLD SCROLL — worn from the source image rather than from a re-reading
-   of the app already wearing it.
+   FLINT PANORAMA
 
-   The page is forest #283829 and there is exactly ONE colour light enough to
-   read on it: #dfcbaf, at 7.88. Everything else measured — the surface at
-   2.01, the sage at 3.06, the accent at 1.92 — is a fill, a mark or a ground,
-   never type. So the three text levels are that one ink carried a little
-   toward the warm and the sage, and the hierarchy is made by size and weight.
+   A LIGHT design with two dark holes punched in it, and that is the whole
+   character. The page is #e2e1dd, the ink is #0e0d0d at 14.83, and 45% of the
+   canvas is that one flat ground — but the navigation band is pure #000000 and
+   the search field is a radial ramp running #626262 to #020202. "Mixed
+   light/dark" is not a theme toggle here; it is one page holding both.
 
-   What makes this design itself is not its colours, though. It is three things
-   the analyzer could not see until this pass:
+   NOTHING FLOATS. Sixteen of the eighteen measured blocks are flat AND
+   borderless — no shadow, no rule. Surfaces are told from the page by a step
+   of 1.21 in tone and nothing else, which is what "generous whitespace" buys
+   you: 65% of the canvas is empty, so a whisper is enough. The two exceptions
+   are the search field, which gets both the design's only border and one of
+   its two shadows, and it needs them — a near-black field on a pure black bar
+   is invisible without them.
 
-   a WOVEN GROUND, a relief over 57% of the flat area at 4.7/255, carried here
-   by two crossed gratings at a seven-pixel period rather than by an asset;
+   So the app's default theme flips to light, because that is what this design
+   is. The dark theme below is derived, not measured.
 
-   an ELEVATION under everything — 22px of falloff at 21/255 thrown straight
-   down — which is a posture, not a detail: every raised thing floats off the
-   cloth and nothing is printed on to it;
-
-   and RAMPED FILLS, five of the ten blocks measured, the strongest travelling
-   53 levels diagonally from #93ad75 to #567749. That ramp is the tile, carried
-   18% toward the page so the ink still reaches 5.78 on its head. Its amplitude
-   is the one thing here spent on contrast: 14 levels of travel, not 53.
+   NO ACCENT WAS MEASURED. The spec's own instruction is that the ring, and the
+   one primary fill, take the strongest colour the palette does hold — which is
+   the ink. So the primary action is a near-black fill with the surface knocked
+   out of it, matching the black band and the dark field rather than
+   introducing a colour the design never had.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     Read off the SOURCE IMAGE this time, not off a re-analysis of the app
-     wearing an earlier reading of it. The two disagree, and the source wins.
+     background #e2e1dd 45%   text    #0e0d0d 21%   muted   #bcbab9 12%
+     surface    #f5f4f2  9%   muted-2 #c5c4c2  6%   muted-3 #aba6a2  3%
+     muted-4    #6e6a65  2%   border  #d0cdcc  2%
+     radius 17px · 1px #262626 border on 1 of 18 blocks, 17 borderless
+     elevation 7px of falloff at 46/255, offset 3px LEFT and 3px UP, on 2
+     nav band #000000 ~43px · hero #e5e4e2 · field 265x50px, radial
+       #626262 -> #020202, 1px #262626, 7px shadow
+     no texture — flat to the pixel at any scale                          */
 
-     background #283829 37%   surface #3f6a52 23%   muted   #5e876c 14%
-     accent     #79573c  9%   muted-2 #789f8b  8%   muted-3 #9f8060  4%
-     muted-4    #be9f80  4%   text    #dfcbaf  1%
-     radius 31px · borderless on all 10 blocks
-     elevation 22px of falloff at 21/255, thrown 22px straight DOWN, on 3
-     card grid 5 tiles, 3 columns, ~261x233px, 24px apart both ways,
-       filled with a diagonal ramp #93ad75 -> #567749 travelling 53/255
-     woven relief over 57% of the flat area at 4.7/255                    */
-
-  --bg: #283829;                                          /* the ink 7.88:1 */
+  --bg: #e2e1dd;
   /*
-     The raised surface is the CARD RAMP, carried toward the page.
-
-     The capture's cards are the lightest things on it and they are ramped, not
-     flat — five of the ten blocks measured are, the strongest travelling 53
-     levels from #93ad75 to #567749. Worn at full strength that ramp is far too
-     light to carry this palette's one ink: #dfcbaf lands at 2.4 on its head.
-     Carried 18% of the way to the page it becomes #3b4d37 and the ink reaches
-     5.78, with the second and third levels at 5.19 and 4.54.
-
-     So the ramp transfers and its amplitude does not: 14 levels of travel
-     rather than 53. That is the one thing here bought with contrast, and it is
-     said rather than quietly done.
+     The raised surface is 1.21 off the page and that is all it is. Nothing
+     here is lifted: no shadow on it, no rule around it, because 16 of the 18
+     blocks measured have neither. A tile is told from its ground by a step in
+     tone that you can only see because there is so much space around it.
   */
-  --bg-elevated: #3b4d37;
-  --surface: #3b4d37;
-  --surface-hover: #44563d;
-  --chrome: color-mix(in srgb, #3f6a52 26%, #283829);
-  --ramp: linear-gradient(135deg, #9cbb85, #8faf7a);     /* diagonal, measured */
-  --ramp-hover: linear-gradient(135deg, #a7c491, #9aba85);
-  /* The warm band, from the brown card ramp rather than the green one, so the
-     chrome is a different material from the tiles rather than a darker one. */
-  --ramp-warm: linear-gradient(
-    135deg,
-    color-mix(in srgb, #7f5642 52%, #283829),
-    color-mix(in srgb, #563525 52%, #283829)
-  );
-
-  /* Every one of the ten measured blocks is borderless, so this is for the one
-     place the app needs an edge the capture had none of: a form control, which
-     must reach 3:1 to be findable. */
-  --border: #c3a687;                            /* 5.41 page · 3.96 on a tile */
-  --rule: color-mix(in srgb, #c3a687 40%, #283829);
-  --rule-heavy: color-mix(in srgb, #c3a687 40%, #283829);
-  --border-strong: #dfcbaf;
+  --bg-elevated: #f5f4f2;
+  --surface: #f5f4f2;
+  --surface-hover: #eae9e6;                    /* the page and the surface, split */
+  --chrome: #000000;                           /* the measured band, exactly */
+  --hero: #e5e4e2;                             /* measured, its own step */
+  /* The one ramp the design spends, on the one element that carries it. */
+  --ramp-field: radial-gradient(circle at 50% 50%, #626262, #020202);
 
   /*
-     Three levels, and they sit close together because the palette gives them
-     nowhere else to be: only one measured colour is light enough to read on
-     this page, so the other two are it, carried a little toward the warm and
-     the sage. Hierarchy here is mostly size and weight.
+     TWO border tokens, because the design has two and they cannot do each
+     other's job. #d0cdcc is the measured hairline and it is 1.21 on the page —
+     a divider you feel rather than see, which is right for a rule and useless
+     for anything that has to be findable. #262626 is the measured border, the
+     one on the one bordered block, at 11.56. Controls take that one.
   */
-  --text: #dfcbaf;                              /* 7.88 page · 5.78 on a tile */
-  --text-muted: #d7c0a3;                        /* 7.08 · 5.19 */
-  --text-faint: #b6b9a1;                        /* 6.19 · 4.54 */
-  --text-loud: #dfcbaf;
-  /* The ink for anything that paints the PAGE colour under itself, wherever
-     it sits — a tile scopes --text to its own light ground, and a dark chip
-     inside one still needs this. */
-  --ink-on-bg: #dfcbaf;
-
-  --focus: #dfcbaf;                                             /* 7.88 */
-  --focus-ring: color-mix(in srgb, #dfcbaf 34%, #283829);
-
-  /* The peach the capture spends on its one button. It works both ways — 5.01
-     as a fill on the page, 5.01 again under a page-coloured label. */
-  --accent: #be9f80;
-  /* Toward the light, as the convention says and as is right here: the label
-     is the dark page, so lifting the fill raises the pair to 6.14. */
-  --accent-strong: #cbb299;
-  --accent-soft: color-mix(in srgb, #be9f80 22%, #283829);
-  /* The measured accent #79573c is 1.92 on this page — a colour to sink things
-     into, not to see. Carried to the page it holds the ink at 5.36. */
-  --accent-deep: #594b34;
-  --on-fill: #283829;
-  --on-deep: #dfcbaf;
-
-  --muted-fill: #5e876c;            /* the sage, as a mark; no text reads on it */
-  --muted-fill-2: #789f8b;
-  --muted-fill-3: #3f6a52;
+  --border: #262626;                                       /* 11.56 on the page */
+  --rule: #d0cdcc;                                         /* the hairline, 1.21 */
+  --rule-heavy: #c5c4c2;
+  --border-strong: #0e0d0d;
 
   /*
-     Derived. None of the measured greens or browns carries the page as a label
-     — 3.06, 1.92 — so each is lifted toward the ink until it does, keeping its
-     hue. All three end up light enough to want the page on them.
+     Three levels. The measured muted-4 #6e6a65 is 4.10 on the page — under AA
+     — so it is kept as a MARK, where 3:1 is the bar it has to clear, and the
+     text levels are it carried toward the ink until they read. The three
+     lighter greys are fills and rules at 1.2–1.8; none of them is ever type.
   */
-  --success: #9fa98e;                                  /* page on it 5.06 */
-  --warning: #be9f80;                                  /* page on it 5.01 */
-  --danger: #b49a7f;                                   /* page on it 4.66 */
-  --on-success: #283829;
-  --on-warning: #283829;
-  --on-danger: #283829;
+  --text: #0e0d0d;                                  /* 14.83 page · 17.66 surface */
+  --text-muted: #454341;                            /* 7.53 · 8.96 */
+  --text-faint: #5d5a58;                            /* 5.23 · 6.23 */
+  --text-loud: #0e0d0d;
+  --ink-on-bg: #0e0d0d;
+  --mark: #6e6a65;                                  /* 4.10 — non-text only */
+
+  --focus: #0e0d0d;
+  --focus-ring: #c5c4c2;
+
+  /*
+     No accent was measured, so per the spec the fill is the strongest colour
+     the palette holds. Hover lifts it one step toward the light, which is the
+     measured #262626 rather than a tint invented for the purpose.
+  */
+  --accent: #0e0d0d;
+  --accent-strong: #262626;
+  --accent-soft: #d0cdcc;
+  --accent-deep: #000000;
+  --on-fill: #f5f4f2;                                      /* 17.5 on the fill */
+  --on-deep: #f5f4f2;                                      /* 19.10 */
+
+  --muted-fill: #bcbab9;
+  --muted-fill-2: #c5c4c2;
+  --muted-fill-3: #aba6a2;
+
+  /*
+     Derived, and derived within the palette rather than around it: this design
+     holds no hue at all, so a green success and a red danger would be the
+     loudest thing on the page and none of it measured. The states are tone —
+     the ink, the mark and the hairline — and each is marked by more than its
+     fill, which the spec asks for anyway.
+  */
+  --success: #0e0d0d;
+  --warning: #454341;
+  --danger: #262626;
+  --on-success: #f5f4f2;
+  --on-warning: #f5f4f2;
+  --on-danger: #f5f4f2;
 
   /* --- measured: corners -------------------------------------------------- */
-  --radius-sm: 31px;
-  --radius: 31px;
-  --radius-lg: 31px;
+  --radius-sm: 17px;
+  --radius: 17px;
+  --radius-lg: 17px;
 
   /* --- measured: elevation ------------------------------------------------
-     22px of falloff reaching 21/255, thrown 22px straight DOWN — the walker
-     reads it on the bottom edge and finds nothing above, which is a shadow
-     sitting wholly under its surface rather than a glow around it. An offset
-     of half the blur puts it there: 0 11px 22px reaches 22px below and stops
-     at the top edge.
+     Rare, and thrown UP AND TO THE LEFT — 7px of falloff, reaching 3px further
+     left than right and 3px further up than down. That is light coming from
+     the bottom right, which is unusual and is what was measured, so it is what
+     is here rather than the down-and-right default.
 
-     The ALPHA is derived from the strength, not guessed. This page has a
-     luminance of 51.5/255, and a shadow that takes 21 off it has to leave 59%
-     of the ground showing — black at 0.41. A shadow written at the 0.2 that
-     looks right on a white page is invisible on a dark green one, which is
-     exactly what the first attempt at this shipped: the tiles sat on the cloth
-     instead of floating over it.
-
-     This is the posture of the whole page rather than a detail of one tile.
-     Everything on it floats; nothing is printed on to it. */
-  --shadow-sm: 0 5px 11px rgb(0 0 0 / 0.26);
-  --shadow: 0 11px 22px rgb(0 0 0 / 0.44);
-  --shadow-lg: 0 18px 34px rgb(0 0 0 / 0.54);
-
-  /* --- measured: the surface ----------------------------------------------
-     A woven relief over 57% of the flat area at about 4.7/255, varying over
-     several pixels rather than one — cloth, not noise. Two crossed gratings at
-     a seven-pixel period carry it without an asset to fetch, which keeps it
-     inside the app's own content policy. Amplitude to taste of the
-     measurement: 4.7/255 is about 2% of alpha either way. */
-  --weave:
-    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.030) 0 1px, transparent 1px 4px);
+     The alpha follows from the ground, not from habit: this page is 224.9/255,
+     a shadow taking 46 off it has to leave 80% showing, and that is black at
+     0.20. Only two of eighteen blocks carry one, so these tokens are for the
+     search field and almost nothing else. */
+  --shadow-sm: -1px -1px 4px rgb(0 0 0 / 0.14);
+  --shadow: -2px -2px 8px rgb(0 0 0 / 0.20);
+  --shadow-lg: -3px -3px 14px rgb(0 0 0 / 0.26);
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -172,162 +143,167 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     1011px of content in a 1012px capture and no margin either side. A
-     full-page capture of a page that runs to its own edges, so the inset is
-     the one step off the spacing scale that keeps a tile off the window edge
-     rather than a percentage of it.
-
-     The gutter IS measured, and this is the thing the layout section alone
-     would have hidden: it says no column gap was found, because the page reads
-     as one column — but the component inventory measured the card grid at
-     ~23px apart across and ~28px apart down. That is the figure the tiles are
-     actually set at, and 24 is the step of the measured scale it lands on. */
+     1465px of content in a 1479px capture — a page that runs to its own edges,
+     with 0% margin left and 3% right. So the inset is the step of the scale
+     that keeps a tile off the window edge rather than a percentage of it, and
+     the gutter is the measured 26px rounded to the scale. */
   --page-inset: 16px;
-  --gutter: 24px;                              /* measured ~23 across, ~28 down */
+  --gutter: 24px;                                       /* measured ~26px */
 
   /* --- measured: type scale -----------------------------------------------
-     Two ink heights, 15 and 8, a step of 1.875 — the widest of the eleven. The
-     leadings are 6.9 and 3.9 times their ink, which are not leadings; they are
-     rows with a lot of space between them, which is what a scroll is. So the
-     step transfers and the line height does not. */
-  --t-label: 12px;
+     Five ink heights — 64, 46, 25, 17, 14 — which against the body row are
+     4.57, 3.29, 1.79 and 1.21. The ratios transfer; the absolute figures do
+     not, because an ink height understates a font size by whatever the
+     ascenders would have added. */
+  --t-label: 12px;                                        /* below the smallest measured */
   --t-small: 14px;
   --t-body: 16px;
-  --t-lede: 20px;
-  --t-sub: 30px;
-  --t-head: clamp(38px, 6vw, 56px);
+  --t-lede: 19px;                                         /* 1.21 */
+  --t-sub: 29px;                                          /* 1.79 */
+  --t-head: clamp(38px, 5.2vw, 64px);                     /* 3.29 rising to 4.57 */
 
-  /* --- chosen: two voices -------------------------------------------------
-     Nothing was recorded for the families, and this is the same choice the
-     design got the first time. Newsreader at its display optical size, cut for
-     a long column read top to bottom and sharpening rather than thinning as it
-     grows, which matters on a dark ground. Public Sans underneath: plain,
-     tightly fitted, and open enough to hold as marigold on forest green at
-     12px. */
+  /*
+     --- measured: weight and tracking --------------------------------------
+     The weights alternate, and that is the design's signature rather than an
+     artefact: Display semibold, H1 light, H2 light, H3 semibold, Body light.
+     The big thing and the small label are heavy; everything between them is
+     thin. Nothing here is a 400.
+
+     Tracking runs the opposite way to convention — WIDER as the type gets
+     smaller. Display is +5px on a 64px ink (0.06em) and Body is +3px on a 14px
+     ink (0.16em). The direction transfers in full. The magnitude does not, at
+     the bottom: 0.16em on a 16px body is two and a half pixels between every
+     letter, which pulls words apart in a catalogue that has to be skimmed. Body
+     is set at 0.05em, and that is the one measurement here knowingly reduced.
+  */
+  --w-light: 300;
+  --w-semi: 600;
+  --track-display: 0.06em;                                /* measured */
+  --track-label: 0.09em;                                  /* measured, H3 */
+  --track-body: 0.05em;                                   /* measured 0.16em, reduced */
+
+  /* --- chosen: one voice --------------------------------------------------
+     Nothing was recorded for the families. Public Sans, alone this time: it is
+     a variable face carrying the 300 and the 600 this design alternates
+     between, where the serif that used to sit over it has a single 500 cut and
+     could not have set an H1 the spec calls light. A plain grotesque is also
+     what a muted, hueless, wide-tracked page wants — the letterforms are not
+     the event here, the spacing is. The serif file is dropped rather than
+     shipped unused. */
   --font: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-ui: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Newsreader', 'Hoefler Text', Georgia, serif;
+  --font-display: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
-  --topbar-height: 60px;
   /*
-     The fill is measured; the size is not honoured and this is why. The
-     capture's avatars are 60px circles sitting in the body of a page. The
-     app's is an account chip inside a 60px bar, and a 60px circle in a 60px
-     bar is the bar. The measurement does not survive the change of slot, so
-     the circle and the colour transfer and the diameter is the app's.
+     The band is measured at 43px and the field inside it at 50px, which cannot
+     both be honoured once the field sits in the band — in the capture it does
+     not. The field's height is the more specific measurement and the one a
+     person touches, so it is kept and the band grows to hold it with the
+     measured 8px either side. Said rather than quietly dropped.
   */
+  --topbar-height: 66px;
+  --field-height: 50px;                                   /* measured */
   --avatar: 32px;
-  --avatar-fill: color-mix(in srgb, #789f8b 72%, #dfcbaf);
+  --avatar-fill: #0e0d0d;
 }
 
-/* --- daybreak ---------------------------------------------------------------
-   Derived. The lightest measured colour is the ink #dfcbaf, which is a warm
-   mid-tone rather than a light one, so the light ground is that carried most
-   of the way to white and the page green becomes the ink — where it reads at
-   10.88, better than anything the dark side can manage. The tile keeps its
-   diagonal ramp, from the same two card colours mixed the other way. */
+/* --- nightfall ---------------------------------------------------------------
+   Derived, not measured. This design is a light page, so the dark theme is it
+   turned over: the ink becomes the ground, the surface is that ground lifted a
+   third of the way toward the measured #6e6a65, and the three light greys the
+   design uses as fills become the three text levels — where they read at
+   14.83, 10.04 and 8.05, better than the light side manages. The chrome does
+   not move, because #000000 is already the darkest thing here and it is
+   measured. */
 
-:root[data-theme='light'] {
-  color-scheme: light;
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-  --bg: #f5efe6;
-  --bg-elevated: #faf7f3;
-  --surface: #faf7f3;
-  --surface-hover: color-mix(in srgb, #dfcbaf 44%, #fefefe);
-  --chrome: #283829;
-  --ramp: linear-gradient(135deg, #c9d6ba, #c5d0c0);   /* the card ramp, lifted */
-  --ramp-hover: linear-gradient(135deg, #bccfab, #b8c6b1);
-  --ramp-warm: linear-gradient(135deg, #7f5642, #563525);
+  --bg: #0e0d0d;
+  --bg-elevated: #2f2d2b;
+  --surface: #2f2d2b;
+  --surface-hover: #3b3937;
+  --chrome: #000000;
+  --hero: #1a1918;
+  --ramp-field: radial-gradient(circle at 50% 50%, #626262, #020202);
 
-  --border: color-mix(in srgb, #79573c 72%, #dfcbaf);
-  --rule: color-mix(in srgb, #79573c 34%, #dfcbaf);
-  --rule-heavy: color-mix(in srgb, #79573c 34%, #dfcbaf);
-  --border-strong: #283829;
+  --border: #bcbab9;                                       /* 10.04 on the page */
+  --rule: #3b3937;
+  --rule-heavy: #454341;
+  --border-strong: #e2e1dd;
 
-  --text: #283829;                                        /* 10.88 on the bg */
-  /* Both are pushed further down than the page alone would need, because the
-     ground a tile's text lands on is the LIGHT RAMP, not the page: at the
-     ramp's dark end the sage read 3.67 and the brown 4.42. Measured where they
-     actually sit, they are 5.2 and 5.2. */
-  --text-muted: color-mix(in srgb, #79573c 70%, #283829);   /* 6.93 · 5.21 */
-  --text-faint: color-mix(in srgb, #5e876c 40%, #283829);   /* 6.84 · 5.15 */
-  --text-loud: #283829;
-  --ink-on-bg: #283829;
+  --text: #e2e1dd;                                  /* 14.83 page · 10.48 surface */
+  --text-muted: #bcbab9;                            /* 10.04 · 7.09 */
+  --text-faint: #aba6a2;                            /* 8.05 · 5.69 */
+  --text-loud: #f5f4f2;
+  --ink-on-bg: #e2e1dd;
+  --mark: #6e6a65;
 
-  --focus: #79573c;
-  --focus-ring: color-mix(in srgb, #79573c 26%, #fefefe);
+  --focus: #e2e1dd;
+  --focus-ring: #454341;
 
-  --accent: #79573c;                                      /* 5.67 on the bg */
-  /* Darker on hover here, the mirror of the dark side: this label is the light
-     one, so the fill has to fall for it. */
-  --accent-strong: color-mix(in srgb, #79573c 74%, #283829);
-  --accent-soft: color-mix(in srgb, #dfcbaf 44%, #fefefe);
-  --accent-deep: #283829;
-  --on-fill: #f5efe6;
-  --on-deep: #f5efe6;
+  --accent: #e2e1dd;
+  /* Toward the light again, because the label on this fill is the dark page. */
+  --accent-strong: #f5f4f2;
+  --accent-soft: #454341;
+  --accent-deep: #000000;
+  --on-fill: #0e0d0d;
+  --on-deep: #e2e1dd;
 
-  --muted-fill: #5e876c;
-  --muted-fill-2: #789f8b;
-  --muted-fill-3: #3f6a52;
+  --muted-fill: #6e6a65;
+  --muted-fill-2: #454341;
+  --muted-fill-3: #aba6a2;
 
-  --success: color-mix(in srgb, #5e876c 76%, #283829);
-  --warning: color-mix(in srgb, #9f8060 84%, #283829);
-  --danger: color-mix(in srgb, #79573c 74%, #283829);
-  --on-success: #f5efe6;
-  --on-warning: #f5efe6;
-  --on-danger: #f5efe6;
+  --success: #e2e1dd;
+  --warning: #bcbab9;
+  --danger: #f5f4f2;
+  --on-success: #0e0d0d;
+  --on-warning: #0e0d0d;
+  --on-danger: #0e0d0d;
 
-  --avatar-fill: color-mix(in srgb, #789f8b 72%, #dfcbaf);
+  --avatar-fill: #e2e1dd;
 }
 
 /*
-   The chrome carries the WARM ramp — the brown card fill rather than the green
-   one — so the bar reads as a different material from the tiles rather than as
-   a darker shade of them. Carried halfway to the page it holds two ink levels
-   at its light end, 5.62 and 5.05, and three at its dark end. The peach accent
-   falls to 3.58 there, so inside the chrome the accent becomes the ink.
-*/
-.topbar,
-.filters {
-  --text: #dfcbaf;
-  --text-muted: #d7c0a3;
-  --text-faint: #d7c0a3;
-  --border: #dfcbaf;
-  --rule: color-mix(in srgb, #dfcbaf 34%, #283829);
-  --surface: color-mix(in srgb, #79573c 68%, #283829);
-  --surface-hover: color-mix(in srgb, #79573c 40%, #283829);
-  --focus: #dfcbaf;
-  --accent: #dfcbaf;
-  --accent-strong: color-mix(in srgb, #dfcbaf 82%, #fefefe);
-  --on-fill: #283829;
-  --on-deep: #283829;
-  background: var(--ramp-warm);
-  color: var(--text);
-}
+   The band is #000000 in both themes, because that is what was measured and it
+   is already the darkest thing the design holds. On it the palette's light end
+   inverts to become the ink: the surface at 19.10, the muted grey at 10.86,
+   the third at 8.71. The focus ring cannot be the ink here — the spec says it
+   must not be the same value as the element it rings, and on a black bar the
+   ink is black — so it takes the surface instead.
 
-:root[data-theme='light'] .topbar,
-:root[data-theme='light'] .filters {
-  --text: #f5efe6;
-  --text-muted: #f5efe6;
-  --text-faint: #f5efe6;
-  --border: #f5efe6;
-  --rule: color-mix(in srgb, #f5efe6 40%, #563525);
-  --surface: color-mix(in srgb, #563525 46%, #7f5642);
-  --surface-hover: color-mix(in srgb, #563525 66%, #7f5642);
-  --focus: #f5efe6;
-  --accent: #f5efe6;
-  --accent-strong: #fefefe;
-  --on-fill: #563525;
-  --on-deep: #563525;
+   ONE band, not two. The filter row used to share this scope, which put a
+   second full-width black strip under the first — the capture has one, ~43px
+   of a 2488px page, and doubling it makes the design's rarest material its
+   most common. The filter row is the page now, closed by the measured
+   hairline.
+*/
+.topbar {
+  --text: #f5f4f2;
+  --text-muted: #bcbab9;
+  --text-faint: #aba6a2;
+  --border: #262626;                                       /* the measured border */
+  --rule: #262626;
+  --surface: #1a1a1a;
+  --surface-hover: #262626;
+  --focus: #f5f4f2;
+  --focus-ring: #6e6a65;
+  --accent: #f5f4f2;
+  --accent-strong: #e2e1dd;
+  --accent-soft: #262626;
+  --on-fill: #000000;
+  --on-deep: #000000;
+  --mark: #bcbab9;
+  background: var(--chrome);
+  color: var(--text);
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
 body,
 #root {
   height: 100%;
@@ -335,15 +311,9 @@ body,
 
 body {
   margin: 0;
-  /*
-     The cloth. It was measured over 57% of the flat area — which is most of
-     this page, not just the cards — and a version that carried it on the tiles
-     alone put the material on the wrong surface: the capture's GROUND is the
-     woven thing and its cards float above it.
-  */
-  background: var(--weave), var(--bg);
-  background-color: var(--bg);
-  background-attachment: fixed;
+  /* Flat to the pixel, at any scale — the texture pass found none, so the
+     ground is one colour and nothing is laid over it. */
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: var(--t-body);
@@ -351,10 +321,14 @@ body {
      display steps only — so this is a choice, kept unitless so the display
      step does not inherit a pixel figure measured on a body row. */
   line-height: 1.5;
-  /* The capitals were measured on the three heading steps, not on the body
-     row, so this time they stop at the headings and the labels and running
-     text is set as typed. */
-  font-weight: 400;
+  /*
+     LIGHT, and tracked. The measured Body row is a 1px stem on 14px of ink and
+     +3px between glyphs — a thin face set wide, which is most of what this
+     design looks like at reading size. Nothing in the five measured steps is a
+     400, so the app has none either.
+  */
+  font-weight: var(--w-light);
+  letter-spacing: var(--track-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -389,11 +363,15 @@ select,
 
 h1, h2, h3 {
   font-family: var(--font-display);
-  /* Medium, as measured on the one heading step this design carries: a 3px
-     stem on 15px of ink. Below that the spec does not attempt a weight, and
-     nor does this. */
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  /*
+     LIGHT, because the measured H1 and H2 are: a 4px stem on 46px of ink and a
+     1px stem on 25px. The heavy steps in this design are the Display at the
+     very top and the H3 at the very bottom, not the headings between them —
+     which is the inversion that makes it look like itself, and is why setting
+     these at a medium would flatten the whole scale.
+  */
+  font-weight: var(--w-light);
+  letter-spacing: 0;
   text-wrap: balance;
   /*
      Unitless, and tight. The measured pitches — 104px against 15px of ink, 31
@@ -428,9 +406,8 @@ select {
   align-items: center;
   gap: var(--s2);
   padding: var(--s2) var(--s3);
-  /* Every measured row is capitals at about a pixel between glyphs. On an
-     11-13px label that is roughly 0.06em. */
-  letter-spacing: 0.06em;
+  /* The H3 step: semibold and tracked +2px on 17px of ink, which is 0.09em. */
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   background: var(--surface);
   /* Borderless, like 17 of the 18 blocks measured. */
@@ -438,10 +415,14 @@ select {
   border-radius: var(--radius-sm);                     /* derived, see above */
   color: var(--text);
   font-size: var(--t-small);
-  font-weight: 500;
-  /* No component was measured in this capture, so the control height is the
-     app's own rather than a claim: 40px keeps a tracked capital label off its
-     own edges at this radius. */
+  font-weight: var(--w-semi);
+  /*
+     40px, the app's own. The 50px this design measures belongs to the SEARCH
+     FIELD, and it is the only component it sizes — extending it to every
+     button pushed the drawer's action row from two lines to three, which is
+     the measurement being applied to a component it was never taken from.
+     The field keeps its 50px; buttons keep theirs.
+  */
   min-height: 40px;
   white-space: nowrap;
   /* Convention: 150ms ease-out on colour, 200ms on transform. */
@@ -471,7 +452,7 @@ select {
   background: var(--accent);
   border-color: transparent;
   color: var(--on-fill);
-  font-weight: 600;
+  font-weight: var(--w-semi);
 }
 
 /* Away from its label: the label is the dark page, so the fill goes lighter
@@ -514,9 +495,8 @@ select {
 
 .chip {
   font-family: var(--font-ui);
-  /* Capitals at about a pixel between glyphs, as every measured row is —
-     which on an 11px label is roughly 0.09em. */
-  letter-spacing: 0.09em;
+  /* The H3 step again: the smallest measured type is the most tracked. */
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
@@ -537,7 +517,7 @@ select {
   border-color: var(--accent);
   background: var(--accent);
   color: var(--on-fill);
-  font-weight: 500;
+  font-weight: var(--w-semi);
 }
 
 .chip button {
@@ -600,9 +580,9 @@ select {
   font-family: var(--font-display);
   /* Medium, tracked capitals — the weight two of the three measured steps are
      set in, and the case all three are. */
-  font-weight: 500;
+  font-weight: var(--w-semi);
   font-size: var(--t-lede);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-display);
   text-transform: uppercase;
   margin-right: var(--s1);
 }
@@ -621,28 +601,55 @@ select {
 
 .brand-count {
   color: var(--text-faint);
-  font-weight: 500;
+  font-weight: var(--w-semi);
   font-size: var(--t-label);
 }
 
+/*
+   THE ONE ELEMENT THIS DESIGN SPENDS EVERYTHING ON.
+
+   It is the only measured component with a fill that is not flat — a radial
+   ramp from #626262 at the centre to #020202 at the edge, travelling 132
+   levels — the only one of eighteen blocks with a border, and one of the two
+   with a shadow. That is not decoration: a near-black field on a pure black
+   band is invisible without the rule and the lift, so the design gives this
+   one thing all three and gives the other seventeen none.
+
+   The measured width is 265px and the measured height 50px; the height is
+   kept exactly and the width becomes a maximum, because the app's bar is
+   fluid where the capture's is a single frame.
+*/
 .search {
   position: relative;
   flex: 1;
-  max-width: 380px;
+  max-width: 265px;                                       /* measured */
 }
 
 .search input {
   width: 100%;
-  padding: var(--s2) var(--s3) var(--s2) var(--s6);
-  background: var(--surface);
-  border: 1px solid var(--border);
+  height: var(--field-height);                            /* measured 50px */
+  padding: 0 var(--s3) 0 var(--s6);
+  background: var(--ramp-field);
+  background-color: #020202;
+  border: 1px solid #262626;                              /* the measured border */
   border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  /* On the ramp's centre the surface reads 5.55 and the page colour 4.66;
+     anything lighter-grey than those falls under AA on it. */
+  color: #f5f4f2;
   outline: none;
 }
 
+.search input::placeholder {
+  color: #e2e1dd;                                         /* 4.66 on the ramp */
+  opacity: 1;
+}
+
+/* The ring must not be the value of the thing it rings, and this field is
+   almost black, so it takes the light end. */
 .search input:focus {
-  border-color: var(--focus);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: #f5f4f2;
+  box-shadow: 0 0 0 2px #f5f4f2, var(--shadow);
 }
 
 .search-icon {
@@ -650,7 +657,7 @@ select {
   left: var(--s3);
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text-faint);
+  color: #e2e1dd;
   pointer-events: none;
 }
 
@@ -673,10 +680,11 @@ select {
   align-items: center;
   gap: var(--s2);
   flex-wrap: wrap;
-  padding: var(--s3) var(--s5);
-  /* Continuous with the masthead: one ramped band ending where the page
-     begins, which is the whole of this design's structure. */
-  border-bottom: 0;
+  padding: var(--s3) var(--page-inset);
+  background: var(--bg);
+  /* The measured hairline, doing the only job it can do at 1.21 on the page:
+     closing a section without drawing attention to itself. */
+  border-bottom: 1px solid var(--rule);
 }
 
 .filters select {
@@ -690,8 +698,8 @@ select {
 .filter-label {
   color: var(--text-muted);
   font-size: var(--t-label);
-  font-weight: 500;
-  letter-spacing: 0.09em;
+  font-weight: var(--w-semi);
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
 }
 
@@ -703,9 +711,8 @@ select {
 
 .tag-filter .chip {
   font-family: var(--font-ui);
-  /* Capitals at about a pixel between glyphs, as every measured row is —
-     which on an 11px label is roughly 0.09em. */
-  letter-spacing: 0.09em;
+  /* The H3 step again: the smallest measured type is the most tracked. */
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -776,8 +783,8 @@ select {
   /* A hairline, at the measured 1px. Nothing in this design is drawn heavy. */
   border-bottom: 1px solid var(--rule);
   font-size: var(--t-label);
-  font-weight: 500;
-  letter-spacing: 0.09em;
+  font-weight: var(--w-semi);
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--text);
 }
@@ -788,7 +795,7 @@ select {
   background: var(--surface-hover);
   color: var(--text-faint);
   font-size: var(--t-label);
-  font-weight: 500;
+  font-weight: var(--w-semi);
   letter-spacing: 0;
 }
 
@@ -802,73 +809,45 @@ select {
   min-width: 0;
   height: var(--card-height, 400px);
   /*
-     THE TILE IS LIGHT, and that is the whole reason this design floats.
+     NOTHING HERE IS LIFTED. Sixteen of the eighteen blocks measured are flat
+     and borderless, and the two that are not are the search field. So the tile
+     has no shadow and no rule: it is told from the page by 1.21 of tone and by
+     the space around it, which is what a design giving 65% of its canvas to
+     flat ground can afford.
 
-     The first attempt carried the measured card ramp 18% toward the page so
-     the page's one light ink would still read on it. It passed every contrast
-     check and looked nothing like the capture: a tile 1.36 off its ground
-     cannot float however much shadow is under it, and the screenshot showed
-     six panels lying flat on the cloth.
-
-     The capture's cards are the LIGHTEST things on it — #9cbb85 is 5.84 off
-     the page — so the tile is worn at the colour it was measured at, and the
-     ink inverts to suit rather than the fill being darkened to suit the ink.
-     A light ground has room above it that this dark one does not: three levels
-     sit at 7.08, 5.84 and 4.87 on the ramp's dark end, which is one more than
-     the dark tile could hold.
-
-     No rule — all ten measured blocks are borderless — and the ramp is the
-     measured diagonal, at a travel of 12 rather than 53 so the ink holds at
-     the foot as well as the head.
+     Both grounds are light and the ink does not change, so unlike the last
+     design this tile needs no palette of its own — only the flat colour spelled
+     out under it, and `color` set, because a scope that redefines --text and
+     never sets `color` keeps whatever was resolved above it.
   */
-  background: var(--weave), var(--ramp);
-  /*
-     And the flat colour under the ramp, spelled out. The shorthand above ends
-     in an image, which leaves background-color transparent — so anything that
-     asks this tile what ground its text lands on is told "the page", and the
-     answer is 1.35:1 on a tile whose real answer is 7.08.
-  */
-  background-color: #9cbb85;
-  /* Scoping the tokens is not enough on its own: `color` is inherited from
-     wherever it was last resolved, so a tile that redefines --text and never
-     sets `color` keeps the page's ink and reads at 1.35 on its own fill. */
+  background: var(--bg-elevated);
+  background-color: var(--bg-elevated);
   color: var(--text);
-  /* The tile is its own ground, so it carries its own inks. */
-  --text: #1a2a1c;                              /* 7.08 head · 6.17 foot */
-  --text-muted: #283829;                        /* 5.84 · 5.08 */
-  --text-faint: color-mix(in srgb, #563525 82%, #1a2a1c);   /* 5.44 · 4.87 */
-  --text-loud: #1a2a1c;
-  --border: #283829;
-  --rule: color-mix(in srgb, #283829 40%, #9cbb85);
-  --surface: color-mix(in srgb, #567749 26%, #9cbb85);
-  --surface-hover: color-mix(in srgb, #567749 40%, #9cbb85);
-  --chrome: color-mix(in srgb, #567749 26%, #9cbb85);
-  --focus: #1a2a1c;
-  --focus-ring: color-mix(in srgb, #1a2a1c 34%, #9cbb85);
-  --accent: #563525;
-  --accent-strong: #1a2a1c;
-  --accent-soft: color-mix(in srgb, #563525 20%, #9cbb85);
-  --on-fill: #9cbb85;
-  --on-deep: #9cbb85;
   border: 1px solid transparent;
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
   overflow: hidden;
-  transition: background 0.15s ease, box-shadow 0.15s ease-out, transform 0.2s ease-out;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.2s ease-out;
 }
 
+/* Hover lifts the fill one step toward the light, as the spec's behaviour
+   section says — not into elevation, which this design does not spend on
+   tiles. */
 .card:hover {
-  background: var(--weave), var(--ramp-hover);
-  /* Raised by the smallest step that reads, and it does not move under the
-     pointer — a tile that moves is a tile you have to chase. */
-  box-shadow: var(--shadow-lg);
+  background: #ffffff;
+  background-color: #ffffff;
 }
 
-/* Selection is the one state that must be unmistakable. On a light tile the
-   ring is the dark end of the palette, at 7.08 against the tile it draws on. */
+:root[data-theme='dark'] .card:hover {
+  background: var(--surface-hover);
+  background-color: var(--surface-hover);
+}
+
+/* Selection is the one state that must be unmistakable, and this palette has
+   no colour to say it with — so it is said with the ink, at 14.83 against the
+   tile it draws on, and with the measured 1px border rather than a shadow. */
 .card.selected {
   border-color: var(--focus);
-  box-shadow: 0 0 0 2px var(--focus), var(--shadow);
+  box-shadow: 0 0 0 2px var(--focus);
 }
 
 /* Takes whatever height the footer leaves, which is what makes the tiles equal. */
@@ -919,7 +898,7 @@ select {
   color: var(--ink-on-bg);
   font-size: var(--t-label);
   line-height: 1.5;
-  letter-spacing: 0.01em;
+  letter-spacing: var(--track-label);
   pointer-events: none;
 }
 
@@ -1014,10 +993,10 @@ select {
   font-family: var(--font);
   /* Medium, not bold: nothing in this design is drawn heavier than a medium,
      and the title is told from the line under it by weight AND by level. */
-  font-weight: 500;
+  font-weight: var(--w-semi);
   font-size: var(--t-body);
   line-height: 1.5;                                     /* not measured */
-  letter-spacing: -0.005em;
+  letter-spacing: var(--track-body);
   margin-bottom: var(--s1);
 }
 
@@ -1121,8 +1100,11 @@ select {
 }
 
 .empty h1 {
+  /* The Display step: semibold, and the only place tracking goes NARROWER than
+     the body — +5px on 64px of ink is 0.06em, where the body row is 0.16em. */
   font-size: var(--t-head);
-  letter-spacing: -0.02em;
+  font-weight: var(--w-semi);
+  letter-spacing: var(--track-display);
   margin: 0 0 var(--s5);
 }
 
@@ -1131,9 +1113,15 @@ select {
    ramp, and it is spent on the primary button, which is the only place the
    accent family can carry a label. The spec is explicit that the other
    thirty-three blocks are flat fills.
+
+   This one takes the measured HERO fill rather than the card fill. The design
+   gives its hero a tone of its own — #e5e4e2, a step between the page and the
+   surface — and this panel is the app's hero: one heading, one supporting
+   line, one primary action, exactly as the spec describes it. The ink reads
+   15.27 on it.
 */
 .empty {
-  background: var(--surface);
+  background: var(--hero);
   border-radius: var(--radius);
   padding: var(--s7) var(--s5);
 }
@@ -1165,7 +1153,7 @@ select {
 
 .empty-hints strong {
   color: var(--text);
-  font-weight: 500;
+  font-weight: var(--w-semi);
 }
 
 kbd {
@@ -1260,7 +1248,7 @@ kbd {
   color: var(--on-fill);
   font-family: var(--font-ui);
   font-size: var(--t-label);
-  font-weight: 500;
+  font-weight: var(--w-semi);
 }
 
 .sync-dot {
@@ -1536,8 +1524,8 @@ kbd {
   border-radius: var(--radius);
   font-family: var(--font-display);
   font-size: var(--t-lede);
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-weight: var(--w-semi);
+  letter-spacing: var(--track-body);
   outline: none;
 }
 
@@ -1613,9 +1601,9 @@ kbd {
   gap: var(--s2);
   cursor: pointer;
   list-style: none;
-  font-weight: 500;
+  font-weight: var(--w-semi);
   font-size: var(--t-label);
-  letter-spacing: 0.09em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -1726,7 +1714,7 @@ kbd {
   font-size: var(--t-label);
   color: var(--text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
 }
 
 .readout {
@@ -1763,7 +1751,7 @@ kbd {
   padding: var(--s1) var(--s2);
   border-radius: var(--radius);
   font-size: var(--t-label);
-  font-weight: 500;
+  font-weight: var(--w-semi);
 }
 
 /*

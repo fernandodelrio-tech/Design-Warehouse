@@ -4,30 +4,25 @@
 
 /*
    Nothing was recorded for the families — a bitmap cannot hold them — so this
-   is a choice, and it is the same choice this design got the first time it
-   came through, for the same reasons.
+   is a choice.
 
-   Newsreader at its display optical size for the headings. The capture is a
-   1012x1779 scroll — a long column read top to bottom — and Newsreader is cut
-   for exactly that: a text serif whose display size sharpens rather than
-   thins, which matters on a dark ground where hairlines vanish.
+   ONE face, not two. "Flint Panorama" alternates between a light and a
+   semibold across its five measured steps and never uses anything between
+   them; the serif that used to sit over this app has a single 500 cut, which
+   cannot set an H1 the spec measures as light. Public Sans is variable across
+   the whole range, so it can.
+
+   It is also the right character for the page. This design holds no hue, no
+   texture and almost no elevation — what it has is space and tracking, and a
+   plain grotesque is what lets those be the event. The serif file is deleted
+   rather than shipped unused.
 */
-@font-face {
-  font-family: 'Newsreader';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('./fonts/newsreader-500.woff2') format('woff2');
-}
 
 /*
-   Public Sans underneath. Plain, tightly fitted and legible small, which is
-   what a page carrying detail across 30% of its canvas needs — and its shapes
-   stay open in marigold on forest green at 12px, where a lighter face smears.
-
-   One variable file rather than the three static cuts it used to be: Google
-   serves the same variable font for every weight asked of this family now, so
-   declaring the range is honest and 26.8 KB covers what 44 KB of statics did.
+   One variable file rather than static cuts: Google serves the same variable
+   font for every weight asked of this family now, so declaring the range is
+   honest — and here the range is the point, since the design wants a 300 and a
+   600 out of the same face.
 */
 @font-face {
   font-family: 'Public Sans';
