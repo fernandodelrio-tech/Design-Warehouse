@@ -1,112 +1,122 @@
 /* ---------------------------------------------------------------------------
-   Design Warehouse — application shell, wearing "Tangerine Longform".
+   Design Warehouse — application shell, wearing "Graphite Longform".
 
-   The accent cannot be read. #f5b655 is 1.69 on the page and 1.43 on the
-   surface, and it is the design's only warm colour — so everything it does
-   here it does as a FILL with the ink knocked out of it, where it reads 9.66.
-   That is not a workaround; it is what the capture shows. Every text row
-   measured — all three steps — is set in #f8f8f8, the page colour, which means
-   all of the design's own type is reversed out of dark blocks.
+   No colour at all. Not "muted" — five tokens and six measured inks, and every
+   one of them is a grey. There is no hue anywhere to spend, so everything this
+   design says it says with VALUE, and the whole reskin follows from that.
 
-   So the chrome is the dark block. The bar and the filter rail are the ink
-   #191b19, the type on them is the page colour at 16.31, and the accent that
-   fails everywhere on the light side becomes readable there at 9.66. The one
-   colour the palette could not spend is spent on the one ground that carries
-   it.
+   Half the measured inks cannot be read. On the page #2e2d32: #fbfafc is
+   13.13, #e4e4e4 is 10.74 and #b3b2b7 is 6.48 — three good levels — but the
+   colour the spec names for Body is 3.30, for H3 3.37 and for Display 2.78.
+   Those three are kept as hexes and used as marks and fills; the ladder is the
+   first three, with a fourth derived by lifting the measured body ink 75% of
+   the way to the text token: #9c9b9e, at 4.94 on the page and 5.39 on the
+   surface.
 
-   The light side has two measured text levels and needs three. #191b19 is
-   16.31 on the page and #584e45 is 7.63; the next token down, #718998, is 3.45
-   and fails. The third level is derived by carrying that slate 64% of the way
-   to the ink: #51616a, which reads 6.05 on the page, 5.14 on the surface and
-   4.79 on the lifted fill. Below it #a1afb8 (2.12) and #c0cbd5 (1.55) are
-   fills and marks only.
+   The chrome inverts, and that is the design's one bold move. The measured
+   navigation band is #e0e0e0 — a near-white bar on a near-black page, carrying
+   the hairline colour as its type at 13.52. It is the only high-contrast fill
+   the palette holds, so it is also the primary button, since no accent was
+   measured and there is nothing else that could be one.
 
-   The measured border #3f3f3f is 9.92 and encloses; the #97abb4 hairline from
-   the Behaviour note is 2.25 and only divides. Thirty-three of the thirty-eight
-   blocks are borderless and none of the thirty-eight is raised.
+   And the measured control border does not work as one. #4d4c53 is 1.61 on the
+   page, under the 3:1 an edge needs to be findable. It divides; the edge that
+   encloses a control is the measured #848387, at 3.63.
 
-   Hover lightens the accent, exactly as the spec's convention says — and this
-   is the first of the nine palettes where that convention is right, for the
-   reason the spec itself gives: this accent's label is the dark ink, so
-   lifting the fill opens the pair from 9.66 to 10.51 rather than closing it.
+   Corners are 0px throughout — measured, and the first square-cornered design
+   of the ten.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
   /* --- measured, exact ---------------------------------------------------
-     background #f8f8f8 36%   text    #191b19 18%   surface #e5e6e6 16%
-     muted      #a1afb8  8%   muted-2 #c0cbd5  8%   muted-3 #718998  6%
-     muted-4    #584e45  5%   accent  #f5b655  2%
-     hairline #3f3f3f 1px, on 5 of 38 blocks · no elevation on any
-     ramp #fdc114 -> #fee76f vertical, on 5 · radius 20px
-     14 icon shapes at ~19px · 38 pictures, largest 360x192, in colour      */
+     background #2e2d32 86%   surface #27272a  7%   muted #4b4a4e 3%
+     border     #18171a  2%   text    #e4e4e4  2%
+     inks: H1 #fbfafc · H2 #b3b2b7 · H3 #817d80 · body #7d7c81
+           display #717075 · lede #848387
+     hairline #4d4c53 1px, on 1 of 8 blocks · no elevation on any
+     ramp #555752 -> #333333 diagonal, on 2 · radius 0px · nav band #e0e0e0
+     input 303x41 pad 15 · 30 pictures, largest 144x96, greyscale        */
 
-  --bg: #f8f8f8;
-  --bg-elevated: #e5e6e6;
-  --surface: #e5e6e6;
-  /* The lightest measured fill, carried halfway to the page so the ink still
-     reads 12.90 on it and the derived third level still reads 4.79. */
-  --surface-hover: color-mix(in srgb, #c0cbd5 55%, #f8f8f8);
-  --chrome: #191b19;
-  /* The measured ramp, vertical, as measured. The ink is 10.57 at its head and
-     13.92 at its foot. */
-  --ramp: linear-gradient(180deg, #fdc114, #fee76f);
+  --bg: #2e2d32;
+  --bg-elevated: #27272a;
+  --surface: #27272a;
+  /* Light enough to read as lifted, dark enough that the fourth text level
+     still clears 4.5 on it. */
+  --surface-hover: color-mix(in srgb, #4b4a4e 40%, #2e2d32);
+  /* The measured band, and the one place this design raises its voice. */
+  --chrome: #e0e0e0;
+  --ramp: linear-gradient(135deg, #555752, #333333);
 
-  /* Two measured rules, two jobs. #3f3f3f is 9.92 and can be the edge of an
-     input; #97abb4 is 2.25 and is a seam. */
-  --border: #3f3f3f;                                    /* 9.92 on the page */
-  --rule: #97abb4;                                      /* 2.25 — a texture */
-  --rule-heavy: #97abb4;
-  --border-strong: #191b19;                            /* 16.31 on the page */
+  /* Two rules, two jobs. #4d4c53 is 1.61 on the page: a seam. #848387 is
+     3.63, which is what an edge has to reach to be findable at all. */
+  --border: #848387;                                    /* 3.63 on the page */
+  --rule: #4d4c53;                                      /* 1.61 — a seam */
+  --rule-heavy: #4d4c53;
+  --border-strong: #e4e4e4;                            /* 10.74 on the page */
 
-  /* Two measured levels and one derived, because the measured third fails. */
-  --text: #191b19;                          /* 16.31 page · 13.85 surface */
-  --text-muted: #584e45;                    /*  7.63 page ·  6.48 surface */
-  --text-faint: #51616a;         /* derived from #718998 · 6.05 page · 5.14 */
+  /* Three measured levels and one derived, because the measured fourth,
+     fifth and sixth all fail. */
+  --text: #e4e4e4;                          /* 10.74 page · 11.71 surface */
+  --text-muted: #b3b2b7;                    /*  6.48 page ·  7.07 surface */
+  --text-faint: #9c9b9e;         /* derived from #848387 · 4.94 · 5.39 */
+  /* The brightest thing measured, for the display end. */
+  --text-loud: #fbfafc;                     /* 13.13 page · 14.31 surface */
 
-  --focus: #191b19;
-  --focus-ring: color-mix(in srgb, #f5b655 40%, #f8f8f8);
-
-  /* A fill, never type. 1.69 on the page is not a colour you can read; 9.66
-     with the ink on it is. */
-  --accent: #f5b655;
-  /* Toward the light, which is both what the spec says and what this palette
-     needs: the label is the ink, so lifting the fill opens 9.66 to 10.51. */
-  --accent-strong: color-mix(in srgb, #f5b655 78%, #fee76f);
-  --accent-soft: color-mix(in srgb, #f5b655 26%, #f8f8f8);   /* ink 14.25 */
-  --accent-deep: #584e45;
-  --on-fill: #191b19;                          /* the label for a light fill */
-  --on-deep: #f8f8f8;                          /* the label for a dark one */
-
-  --muted-fill: #a1afb8;
-  --muted-fill-2: #c0cbd5;
-  --muted-fill-3: #718998;
+  --focus: #fbfafc;
+  --focus-ring: color-mix(in srgb, #fbfafc 30%, #2e2d32);
 
   /*
-     Derived. There is no red and no green here — the palette runs a warm axis
-     and a cool one — so the three states are the amber, the cool slate carried
-     to where it can be read, and the darkest rule. Unlike the eight palettes
-     before it, these do NOT share one label: the amber takes the ink, the
-     other two take the page. The badge rules at the foot of this file set
-     each one.
+     There is no accent. The spec says so outright, and the palette bears it
+     out: nothing here has a hue. So the primary action takes the measured
+     band — the only fill in the design with real contrast behind it — and
+     wears the hairline colour as its label at 13.52.
   */
-  --success: #51616a;                       /* page on it 6.05 — the slate */
-  --warning: #f5b655;                       /* ink on it  9.66 — the amber */
-  --danger: #3f3f3f;                        /* page on it 9.92 — the rule */
+  --accent: #e0e0e0;
+  /* Away from its label, which with a dark label on a light fill means
+     lighter: 13.52 at rest, 14.75 on hover. */
+  --accent-strong: color-mix(in srgb, #e0e0e0 60%, #fbfafc);
+  --accent-soft: color-mix(in srgb, #e0e0e0 14%, #2e2d32);
+  --accent-deep: #18171a;
+  --on-fill: #18171a;                          /* the label for a light fill */
+  --on-deep: #e4e4e4;                          /* the label for a dark one */
+
+  --muted-fill: #4b4a4e;
+  --muted-fill-2: #717075;
+  --muted-fill-3: #848387;
+
+  /*
+     Derived, and this is the starkest case of the ten: the palette has no hue
+     at ALL, so state cannot be signalled by colour even in principle. It is
+     signalled by value — light, mid, dark — and by the word each badge
+     carries. There is one consolation in that: a reader who cannot separate
+     hues, or who prints the page in grey, loses nothing here, because there
+     was never anything to lose.
+  */
+  --success: #e0e0e0;                       /* ink on it 13.52 — the band */
+  --warning: #848387;                       /* ink on it  4.74 — mid grey */
+  --danger: #18171a;                        /* text on it 14.04 — the dark */
+  /*
+     Which label a state fill needs is a property of the PALETTE, not of the
+     badge, and this design is the one that made that plain: two of its three
+     states are light fills and one is nearly black, so no single "label for a
+     fill" token could serve them. Each says what it needs.
+  */
+  --on-success: #18171a;                                          /* 13.52 */
+  --on-warning: #18171a;                                          /*  4.74 */
+  --on-danger: #e4e4e4;                                           /* 14.04 */
 
   /* --- measured: corners --------------------------------------------------
-     One radius was measured, 20px, and it is the panel radius. Nothing the
-     size of a control was measured at all — the capture holds no repeated
-     component — so the control step is derived rather than claimed. */
-  --radius-sm: 12px;                                            /* derived */
-  --radius: 20px;
-  --radius-lg: 20px;
+     0px. Every one of them. */
+  --radius-sm: 0px;
+  --radius: 0px;
+  --radius-lg: 0px;
 
   /* --- measured: elevation ------------------------------------------------
-     None, on any of the thirty-eight blocks. */
+     None, on any of the eight blocks. */
   --shadow-sm: none;
   --shadow: none;
   --shadow-lg: none;
@@ -122,129 +132,149 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     The two readings of the frame disagree: the pixel figure is 1040px of a
-     1050px capture with 0 left and 10 right, and the estimate underneath it
-     says 5% left and 1% right. The pixel figure is the direct measurement, so
-     it is the one honoured — a full-bleed page with a step of the scale
-     keeping content off the window edge. No column gap was measured at all
-     (the content reads as one column), so the gutter is a choice from the
-     measured scale rather than a reading. */
-  --page-inset: 8px;                                       /* measured ~10px */
-  --gutter: 16px;                                          /* not measured */
+     974px of content in a 977px capture, 0 left and 3 right: a full-bleed page
+     with a hair of inset. The gutter is the striking figure — 79px across two
+     measured gaps, which is why the design reads as generous despite carrying
+     detail over a quarter of its canvas. It is snapped to 64, the top step of
+     the measured scale, because a scale and a figure between two of its steps
+     cannot both be honoured. */
+  --page-inset: 8px;                                        /* measured ~3px */
+  --gutter: 64px;                                          /* measured ~79px */
 
   /* --- measured: type scale -----------------------------------------------
-     Ink heights of 54, 16 and 10 — glyph heights, which understate the font
-     size, so the ratios travel and the absolutes do not. H2 over Body is 5.4
-     and H3 over Body is 1.6, and that wide display step is what makes this a
-     longform page rather than a dashboard. The body leading is real, 15/10 =
-     1.5; the heading pitches (116 on 54, 59 on 16) are not leadings but the
-     space between blocks, and are honoured as spacing. */
+     Ink heights of 52, 33, 19, 13 and 9 — glyph heights, which understate the
+     font size, so the ratios travel and the absolutes do not. Against Body
+     they run 5.78, 3.67, 2.11 and 1.44. The leadings are real at the display
+     end (75/52 = 1.44, 51/33 = 1.55) and not at the other: H2's 17 on 19 is
+     less than its own ink, which is a row pitch rather than a leading. */
   --t-label: 11px;
   --t-small: 13px;
   --t-body: 15px;
-  --t-lede: 19px;
-  --t-sub: 24px;                                             /* 15 x 1.6 */
-  --t-head: clamp(40px, 7vw, 78px);                          /* 15 x 5.4 */
+  --t-lede: 22px;                                            /* 15 x 1.44 */
+  --t-sub: 32px;                                             /* 15 x 2.11 */
+  --t-head: clamp(38px, 6vw, 55px);                          /* 15 x 3.67 */
 
   /* --- chosen: one family, one mono ---------------------------------------
-     Nothing was recorded for the families. Archivo: every measured row is
-     capitals, the extremes are 5.4x apart and two of the three are medium,
-     which is a grotesque doing display and caption work at once. Roboto Mono
-     for the readouts, neutral enough that a hex reads as a different width
-     rather than a different voice. */
-  --font: 'Archivo', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-ui: 'Archivo', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Archivo', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+     Nothing was recorded for the families. Inter: the measurements want a
+     genuinely light display cut and a semibold that holds tracked capitals at
+     13px, and its 100-900 axis covers both from one file. JetBrains Mono for
+     the readouts — a drawing-office face for a design named after pencil, with
+     a slashed zero, which matters in a column of hex. */
+  --font: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-ui: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --topbar-height: 60px;
+  --topbar-height: 56px;
   --avatar: 28px;
-  --avatar-fill: #c0cbd5;
+  --avatar-fill: #4b4a4e;
 }
 
-/* --- after dark -------------------------------------------------------------
+/* --- daylight ---------------------------------------------------------------
    Derived, by the rule the brief sets: mix the measured colours toward the
-   darkest of them. The ground is the measured ink and the raised surface is
-   the measured warm brown carried halfway to it, #39352f — warm rather than
-   neutral, because the only dark token this palette holds is warm.
+   lightest of them. The ground is the H1 ink #fbfafc and the raised surface is
+   the page colour carried almost all the way to it, so the two stay a hair
+   apart the way they do on the dark side.
 
-   The ladder inverts and gains a level, since all three cool tokens read here:
-   #f8f8f8 at 16.31, #c0cbd5 at 10.51, #a1afb8 at 7.70. And the accent stops
-   being fill-only: on this ground #f5b655 is 9.66, so the colour that could
-   not be typed on the light side is typed on this one. */
+   The ladder inverts and lands higher: #18171a reads 17.16 on that ground,
+   #2e2d32 13.13 and the derived mid-grey 4.98. The band inverts too — a light
+   bar on a dark page becomes a dark bar on a light one, which is the same
+   gesture the other way up, and it carries #e4e4e4 at 11.62.
+*/
 
-:root[data-theme='dark'] {
-  color-scheme: dark;
+:root[data-theme='light'] {
+  color-scheme: light;
 
-  --bg: #191b19;
-  --bg-elevated: color-mix(in srgb, #584e45 50%, #191b19);
-  --surface: color-mix(in srgb, #584e45 50%, #191b19);
-  --surface-hover: color-mix(in srgb, #584e45 80%, #191b19);
-  --chrome: color-mix(in srgb, #584e45 50%, #191b19);
-  --ramp: linear-gradient(180deg, #fdc114, #fee76f);
+  --bg: #fbfafc;
+  --bg-elevated: color-mix(in srgb, #2e2d32 4%, #fbfafc);
+  --surface: color-mix(in srgb, #2e2d32 4%, #fbfafc);
+  --surface-hover: color-mix(in srgb, #2e2d32 10%, #fbfafc);
+  --chrome: #27272a;
+  --ramp: linear-gradient(135deg, #555752, #333333);
 
-  --border: #97abb4;                                    /* 7.26 on the ground */
-  --rule: color-mix(in srgb, #97abb4 34%, #191b19);
-  --rule-heavy: color-mix(in srgb, #97abb4 34%, #191b19);
-  --border-strong: #f8f8f8;
+  --border: color-mix(in srgb, #4b4a4e 62%, #fbfafc);
+  --rule: color-mix(in srgb, #4b4a4e 22%, #fbfafc);
+  --rule-heavy: color-mix(in srgb, #4b4a4e 22%, #fbfafc);
+  --border-strong: #18171a;
 
-  --text: #f8f8f8;                          /* 16.31 ground · 11.47 surface */
-  --text-muted: #c0cbd5;                    /* 10.51 ground ·  7.39 surface */
-  --text-faint: #a1afb8;                    /*  7.70 ground ·  5.42 surface */
+  --text: #18171a;                          /* 17.16 on the ground */
+  --text-muted: #2e2d32;                    /* 13.13 */
+  /* The measured muted fill, which on this ground is a text colour: 8.45 on
+     the page, 7.88 on the surface, 7.07 on the lifted fill. */
+  --text-faint: #4b4a4e;
+  --text-loud: #18171a;
 
-  --focus: #f5b655;
-  --focus-ring: color-mix(in srgb, #f5b655 34%, #191b19);
+  --focus: #18171a;
+  --focus-ring: color-mix(in srgb, #18171a 26%, #fbfafc);
 
-  --accent: #f5b655;                        /* 9.66 here, as fill AND as type */
-  --accent-strong: color-mix(in srgb, #f5b655 78%, #fee76f);
-  --accent-soft: color-mix(in srgb, #f5b655 20%, #191b19);   /* text 10.49 */
-  --accent-deep: #fee76f;
-  --on-fill: #191b19;
-  --on-deep: #191b19;            /* every state fill is light on this side */
+  --accent: #27272a;
+  /* Away from its label again, which on this side means darker. */
+  --accent-strong: #18171a;
+  --accent-soft: color-mix(in srgb, #2e2d32 10%, #fbfafc);
+  --accent-deep: #18171a;
+  --on-fill: #e4e4e4;
+  --on-deep: #e4e4e4;
 
-  --muted-fill: #718998;
-  --muted-fill-2: #584e45;
-  --muted-fill-3: #97abb4;
+  --muted-fill: #b3b2b7;
+  --muted-fill-2: #848387;
+  --muted-fill-3: #4b4a4e;
 
-  --success: #a1afb8;                       /* ink on it  7.70 */
-  --warning: #f5b655;                       /* ink on it  9.66 */
-  --danger: #f8f8f8;                        /* ink on it 16.31 */
+  --success: #27272a;                       /* #e4e4e4 on it 11.62 */
+  --warning: #848387;                       /* #18171a on it  4.74 */
+  --danger: #18171a;                        /* #e4e4e4 on it 14.04 */
+  --on-success: #e4e4e4;
+  --on-warning: #18171a;
+  --on-danger: #e4e4e4;
 
-  --avatar-fill: color-mix(in srgb, #c0cbd5 26%, #191b19);
+  --avatar-fill: #b3b2b7;
 }
 
 /*
-   The chrome is the dark block the design's own type is knocked out of. All
-   three measured text steps are set in #f8f8f8 — the page colour — which is
-   only possible on a dark ground, so the bar and the filter rail are the ink
-   and their type is the page: 16.31, with #c0cbd5 at 10.51 and #a1afb8 at
-   7.70 under it. Three levels, one more than the light side has.
+   The bar inverts, which is the measurement and the whole gesture. The
+   navigation band came off the capture at #e0e0e0 — near-white, on a page of
+   #2e2d32 — so the chrome is the light thing on a dark page and everything on
+   it is written in the hairline colour at 13.52, with the page and the surface
+   under that at 10.35 and 11.28.
 
-   And the accent works here. #f5b655 is 1.69 on the page and 9.66 on this
-   ground, so the one colour the light side can only fill with is the one this
-   ground can write in.
+   Three levels again, and darker ones this time: the ladder that runs upward
+   on the page runs downward here.
 */
 .topbar,
 .filters {
-  --text: #f8f8f8;
-  --text-muted: #c0cbd5;
-  --text-faint: #a1afb8;
-  --border: #97abb4;                                  /* 7.26 on this ground */
-  --rule: color-mix(in srgb, #97abb4 34%, #191b19);
-  --surface: color-mix(in srgb, #584e45 50%, #191b19);
-  --surface-hover: color-mix(in srgb, #584e45 80%, #191b19);
-  --focus: #f5b655;
-  --on-deep: #191b19;
+  --text: #18171a;                                    /* 13.52 on the band */
+  --text-muted: #27272a;                              /* 11.28 */
+  --text-faint: #4b4a4e;                              /*  6.66 */
+  --border: #4b4a4e;
+  --rule: color-mix(in srgb, #4b4a4e 34%, #e0e0e0);
+  --surface: color-mix(in srgb, #2e2d32 12%, #e0e0e0);
+  --surface-hover: color-mix(in srgb, #2e2d32 22%, #e0e0e0);
+  --focus: #18171a;
+  --on-fill: #e4e4e4;
+  --on-deep: #e0e0e0;
+  --accent: #27272a;
+  --accent-strong: #18171a;
   background: var(--chrome);
   color: var(--text);
 }
 
-/* On the dark side the bar is the warm surface, a step up from the page
-   rather than the page itself, so the ink below it stays the ground. */
-:root[data-theme='dark'] .topbar,
-:root[data-theme='dark'] .filters {
-  --surface: color-mix(in srgb, #584e45 80%, #191b19);
-  --surface-hover: #584e45;
+/* On the light side the bar is the dark one — the same gesture the other way
+   up, which is what keeps the two themes recognisably one design. */
+:root[data-theme='light'] .topbar,
+:root[data-theme='light'] .filters {
+  --text: #e4e4e4;                                   /* 11.62 on the band */
+  --text-muted: #b3b2b7;                             /*  6.55 */
+  /* #848387 is 3.96 on this band, so the third level is lifted until it
+     reads: 5.39. */
+  --text-faint: color-mix(in srgb, #848387 75%, #e4e4e4);
+  --border: #848387;
+  --rule: color-mix(in srgb, #b3b2b7 30%, #27272a);
+  --surface: color-mix(in srgb, #e4e4e4 12%, #27272a);
+  --surface-hover: color-mix(in srgb, #e4e4e4 22%, #27272a);
+  --focus: #fbfafc;
+  --on-fill: #18171a;
+  --on-deep: #18171a;
+  --accent: #e0e0e0;
+  --accent-strong: #fbfafc;
 }
 
 * {
@@ -263,14 +293,13 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: var(--t-body);
-  /* The measured body leading, as a ratio: 15px of pitch on 10px of ink. Kept
-     unitless so the display step does not inherit a pixel figure measured on a
-     body row — the bug that once ran an 84px masthead through its paragraph. */
+  /* No leading was measured for the body row — the table records one for the
+     display steps only — so this is a choice, kept unitless so the display
+     step does not inherit a pixel figure measured on a body row. */
   line-height: 1.5;
-  /* Every measured row is capitals, and all three are set in the page colour
-     — reversed out of dark blocks. That is a display and label register, not a
-     paragraph one, so the capitals go to controls and labels and running text
-     is set as typed, in the ink, at 400. */
+  /* The capitals were measured on the three heading steps, not on the body
+     row, so this time they stop at the headings and the labels and running
+     text is set as typed. */
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
@@ -293,38 +322,63 @@ select,
 .field-label,
 .scale-head,
 .selection-bar,
+.brand-count {
+  font-family: var(--font-ui);
+}
+
 /*
-   Every measured row in this design is capitals, and the capitals go on — but
-   only where the words are the app's own. A design's title is something the
-   person typed, and setting THAT in capitals is not a style decision about the
-   app, it is the app shouting the user's data back at them. So the case goes
-   to the chrome: the masthead, the section headings, the labels, the controls.
+   The capitals, once, and only where the words are the app's own. A design's
+   title is something the person typed, and setting THAT in capitals is the app
+   shouting the user's data back at them — so the case goes to the section
+   headings and the drop target, and the labels and controls above get it from
+   their own rules.
+
+   Not the masthead: the display step is the one heading the spec measured
+   WITHOUT capitals, and it is the empty state's.
 */
-.empty h1,
 .group-heading,
 .dropzone-inner h2 {
   text-transform: uppercase;
 }
 
-.brand-count {
-  font-family: var(--font-ui);
-}
-
 h1, h2, h3 {
   font-family: var(--font-display);
-  /* Medium, as measured on both heading steps: a 10px stem on 54px of ink and
-     a 3px stem on 16px, which are the same ratio. */
-  font-weight: 500;
-  letter-spacing: 0.005em;
+  /* Semibold, as measured on all three heading steps: 7px of stem on 33px of
+     ink, 4 on 19, 3 on 13 — the same ratio each time. */
+  font-weight: 600;
+  /* The tracking measured with the capitals: about 4px between glyphs on a
+     33px ink height. The capitals themselves are put on further down, and only
+     where the words belong to the app — a design's title is something the
+     person typed, and setting THAT in capitals is the app shouting their data
+     back at them. */
+  letter-spacing: 0.08em;
   text-wrap: balance;
   /*
      The measured heading pitches — 116px on 54px of ink, 59px on 16px — are
      not leadings. A heading that occupies one row cannot reveal its own
      leading, so those figures describe the space between blocks and are
-     honoured as spacing, not as line height. What is left is tight, which is
-     what a 5.4x display step wants.
+     honoured as spacing, not as line height.
   */
-  line-height: 1.06;
+  line-height: 1.2;
+}
+
+/*
+   The display step is the exception to all of it: measured LIGHT — a 3px stem
+   on 52px of ink, thinner than anything else here — and not in capitals. Its
+   leading is real, 75 on 52, and honoured.
+
+   Two things about it could not be. It was measured ranged right, and this
+   masthead sits in a centred panel that the app already had; changing that is
+   a layout decision rather than a style one. And it was set in #717075, which
+   is 2.78 on its own page — the dimmest of six measured inks and the third
+   that cannot be read. It takes the brightest instead.
+*/
+.empty h1 {
+  font-weight: 200;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  line-height: 1.44;
+  color: var(--text-loud);
 }
 
 button {
@@ -387,25 +441,23 @@ select {
 }
 
 /*
-   The measured ramp, vertical as measured, with the ink knocked out of it:
-   10.57 at its head and 13.92 at its foot. This is the only way the accent
-   family can carry a label at all — flat, it is 1.69 on the page — and it is
-   why the primary button is the one place in the design that is loud.
+   The measured band, flat. There is no accent in this design — the spec says
+   so and the palette bears it out — so the primary action is the one fill it
+   does hold with contrast behind it, wearing the hairline colour as its label
+   at 13.52. On a page where everything else is a grey against a grey, one
+   near-white rectangle is as loud as it needs to be.
 */
 .btn-primary {
-  background: var(--ramp);
+  background: var(--accent);
   border-color: transparent;
   color: var(--on-fill);
   font-weight: 600;
 }
 
-/*
-   Toward the light, which is what the spec's convention says AND what this
-   palette wants — the first of the nine where those agree. The label is the
-   ink, so lifting the fill to the ramp's own foot opens the pair to 13.92.
-*/
+/* Away from its label: the label is the dark one, so the fill goes lighter
+   and the pair opens from 13.52 to 14.75. */
 .btn-primary:hover {
-  background: #fee76f;
+  background: var(--accent-strong);
   border-color: transparent;
 }
 
@@ -425,17 +477,15 @@ select {
 }
 
 /*
-   The destructive control inverts rather than tints, on both sides, because
-   tinting has nothing to say in either. On the light side --danger is #3f3f3f,
-   a hair off the ink at 1.65, so as text it would read as text. On the dark
-   side it is the light extreme, which is where the text already is. Filled, it
-   is the one control on the page that turns the ground over: 9.92 light,
-   16.31 dark, and --on-deep is what makes one rule cover both.
+   The destructive control fills rather than tints. In a palette with no hue
+   there is no red to tint WITH, so the signal has to be a change of value big
+   enough to be unmistakable: the darkest thing measured, under the text, on
+   both sides. --on-deep is what lets one rule cover the two themes.
 */
 .btn-danger:hover {
   background: var(--danger);
   border-color: var(--danger);
-  color: var(--on-deep);
+  color: var(--on-danger);
 }
 
 .btn-icon {
@@ -514,10 +564,16 @@ select {
   display: flex;
   align-items: center;
   gap: var(--s3);
-  padding: 0 var(--s5);
-  /* No elevation on any of the twenty-two blocks and no blur, so the bar is
-     the dark block the design's type is knocked out of, so it needs no rule to
-     be told from the page at all. */
+  /*
+     The inset the frame was measured at, rather than a fixed step. The bar
+     carries a wordmark, a search field and seven controls, and at 768px this
+     family's widths put the last of them 3px past the edge — a scrollbar
+     across the whole app for three pixels. It shrinks with the window instead.
+  */
+  padding: 0 clamp(var(--s2), 2vw, var(--s5));
+  /* No elevation on any of the eight blocks measured and no blur: the bar is
+     told from the page by being the light thing on a dark one, which needs no
+     rule under it. */
   border-bottom: 0;
 }
 
@@ -545,19 +601,6 @@ select {
 
 .brand-mark span {
   border-radius: var(--radius-sm);
-}
-
-/*
-   Every measured row in this design is capitals, and the capitals go on — but
-   only where the words are the app's own. A design's title is something the
-   person typed, and setting THAT in capitals is not a style decision about the
-   app, it is the app shouting the user's data back at them. So the case goes
-   to the chrome: the masthead, the section headings, the labels, the controls.
-*/
-.empty h1,
-.group-heading,
-.dropzone-inner h2 {
-  text-transform: uppercase;
 }
 
 .brand-count {
@@ -679,6 +722,13 @@ select {
    300px floor cannot fit the viewport and the track overflows instead.
 */
 .catalog-grid {
+  /*
+     The capture reads as three columns, and at its own width this grid falls
+     into three — 977px less the inset and two 64px gutters is about 277px a
+     tile. It is not pinned there, though: the tile width is the app's own Size
+     control, set inline, and a design language does not get to take a control
+     away from the person using it.
+  */
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min, 300px), 100%), 1fr));
   gap: var(--gutter);
@@ -738,7 +788,7 @@ select {
   /*
      No rule and no shadow: thirty-three of the thirty-eight measured blocks
      are borderless and none of the thirty-eight is raised. A tile is told from the
-     page by its fill — the measured surface #e5e6e6, which is 1.18 against the
+     page by its fill — the measured surface #27272a, which is 1.09 against the
      page: a difference you feel at the edge rather than see.
   */
   background: var(--bg-elevated);
@@ -902,7 +952,7 @@ select {
      and the title is told from the line under it by weight AND by level. */
   font-weight: 500;
   font-size: var(--t-body);
-  line-height: 1.5;                                     /* measured, 15 / 10 */
+  line-height: 1.5;                                     /* not measured */
   letter-spacing: -0.005em;
   margin-bottom: var(--s1);
 }
@@ -1137,7 +1187,7 @@ kbd {
   flex: 0 0 auto;
 }
 
-/* The lightest cool fill, with the ink on it: #191b19 on #c0cbd5 is 10.51. */
+/* The measured muted fill, with the text on it: #e4e4e4 on #4b4a4e is 6.91. */
 .account-initial {
   background: var(--avatar-fill);
   color: var(--text);
@@ -1658,17 +1708,17 @@ kbd {
 */
 .badge.pass {
   background: var(--success);
-  color: var(--on-deep);
+  color: var(--on-success);
 }
 
 .badge.warn {
   background: var(--warning);
-  color: var(--on-fill);
+  color: var(--on-warning);
 }
 
 .badge.fail {
   background: var(--danger);
-  color: var(--on-deep);
+  color: var(--on-danger);
 }
 
 .list-editor {
@@ -1877,20 +1927,7 @@ kbd {
     min-width: 0;
   }
 
-  /*
-   Every measured row in this design is capitals, and the capitals go on — but
-   only where the words are the app's own. A design's title is something the
-   person typed, and setting THAT in capitals is not a style decision about the
-   app, it is the app shouting the user's data back at them. So the case goes
-   to the chrome: the masthead, the section headings, the labels, the controls.
-*/
-.empty h1,
-.group-heading,
-.dropzone-inner h2 {
-  text-transform: uppercase;
-}
-
-.brand-count {
+  .brand-count {
     white-space: nowrap;
   }
 
@@ -2019,20 +2056,7 @@ kbd {
     --card-height: 400px;
   }
 
-  /*
-   Every measured row in this design is capitals, and the capitals go on — but
-   only where the words are the app's own. A design's title is something the
-   person typed, and setting THAT in capitals is not a style decision about the
-   app, it is the app shouting the user's data back at them. So the case goes
-   to the chrome: the masthead, the section headings, the labels, the controls.
-*/
-.empty h1,
-.group-heading,
-.dropzone-inner h2 {
-  text-transform: uppercase;
-}
-
-.brand-count {
+  .brand-count {
     display: none;
   }
 }

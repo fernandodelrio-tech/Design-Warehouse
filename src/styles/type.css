@@ -4,35 +4,33 @@
 
 /*
    Nothing was recorded for the families — a bitmap cannot hold them — so this
-   is a choice, and Archivo is the choice. Every text row in the capture is
-   CAPITALS, at three sizes whose extremes are 5.4x apart, and two of the three
-   are medium. That is a grotesque used as a display face and as a caption face
-   at once, which is the job Archivo was drawn for: caps that stay square and
-   sturdy at 78px and still hold their counters at 11px.
+   is a choice, and Inter is the choice. The measurements ask for two things at
+   once: a genuinely LIGHT display cut (a 3px stem on 52px of ink, which is
+   thinner than most families go) and a semibold that holds tracked capitals at
+   13px. Inter's axis runs 100 to 900, which covers both ends of that from one
+   file, and its neutrality is the point rather than a shortcoming on a page
+   built entirely from greys.
 
-   One variable file across 300-700, 34.9 KB. The design uses at least three
-   weights and a 5.4x size range, which is where a variable font stops being a
-   compromise and starts being the cheaper option.
+   48 KB for the whole weight range, which is less than the four static cuts
+   this design would otherwise need.
 */
 @font-face {
-  font-family: 'Archivo';
+  font-family: 'Inter';
   font-style: normal;
-  font-weight: 300 700;
-  font-stretch: 100%;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('./fonts/archivo.woff2') format('woff2');
+  src: url('./fonts/inter.woff2') format('woff2');
 }
 
 /*
-   Roboto Mono for the readouts — the hex values, the measured figures and the
-   prompt the app hands to Claude. A neutral grotesque mono, so a hex inside a
-   sentence set in Archivo reads as a different width rather than a different
-   voice.
+   JetBrains Mono for the readouts — the hex values, the measured figures and
+   the prompt the app hands to Claude. A drawing-office face for a design named
+   after pencil, and its zero is slashed, which matters in a column of hex.
 */
 @font-face {
-  font-family: 'Roboto Mono';
+  font-family: 'JetBrains Mono';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./fonts/roboto-mono-400.woff2') format('woff2');
+  src: url('./fonts/jetbrains-mono.woff2') format('woff2');
 }

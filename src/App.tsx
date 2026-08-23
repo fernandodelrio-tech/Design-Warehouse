@@ -126,10 +126,10 @@ export default function App() {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
-  // "Fern Console" is a light design, so light is the resting state and the
-  // dark theme is the derived one.
+  // "Graphite Longform" is a dark design, so dark is the resting state and the
+  // light theme is the derived one.
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
+    () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'dark',
   );
 
   /**
@@ -793,13 +793,13 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* The cool axis and the one warm note: #c0cbd5, #a1afb8, #718998
-                and the accent. On the bar's dark ground all four read, which
-                is where the accent finally does. */}
+            {/* Four greys and nothing else, which is what this design is:
+                #b3b2b7, #848387, #4b4a4e and the band. On the light bar they
+                read as a descending scale rather than as colours. */}
+            <span style={{ background: 'var(--text-muted)' }} />
+            <span style={{ background: 'var(--muted-fill-3)' }} />
             <span style={{ background: 'var(--muted-fill-2)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
-            <span style={{ background: 'var(--muted-fill-3)' }} />
-            <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
           <span className="brand-count">
