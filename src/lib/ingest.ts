@@ -67,6 +67,9 @@ export async function ingestBlob(
     image,
     auto,
     spec,
+    // Kept beside the editable copy so a later re-analysis can tell what the
+    // analyzer wrote from what a person changed. See reseedSpec.
+    seeded: JSON.parse(JSON.stringify(spec)) as typeof spec,
   };
   const blobs: DesignBlobs = { id: record.id, full: blob, thumb };
   await saveDesign(record, blobs);

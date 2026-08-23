@@ -630,36 +630,65 @@ export function seedSpec(image: ImageMeta, stored: AutoAnalysis): DesignSpec {
  * the previous analysis put there, or when it is empty; anything else is an
  * edit and survives. Only the analyzer-derived fields are considered; the font
  * families, which nothing can read off a bitmap, are yours alone.
+ *
+ * `previous` is what the seeder wrote LAST TIME, and getting that right is the
+ * whole difficulty. Recomputing it from the old analysis with today's seeder
+ * does not give it: today's seeder writes today's sentences, and the moment a
+ * measurement is reworded — which has happened repeatedly — every record still
+ * carrying the old wording looks hand-edited and is preserved forever. A
+ * design catalogued before the imagery pass went on saying "concentrated in a
+ * 1008x1680px region at 0,0" through every re-analysis, because nothing could
+ * ever match it again.
+ *
+ * So the seed is now SAVED with the record and handed back here. Where a
+ * record predates that — every record already on disk — `stale` says the
+ * analyzer has moved on since it was written, and the prose the analyzer owns
+ * is taken from the new seed rather than guarded. That is a deliberate,
+ * one-time loss of any hand-edit in those particular fields, and it is the
+ * lesser one: the alternative is a measurement that no amount of re-analysing
+ * can shift.
  */
-export function reseedSpec(spec: DesignSpec, previous: DesignSpec, next: DesignSpec): DesignSpec {
+export function reseedSpec(
+  spec: DesignSpec,
+  previous: DesignSpec,
+  next: DesignSpec,
+  stale = false,
+): DesignSpec {
+  /*
+     Which fields the analyzer OWNS. These are prose it writes and the drawer
+     labels as measured; the rest — families, notes, tags, keywords, the
+     replication notes — belong to whoever typed them and are never taken.
+  */
+  const own = <T>(current: T, prev: T, fresh: T): T =>
+    stale ? fresh : adopt(current, prev, fresh);
   return {
     ...spec,
-    colorTokens: adopt(spec.colorTokens, previous.colorTokens, next.colorTokens),
+    colorTokens: own(spec.colorTokens, previous.colorTokens, next.colorTokens),
     typography: {
       ...spec.typography,
-      scale: adopt(spec.typography.scale, previous.typography.scale, next.typography.scale),
+      scale: own(spec.typography.scale, previous.typography.scale, next.typography.scale),
       notes: adopt(spec.typography.notes, previous.typography.notes, next.typography.notes),
     },
     layout: {
       ...spec.layout,
-      radius: adopt(spec.layout.radius, previous.layout.radius, next.layout.radius),
-      borders: adopt(spec.layout.borders, previous.layout.borders, next.layout.borders),
-      maxWidth: adopt(spec.layout.maxWidth, previous.layout.maxWidth, next.layout.maxWidth),
-      gutter: adopt(spec.layout.gutter, previous.layout.gutter, next.layout.gutter),
-      breakpoints: adopt(spec.layout.breakpoints, previous.layout.breakpoints, next.layout.breakpoints),
+      radius: own(spec.layout.radius, previous.layout.radius, next.layout.radius),
+      borders: own(spec.layout.borders, previous.layout.borders, next.layout.borders),
+      maxWidth: own(spec.layout.maxWidth, previous.layout.maxWidth, next.layout.maxWidth),
+      gutter: own(spec.layout.gutter, previous.layout.gutter, next.layout.gutter),
+      breakpoints: own(spec.layout.breakpoints, previous.layout.breakpoints, next.layout.breakpoints),
       notes: adopt(spec.layout.notes, previous.layout.notes, next.layout.notes),
     },
-    components: adopt(spec.components, previous.components, next.components),
-    uxNotes: adopt(spec.uxNotes, previous.uxNotes, next.uxNotes),
+    components: own(spec.components, previous.components, next.components),
+    uxNotes: own(spec.uxNotes, previous.uxNotes, next.uxNotes),
     effects: {
-      shadows: adopt(spec.effects.shadows, previous.effects.shadows, next.effects.shadows),
-      gradients: adopt(spec.effects.gradients, previous.effects.gradients, next.effects.gradients),
-      blur: adopt(spec.effects.blur, previous.effects.blur, next.effects.blur),
-      animation: adopt(spec.effects.animation, previous.effects.animation, next.effects.animation),
-      iconography: adopt(spec.effects.iconography, previous.effects.iconography, next.effects.iconography),
-      imagery: adopt(spec.effects.imagery, previous.effects.imagery, next.effects.imagery),
+      shadows: own(spec.effects.shadows, previous.effects.shadows, next.effects.shadows),
+      gradients: own(spec.effects.gradients, previous.effects.gradients, next.effects.gradients),
+      blur: own(spec.effects.blur, previous.effects.blur, next.effects.blur),
+      animation: own(spec.effects.animation, previous.effects.animation, next.effects.animation),
+      iconography: own(spec.effects.iconography, previous.effects.iconography, next.effects.iconography),
+      imagery: own(spec.effects.imagery, previous.effects.imagery, next.effects.imagery),
     },
-    interactions: adopt(spec.interactions, previous.interactions, next.interactions),
+    interactions: own(spec.interactions, previous.interactions, next.interactions),
   };
 }
 

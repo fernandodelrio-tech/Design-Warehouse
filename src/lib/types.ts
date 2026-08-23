@@ -261,6 +261,16 @@ export interface DesignRecord {
   tags: string[];
   favorite: boolean;
   image: ImageMeta;
+  /**
+   * The spec exactly as the analyzer seeded it, kept beside the editable one.
+   *
+   * Without it, "did somebody change this field?" can only be answered by
+   * re-deriving what the analyzer would say today — which stops working the
+   * moment a measurement is reworded, and quietly froze the old wording into
+   * every existing record. With it the question is exact. Absent on anything
+   * catalogued before it existed.
+   */
+  seeded?: DesignSpec;
   auto: AutoAnalysis;
   spec: DesignSpec;
 }

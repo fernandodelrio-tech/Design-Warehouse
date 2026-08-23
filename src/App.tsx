@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { analyzeBlob, reseedSpec, seedSpec } from './lib/analyze';
+import { ANALYZER_VERSION, analyzeBlob, reseedSpec, seedSpec } from './lib/analyze';
 import {
   clearCatalog,
   currentDatabase,
@@ -523,8 +523,22 @@ export default function App() {
         // The version matters here — a design catalogued before the analyzer
         // measured radii, hairlines, elevation and type sizes carries blanks
         // that only re-analysis can fill.
-        const previousSpec = seedSpec(record.image, record.auto);
-        const spec = reseedSpec(record.spec, previousSpec, seedSpec(image, auto));
+        /*
+           What the analyzer wrote last time. The record carries it now; for
+           anything catalogued before it did, the best available answer is
+           today's seeder over the old analysis — which is only right for
+           fields the analyzer has not reworded since. `stale` says it has,
+           and reseedSpec takes the new prose rather than guarding wording
+           nothing can match any more.
+        */
+        const nextSpec = seedSpec(image, auto);
+        const previousSpec = record.seeded ?? seedSpec(record.image, record.auto);
+        const spec = reseedSpec(
+          record.spec,
+          previousSpec,
+          nextSpec,
+          !record.seeded && (record.auto.version ?? 0) < ANALYZER_VERSION,
+        );
         const kept = JSON.stringify(spec) === JSON.stringify(record.spec);
         const next: DesignRecord = {
           ...record,
@@ -532,6 +546,7 @@ export default function App() {
           auto,
           updatedAt: Date.now(),
           spec,
+          seeded: JSON.parse(JSON.stringify(nextSpec)) as typeof nextSpec,
         };
         await saveDesign(next, { id, full: blobs.full, thumb });
         releaseImage(id);
@@ -793,13 +808,12 @@ export default function App() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-mark" aria-hidden>
-            {/* Four greys and nothing else, which is what this design is:
-                #b3b2b7, #848387, #4b4a4e and the band. On the light bar they
-                read as a descending scale rather than as colours. */}
-            <span style={{ background: 'var(--text-muted)' }} />
+            {/* The three greens, which carry no type anywhere in this design,
+                and the marigold that carries all of it. */}
             <span style={{ background: 'var(--muted-fill-3)' }} />
             <span style={{ background: 'var(--muted-fill-2)' }} />
             <span style={{ background: 'var(--muted-fill)' }} />
+            <span style={{ background: 'var(--accent)' }} />
           </span>
           Design Warehouse
           <span className="brand-count">
