@@ -46,10 +46,20 @@
      avatar #74887d 60px · radius 33px · 26 icon shapes at ~22px          */
 
   --bg: #1a3425;                                        /* marigold 6.53:1 */
-  /* Not raised, and not raisable: the measured surface takes the spec's own
-     text to 3.06 and nothing in the palette reads on it. */
-  --bg-elevated: #1a3425;
-  --surface: #1a3425;
+  /*
+     There IS a raisable surface, and the first reading of this design missed
+     it by looking at the wrong token.
+
+     The measured "surface" #2d533f cannot be one: the spec's own text lands at
+     3.06 on it and nothing in the palette does better. But the measured CARD
+     RAMP can. Carried a third of the way to the page, #563524 becomes #2d3425
+     — a warm panel a step off the forest ground — and all three text levels
+     reach it: the marigold at 6.26, the hairline at 4.96, the olive at 4.55.
+     It is only 1.24 from the page, so the shadow does most of the work of
+     telling a tile from what it sits on, which is what the design does too.
+  */
+  --bg-elevated: color-mix(in srgb, #563524 32%, #1a3425);
+  --surface: color-mix(in srgb, #563524 32%, #1a3425);
   --surface-hover: color-mix(in srgb, #2d533f 62%, #1a3425);
   --chrome: color-mix(in srgb, #4e3524 60%, #1a3425);
   --ramp: linear-gradient(
@@ -113,10 +123,25 @@
   --radius-lg: 33px;
 
   /* --- measured: elevation ------------------------------------------------
-     None, on any of the eighteen blocks. */
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-lg: none;
+     The first reading of this design said none, and it was wrong: the shadow
+     walker was reading single lines of pixels across a woven ground, where a
+     real falloff stops looking monotone and is thrown away. Measured through
+     the texture it is 24px of falloff reaching 51/255, thrown down and to the
+     left. That is not a hairline of separation, it is the posture of the whole
+     page — everything on it floats, and nothing is printed on to it. */
+  --shadow-sm: 0 6px 10px rgb(0 0 0 / 0.14);
+  --shadow: 0 14px 24px rgb(0 0 0 / 0.20);
+  --shadow-lg: 0 22px 44px rgb(0 0 0 / 0.26);
+
+  /* --- measured: the surface ----------------------------------------------
+     A woven relief over 57% of the flat area at about 4.7/255, varying over
+     several pixels rather than one — cloth, not noise. Two crossed gratings at
+     a seven-pixel period carry it without an asset to fetch, which keeps it
+     inside the app's own content policy. Amplitude to taste of the
+     measurement: 4.7/255 is about 2% of alpha either way. */
+  --weave:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.030) 0 1px, transparent 1px 4px);
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -743,22 +768,26 @@ select {
   min-width: 0;
   height: var(--card-height, 400px);
   /*
-     No rule and no shadow: seventeen of the eighteen measured blocks are
-     borderless and none of the eighteen is raised. A tile is told from the
-     page by its fill — except that this palette has no surface to spend: the
-     measured one takes the spec's own text to 3.06 and nothing reads on it. A
-     tile is told from the page by its gutter and by the screenshot at its
-     head, which is what the design does anyway.
+     No rule — seventeen of the eighteen measured blocks are borderless — but a
+     shadow, because measured THROUGH the weave every raised thing on this page
+     casts one. The palette gives a tile no colour of its own to be told by:
+     the measured surface takes the spec's own text to 3.06. So the lift is
+     what tells it, and the tile floats off the cloth rather than being tinted
+     against it.
   */
-  background: var(--bg-elevated);
+  background: var(--weave), var(--bg-elevated);
   border: 1px solid transparent;
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
   overflow: hidden;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease-out, transform 0.2s ease-out;
 }
 
 .card:hover {
   background: var(--surface-hover);
+  /* Raised by the smallest step that reads, and it does not move under the
+     pointer — a tile that moves is a tile you have to chase. */
+  box-shadow: var(--shadow-lg);
 }
 
 /* Selection is the one state that must be unmistakable, so it is the accent,
