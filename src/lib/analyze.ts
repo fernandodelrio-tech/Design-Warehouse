@@ -12,7 +12,7 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 6;
+export const ANALYZER_VERSION = 7;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -234,7 +234,20 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
         (rest(e.withShadow) > 0
           ? `. The other ${rest(e.withShadow)} ${plural(rest(e.withShadow), 'sits', 'sit')} ` +
             'flat on the page.'
-          : ' — every one of them casts.')
+          : ' — every one of them casts.') +
+        /*
+           A falloff this wide is not a hairline of separation, it is the
+           design's posture, and saying only the numbers loses it. Twenty
+           pixels of soft shadow under every surface is what makes a page read
+           as floating rather than printed, and a reader who takes the figure
+           and applies a 2px default has honoured the measurement and missed
+           the design.
+        */
+        (e.shadow.spread >= 20
+          ? ' Read that as the posture of the whole page rather than as a detail: a falloff ' +
+            'this wide under a surface is what makes it float, so every raised thing should ' +
+            'sit off its ground by this much, and nothing should read as printed on to it.'
+          : '')
       : `None. All ${e.blocks} measured blocks step straight to the page with no falloff.`
     : detail?.shadow
       ? `Soft elevation, about ${detail.shadow.spread}px of falloff at ${detail.shadow.strength}/255 at its darkest`
@@ -413,13 +426,26 @@ function seedFromStructure(image: ImageMeta, auto: AutoAnalysis) {
      belong here, next to the photography, because they are the same question —
      what is the surface actually made of.
   */
+  /*
+     The surface itself, which is a core visual cue and was being reported as
+     either fine noise or nothing at all. A weave — a material with a structure
+     you could put a ruler on — is the thing a reader most needs telling about,
+     because it cannot be reproduced with a noise filter and a page that skips
+     it reads as plastic where the original read as cloth or paper or card.
+  */
   const texture = [
     s?.grain
-      ? `Grain over ${Math.round(s.grain.coverage * 100)}% of the flat area, about ` +
-        `${s.grain.amplitude}/255 of high-frequency noise — a laid texture, not a flat fill; ` +
-        'reproduce it or the surfaces will read cleaner than the original.'
+      ? s.grain.scale === 'weave'
+        ? `Textured surfaces, not flat ones: a woven or moulded relief over ` +
+          `${Math.round(s.grain.coverage * 100)}% of the flat area at about ` +
+          `${s.grain.amplitude}/255, varying over several pixels rather than one. ` +
+          'This is a material, not a noise filter — reproduce it with a tiling image or ' +
+          'a repeating background, and expect the surfaces to read as plastic if you skip it.'
+        : `Grain over ${Math.round(s.grain.coverage * 100)}% of the flat area, about ` +
+          `${s.grain.amplitude}/255 of pixel-fine noise — a laid texture, not a flat fill; ` +
+          'reproduce it or the surfaces will read cleaner than the original.'
       : s
-        ? 'No grain — the flat areas are flat to the pixel.'
+        ? 'No texture — the flat areas are flat to the pixel, at any scale.'
         : '',
   ].filter(Boolean);
 

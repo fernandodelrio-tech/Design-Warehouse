@@ -159,8 +159,12 @@ export interface StructureMeasurement {
    * `stroke` is null where the shapes do not agree on one — not zero.
    */
   icons: { count: number; px: number; stroke: number | null } | null;
-  /** High-frequency noise laid over the fills, where there is any. */
-  grain: { coverage: number; amplitude: number } | null;
+  /**
+   * The surface the fills are made of, where they are made of anything.
+   * `scale` says which kind: 'grain' is pixel-fine noise, 'weave' is a coarser
+   * relief — a material rather than a filter.
+   */
+  grain: { coverage: number; amplitude: number; scale: 'grain' | 'weave' } | null;
 
 }
 

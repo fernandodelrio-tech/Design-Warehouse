@@ -402,8 +402,16 @@ export function measureBlockEdge(
      still 2.2 levels short of the page — so the shadow was measured on the
      borderless card beside it and missed on this one.
   */
-  look = 34,
+  look = 0,
 ): BlockEdge {
+  /*
+     How far to look for a falloff. A fixed 34 was right for the tight shadows
+     these captures used to carry and far too short for a soft one: a 250px
+     card with a 40px blur under it has a ramp that is still falling when the
+     window ends, and a ramp that never settles is thrown away. It scales with
+     the block now, within bounds — big things cast far, small things cannot.
+  */
+  if (look <= 0) look = Math.min(90, Math.max(34, Math.round(Math.min(b.w, b.h) * 0.35)));
   const widths: number[] = [];
   const colours: string[] = [];
   const spreads: number[] = [];
@@ -442,6 +450,39 @@ export function measureBlockEdge(
       }
       if (outside || track.length < look) continue;
 
+      /*
+         The same walk, averaged ACROSS the edge.
+
+         A single line of pixels is at the mercy of whatever the ground is made
+         of. On a woven or grained surface it swings by ten levels a pixel, the
+         profile stops being monotone, and a real falloff over a real texture
+         is discarded — which is how a page of cards with soft shadows on a
+         fabric ground reported no elevation at all. Texture varies along the
+         edge; a shadow does not. Averaging five samples spread along it leaves
+         the falloff and cancels most of the weave.
+      */
+      const spread: number[] = [];
+      for (let k = 1; k <= look; k++) {
+        let sum = 0;
+        let taken = 0;
+        /*
+           A contiguous span, not a few spaced samples. Spaced ones alias
+           against a periodic weave — pick five points 4px apart on a 7px
+           grating and the average still swings — where a solid run of
+           thirteen averages a whole period or more away whatever the period
+           happens to be.
+        */
+        for (let step = -6; step <= 6; step++) {
+          const o = offset + step;
+          if (o < inset || o > along - inset - 1) continue;
+          const i2 = at(o, k);
+          if (i2 < 0 || i2 >= w * h) continue;
+          sum += luma(rgbAt(d, i2 * 4));
+          taken++;
+        }
+        spread.push(taken ? sum / taken : luma(track[k - 1]));
+      }
+
       // --- border: a flat run of one colour that ends in a step
       let run = 1;
       while (run < track.length && dist2(track[run], track[0]) <= SAME) run++;
@@ -460,9 +501,35 @@ export function measureBlockEdge(
         colours.push(hex(track[0]));
       }
 
-      // --- shadow: a monotone ramp that settles, starting past any border
+      /*
+         --- shadow: a monotone ramp that settles, starting past any border.
+
+         Read off the across-the-edge average rather than the raw line, and
+         smoothed once more along the walk, because a weave runs in both
+         directions. The BORDER test above stays on the raw line: a border is a
+         hard step and smoothing is exactly what would hide it.
+      */
       const from = isBorder ? run : 0;
-      const profile = track.slice(from).map(luma);
+      const wide = spread.slice(from);
+      /*
+         Nine samples, not three. Averaging across the edge cancels the half of
+         a weave that runs along it and leaves the half that runs with the
+         walk — which is why the first attempt still saw a profile reversing
+         thirty times over and threw a real shadow away. A mean spanning a
+         whole period of the texture removes it; nine covers anything up to a
+         nine-pixel weave, which is coarser than any surface these captures
+         carry, and a falloff measured in tens of pixels does not notice.
+      */
+      const profile = wide.map((_, i) => {
+        let sum = 0;
+        let n = 0;
+        for (let k = i - 4; k <= i + 4; k++) {
+          if (k < 0 || k >= wide.length) continue;
+          sum += wide[k];
+          n++;
+        }
+        return sum / n;
+      });
       if (profile.length < 10) continue;
       const settled = profile[profile.length - 1];
       const rise = settled - profile[0];
@@ -493,8 +560,22 @@ export function measureBlockEdge(
          stripe, and checking only up to the reach never saw that — a page with
          no elevation on it at all reported a 20px shadow.
       */
+      /*
+         What counts as going backwards depends on how noisy the ground is.
+
+         A fixed two levels is right on a flat page and wrong on a woven one,
+         where what is left after smoothing still wobbles by three or four and
+         a real falloff was being rejected for reversing eight times. The
+         wobble is measurable — it is the difference between the profile and
+         its own smoothing — so the threshold is set from it. A stripe or a
+         neighbouring block still crosses far above that; a texture does not.
+      */
+      let noise = 0;
+      for (let k = 0; k < profile.length; k++) noise += Math.abs(wide[k] - profile[k]);
+      noise /= Math.max(1, profile.length);
+      const drop = Math.max(2, noise * 1.6);
       let backwards = 0;
-      for (let k = 1; k < profile.length; k++) if (profile[k] < profile[k - 1] - 2) backwards++;
+      for (let k = 1; k < profile.length; k++) if (profile[k] < profile[k - 1] - drop) backwards++;
       /*
          A falloff is gradual. Where the whole rise happens in one or two
          pixels the profile is not a shadow settling, it is flat ground and

@@ -290,62 +290,102 @@ function measureImagery(d: Uint8ClampedArray, w: number, h: number, scale: numbe
  * colour range stays narrow.
  */
 function measureTexture(d: Uint8ClampedArray, w: number, h: number) {
-  // --- grain
+  /*
+     Texture at TWO scales, because a surface can be textured in two ways and
+     only one of them was being looked for.
+
+     The old pass compared every pixel to the mean of its eight neighbours and
+     called the residual grain. That finds sensor noise and paper fibre — a
+     texture whose period is one pixel — and is blind to everything coarser: a
+     weave, a felt, a leaf relief, a brushed panel. Those vary over five or ten
+     pixels, so against a 3x3 mean they look perfectly smooth, and a page built
+     entirely out of them reported "no grain, the flat areas are flat to the
+     pixel". They are not flat, and the difference is most of what makes a
+     surface look like a material rather than a fill.
+
+     A second residual, against a mean spanning nine pixels, sees them. The
+     larger of the two says how textured the surface is; which one is larger
+     says what kind.
+  */
   const tile = 16;
-  let grainy = 0;
+  let textured = 0;
   let flat = 0;
-  const amplitudes: number[] = [];
+  const fines: number[] = [];
+  const coarses: number[] = [];
   const stepY = Math.max(tile, Math.floor(h / 60));
   const stepX = Math.max(tile, Math.floor(w / 60));
+  const lumaAt = (x: number, y: number) => {
+    const q = (Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))) * 4;
+    return luma(d[q], d[q + 1], d[q + 2]);
+  };
   for (let ty = 1; ty + tile < h - 1; ty += stepY) {
     for (let tx = 1; tx + tile < w - 1; tx += stepX) {
-      let residual = 0;
+      let fine = 0;
+      let coarse = 0;
       let n = 0;
       let lo = 255;
       let hi = 0;
-      for (let y = ty; y < ty + tile; y++) {
-        for (let x = tx; x < tx + tile; x++) {
-          const here = luma(d[(y * w + x) * 4], d[(y * w + x) * 4 + 1], d[(y * w + x) * 4 + 2]);
-          let mean = 0;
-          for (let dy = -1; dy <= 1; dy++) {
-            for (let dx = -1; dx <= 1; dx++) {
-              const q = ((y + dy) * w + (x + dx)) * 4;
-              mean += luma(d[q], d[q + 1], d[q + 2]);
-            }
-          }
-          residual += Math.abs(here - mean / 9);
+      for (let y = ty; y < ty + tile; y += 2) {
+        for (let x = tx; x < tx + tile; x += 2) {
+          const here = lumaAt(x, y);
+          let near = 0;
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) near += lumaAt(x + dx, y + dy);
+          // Nine samples on a 3px stride: a mean spanning nine pixels for the
+          // price of a 3x3.
+          let far = 0;
+          for (let dy = -3; dy <= 3; dy += 3) for (let dx = -3; dx <= 3; dx += 3) far += lumaAt(x + dx, y + dy);
+          fine += Math.abs(here - near / 9);
+          coarse += Math.abs(here - far / 9);
           n++;
           if (here < lo) lo = here;
           if (here > hi) hi = here;
         }
       }
       if (!n) continue;
-      const amplitude = residual / n;
-      // A tile with a hard edge or a photograph in it has a wide range; grain
-      // has a large residual inside a narrow one.
-      if (hi - lo > 60) continue;
-      if (amplitude >= 1.2) {
-        grainy++;
-        amplitudes.push(amplitude);
+      /*
+         A tile holding a hard edge or a piece of photograph swings far more
+         than any surface does. The old ceiling of 60 was set against fine
+         grain and threw out every contrasty weave with it; 110 keeps the
+         edges out and lets the materials through.
+      */
+      if (hi - lo > 110) continue;
+      const f = fine / n;
+      const c = coarse / n;
+      if (Math.max(f, c) >= 1.2) {
+        textured++;
+        fines.push(f);
+        coarses.push(c);
       } else flat++;
     }
   }
-  const tiles = grainy + flat;
-  const grain =
-    tiles >= 12 && grainy / tiles >= 0.5
-      ? { coverage: Math.round((grainy / tiles) * 100) / 100, amplitude: Math.round(median(amplitudes) * 10) / 10 }
-      : null;
-
+  const tiles = textured + flat;
+  if (tiles < 12 || textured / tiles < 0.5) return { grain: null };
+  const f = median(fines);
+  const c = median(coarses);
+  return {
+    grain: {
+      coverage: Math.round((textured / tiles) * 100) / 100,
+      amplitude: Math.round(Math.max(f, c) * 10) / 10,
+      /*
+         Which scale carries it. Fine is grain — noise, fibre, film. Coarse is
+         a weave: a material with a structure you could put a ruler on, and the
+         thing that has to be reproduced with an image or a repeating
+         background rather than with a noise filter.
+      */
+      scale: c > f * 1.15 ? ('weave' as const) : ('grain' as const),
+    },
+  };
   /*
-     No pattern detection here, and that is deliberate rather than unfinished.
+     Still no PATTERN detection, and that is deliberate rather than unfinished.
      An autocorrelation of the edge profile does find a strong, confident period
      on almost every page — and the period it finds is the LEADING, because
      evenly spaced rows of prose are the most periodic thing on a page. It
      reported a 26px stripe pattern on a capture with no pattern in it at all.
      A detector that calls body text a texture is worse than no detector, so
-     until it can be told from text it is not shipped.
+     until it can be told from text it is not shipped. What is measured here is
+     how rough a surface is and at what scale, which is a different question
+     and an answerable one.
   */
-  return { grain };
 }
 
 // --- what repeats ------------------------------------------------------------
