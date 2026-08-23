@@ -120,6 +120,44 @@
   --on-warning: #1a1614;
   --on-danger: #f2eee9;
 
+  /* --- measured: the DECISIONS -------------------------------------------
+     A spec measures more than colours and sizes. It measures decisions —
+     whether a block is bordered, whether it floats, whether type is set in
+     capitals, how tall a control is — and a decision has to travel through a
+     token or it stays wherever it was first written.
+
+     For five designs they did not travel. Every one of them was applied by
+     hand to the home screen — the bar, the tiles, the buttons, the search —
+     and everything else inherited only the colour and the radius. So the
+     detail drawer's fields were bordered under a design that measured twelve
+     of twelve blocks borderless, sat flat under one whose spec called
+     elevation "the posture of the whole page", and stayed sentence case under
+     one that measured all three of its type steps in capitals. Colour changed;
+     nothing else did.
+
+     These are the four that were frozen. They are set once here and consumed
+     everywhere, so the next design moves the whole app rather than its front
+     page.
+  */
+  /* What a SURFACE gets: the borderless reading. Fifteen of the sixteen blocks
+     measured here carry no rule. */
+  --edge: 1px solid transparent;
+  /* What a CONTROL gets: a rule is how a field says it is a field, and it has
+     to clear 3:1 whatever the design says about blocks. */
+  --edge-control: 1px solid var(--border);
+  /* A dashed affordance — a drop target, a suggestion — which is a function
+     rather than a style, so it stays whatever the design's rule colour is. */
+  --edge-dashed: 1px dashed var(--border);
+  /* What a RAISED surface gets, or `none` where a design lifts nothing. */
+  --lift-sm: var(--shadow-sm);
+  --lift: var(--shadow);
+  --lift-lg: var(--shadow-lg);
+  /* The measured case of labels, titles and headings. */
+  --case: uppercase;
+  /* One focus recipe. Every one of these specs asks for a 2px ring offset 2px
+     and the app was drawing a flat 3px halo in half the places it mattered. */
+  --focus-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 3px var(--focus);
+
   /* --- measured: corners --------------------------------------------------
      One radius this time. The last design carried two because it measured a
      button; this one measures no component at all, so 14px goes everywhere. */
@@ -389,7 +427,7 @@ h1, h2, h3 {
   */
   font-weight: var(--w-light);
   letter-spacing: var(--track-display);
-  text-transform: uppercase;
+  text-transform: var(--case);
   text-wrap: balance;
   /* No line height was recorded — the column is empty, not zero — so this is
      the app's own, opened a little for capitals. */
@@ -423,7 +461,7 @@ select {
   /* Capitals, as the one measured row is, with the small opening they need —
      no tracking was recorded, so this is the app's own. */
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   /*
      Flat, and borderless. All sixteen measured blocks are flat fills — there
      is no ramp anywhere in this capture — and fifteen of the sixteen carry no
@@ -523,7 +561,7 @@ select {
   font-family: var(--font-ui);
   /* The H3 step again: the smallest measured type is the most tracked. */
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   display: inline-flex;
   align-items: center;
   gap: var(--s1);
@@ -613,7 +651,7 @@ select {
   font-weight: var(--w-semi);
   font-size: var(--t-lede);
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   margin-right: var(--s4);
 }
 
@@ -727,7 +765,7 @@ select {
 .filters select {
   padding: var(--s1) var(--s2);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--edge-control);
   border-radius: var(--radius-sm);
   outline: none;
 }
@@ -737,7 +775,7 @@ select {
   font-size: var(--t-label);
   font-weight: var(--w-semi);
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
 }
 
 .tag-filter {
@@ -750,7 +788,7 @@ select {
   font-family: var(--font-ui);
   /* The H3 step again: the smallest measured type is the most tracked. */
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   cursor: pointer;
 }
 
@@ -824,7 +862,7 @@ select {
   font-size: var(--t-label);
   font-weight: var(--w-semi);
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   color: var(--text);
 }
 
@@ -857,7 +895,7 @@ select {
   */
   background: var(--bg-elevated);
   background-color: var(--bg-elevated);
-  box-shadow: var(--shadow);
+  box-shadow: var(--lift);
   color: var(--text);
   border: 1px solid transparent;
   border-radius: var(--radius);
@@ -871,7 +909,7 @@ select {
 .card:hover {
   background: var(--surface-hover);
   background-color: var(--surface-hover);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lift-lg);
 }
 
 /* Selection is the one state that must be unmistakable, and this palette has
@@ -971,7 +1009,7 @@ select {
 
 .card-hover-actions .btn {
   background: var(--bg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--lift-sm);
 }
 
 /*
@@ -1038,7 +1076,7 @@ select {
 
 .card-subtitle {
   /* The one measured row is in capitals, and this is the app's densest row. */
-  text-transform: uppercase;
+  text-transform: var(--case);
   color: var(--text-faint);
   font-size: var(--t-label);
   margin-bottom: var(--s3);
@@ -1096,7 +1134,7 @@ select {
   height: 22px;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: var(--edge);
 }
 
 .palette-swatch {
@@ -1152,7 +1190,7 @@ select {
   background: var(--surface);
   background-color: var(--surface);
   color: var(--text);
-  box-shadow: var(--shadow);
+  box-shadow: var(--lift);
   border-radius: var(--radius);
   padding: var(--s7) var(--s5);
 }
@@ -1176,7 +1214,7 @@ select {
   display: grid;
   gap: var(--s3);
   text-align: left;
-  border: 1px dashed var(--border-strong);
+  border: var(--edge-dashed);
   border-radius: var(--radius);
   padding: var(--s4) var(--s5);
   color: var(--text-muted);
@@ -1188,10 +1226,13 @@ select {
   font-weight: var(--w-semi);
 }
 
+/* A key cap and an editable list keep their edge whatever the borderless
+   reading says: the rule is what makes one look like a key and the other look
+   like something you can type into. */
 kbd {
   display: inline-block;
   padding: var(--s1) var(--s2);
-  border: 1px solid var(--border-strong);
+  border: var(--edge-control);
   border-bottom-width: 2px;
   border-radius: var(--radius);
   background: var(--bg-elevated);
@@ -1218,7 +1259,7 @@ kbd {
   border: 2px dashed var(--focus);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lift-lg);
   text-align: center;
 }
 
@@ -1248,10 +1289,10 @@ kbd {
   max-height: calc(var(--overlay-h, 100dvh) - var(--s5) * 2);
   margin: auto;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
+  border: var(--edge);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lift-lg);
 }
 
 .account-chip {
@@ -1301,7 +1342,7 @@ kbd {
   padding: var(--s2) var(--s3);
   border-radius: var(--radius-sm);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--edge);
   color: var(--text-muted);
   font-size: var(--t-label);
 }
@@ -1360,10 +1401,10 @@ kbd {
   gap: var(--s3);
   padding: var(--s3) var(--s4);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
+  border: var(--edge);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  box-shadow: var(--lift);
   font-size: var(--t-small);
   animation: toast-in 0.18s ease;
 }
@@ -1495,10 +1536,10 @@ kbd {
   max-height: calc(var(--overlay-h, 100dvh) - var(--s5) * 2);
   min-height: 0;
   background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
+  border: var(--edge);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lift-lg);
 }
 
 .detail-preview {
@@ -1519,7 +1560,7 @@ kbd {
 .detail-preview img {
   max-width: 100%;
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  box-shadow: var(--lift);
 }
 
 .detail-preview img.zoomed {
@@ -1576,7 +1617,7 @@ kbd {
   width: 100%;
   padding: var(--s2) var(--s3);
   background: var(--bg);
-  border: 1px solid var(--border-strong);
+  border: var(--edge-control);
   border-radius: var(--radius);
   font-family: var(--font);
   font-size: var(--t-small);
@@ -1585,7 +1626,7 @@ kbd {
 
 .apply-target:focus {
   border-color: var(--focus);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  box-shadow: var(--focus-shadow);
 }
 
 .apply-target::placeholder {
@@ -1636,7 +1677,7 @@ kbd {
   font-weight: var(--w-semi);
   font-size: var(--t-label);
   letter-spacing: var(--track-label);
-  text-transform: uppercase;
+  text-transform: var(--case);
   color: var(--text-muted);
 }
 
@@ -1665,9 +1706,18 @@ kbd {
   gap: var(--s1);
 }
 
+/*
+   The drawer's labels take the measured case and tracking like every other
+   label in the app. They did not for five designs — the case rules were
+   written one at a time onto whatever the home screen needed, and a label down
+   here was simply never one of them.
+*/
 .field label,
 .field-label {
   font-size: var(--t-label);
+  font-weight: var(--w-semi);
+  letter-spacing: var(--track-label);
+  text-transform: var(--case);
   color: var(--text-faint);
 }
 
@@ -1677,8 +1727,9 @@ kbd {
   width: 100%;
   padding: var(--s2) var(--s2);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--edge-control);
   border-radius: var(--radius-sm);
+  min-height: var(--field-height);
   outline: none;
   resize: vertical;
 }
@@ -1687,7 +1738,7 @@ kbd {
 .field textarea:focus,
 .field select:focus {
   border-color: var(--focus);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  box-shadow: var(--focus-shadow);
 }
 
 .field input::placeholder,
@@ -1715,17 +1766,22 @@ kbd {
   display: block;
   width: 26px;
   height: 26px;
-  border: 1px solid var(--border-strong);
+  border: var(--edge);
   border-radius: var(--radius-sm);
   overflow: hidden;
   cursor: pointer;
 }
 
+/* The colour well's input is an invisible hit target filling a 26px square,
+   not a text field — so the measured control height does not apply to it. It
+   did for one build, and a 40px minimum inside a 26px box overflowed the
+   swatch on every viewport. */
 .token-swatch input {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+  min-height: 0;
   padding: 0;
   border: 0;
   opacity: 0;
@@ -1745,7 +1801,7 @@ kbd {
   gap: var(--s2);
   font-size: var(--t-label);
   color: var(--text-faint);
-  text-transform: uppercase;
+  text-transform: var(--case);
   letter-spacing: var(--track-label);
 }
 
@@ -1775,7 +1831,7 @@ kbd {
 .contrast-sample {
   padding: var(--s1) var(--s3);
   border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  border: var(--edge);
   font-size: var(--t-label);
 }
 
@@ -1814,7 +1870,7 @@ kbd {
   gap: var(--s2);
   padding: var(--s2);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: var(--edge-control);
   border-radius: var(--radius-sm);
 }
 
@@ -1834,7 +1890,7 @@ kbd {
 }
 
 .suggestions button {
-  border: 1px dashed var(--border-strong);
+  border: var(--edge-dashed);
   background: transparent;
   color: var(--text-faint);
   border-radius: var(--radius);
@@ -1859,9 +1915,9 @@ kbd {
   gap: var(--s3);
   padding: var(--s2) var(--s3) var(--s2) var(--s4);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
+  border: var(--edge);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--lift-lg);
   font-size: var(--t-small);
 }
 
