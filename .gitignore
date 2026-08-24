@@ -6,3 +6,6 @@ dist
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 release
+
+# Impeccable live-server runtime state (PID/port/token, per-session)
+.impeccable/live/
