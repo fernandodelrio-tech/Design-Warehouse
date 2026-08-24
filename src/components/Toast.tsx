@@ -4,13 +4,20 @@ import { IconAlert, IconCheck, IconClose, IconInfo } from './Icons';
 
 export type ToastKind = 'info' | 'success' | 'error';
 
+/** An offer to reverse what the message just reported. */
+export interface ToastAction {
+  label: string;
+  run: () => void;
+}
+
 interface Toast {
   id: number;
   message: string;
   kind: ToastKind;
+  action?: ToastAction;
 }
 
-type Notify = (message: string, kind?: ToastKind) => void;
+type Notify = (message: string, kind?: ToastKind, action?: ToastAction) => void;
 
 const ToastContext = createContext<Notify>(() => {});
 
@@ -41,6 +48,9 @@ const LIFESPAN: Record<ToastKind, number | null> = {
   error: null,
 };
 
+/** Long enough to read the message, find Undo, and press it. */
+const ACTION_LIFESPAN = 10000;
+
 /*
    Severity is carried by a mark and a word, never by colour alone.
 
@@ -65,17 +75,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((current) => current.filter((t) => t.id !== id));
   }, []);
 
-  const notify = useCallback<Notify>((message, kind = 'info') => {
+  const notify = useCallback<Notify>((message, kind = 'info', action) => {
     const id = nextId++;
     setToasts((current) => {
-      const next = [...current, { id, message, kind }];
+      const next = [...current, { id, message, kind, action }];
       // Trim the transient ones only, newest kept. An error stays until it is
       // dismissed, however many successes land on top of it.
       const errors = next.filter((t) => t.kind === 'error');
       const rest = next.filter((t) => t.kind !== 'error').slice(-MAX_VISIBLE);
       return next.filter((t) => errors.includes(t) || rest.includes(t));
     });
-    const life = LIFESPAN[kind];
+    // An offer you cannot reach is not an offer. A toast carrying an action
+    // gets long enough to notice it, move to it and press it.
+    const life = action ? ACTION_LIFESPAN : LIFESPAN[kind];
     if (life !== null) setTimeout(() => dismiss(id), life);
   }, [dismiss]);
 
@@ -91,6 +103,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <p className="toast-body">
           <span className="visually-hidden">{label}: </span>
           {toast.message}
+          {toast.action && (
+            <button
+              type="button"
+              className="toast-action"
+              onClick={() => {
+                toast.action?.run();
+                dismiss(toast.id);
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
         </p>
         <button
           type="button"

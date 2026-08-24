@@ -374,7 +374,7 @@ select,
 .group-heading,
 .card-spec-line dt,
 .readout dt,
-.field label,
+.field > label[for],
 .field-label,
 .scale-head,
 .selection-bar,
@@ -513,11 +513,28 @@ select {
 }
 
 /*
-   The destructive control fills rather than tints. This palette holds no red
-   at any luminance, so the signal is the brown-shifted marigold derived for it
-   — 4.64 against the page with the page knocked out of it — and it is applied
-   as a fill so the change is unmistakable rather than a tint of a green.
+   The destructive control carries a rule at rest, and fills on hover.
+
+   This palette holds no red at any luminance — --danger resolves to the ink
+   in the light theme and to the page cream in the dark one — so the resting
+   signal cannot be hue. It is the edge instead: thirty-six of forty-two
+   measured blocks are borderless and the app follows that, which leaves an
+   outline free to mean something. A destructive button is the only ruled one
+   in a row, and it is the heavy label this design already runs on.
+
+   Without this it had a :hover rule and nothing else, so Delete rendered
+   pixel-identical to Spec, JSON, CSS and .md until the pointer was already on
+   it — and identical to Clear, which means deselect, in the selection bar.
+
+   The icon form is exempt: a trash glyph is already the signal, and a ruled
+   box around one on every card in the grid is noise.
 */
+.btn-danger:not(.btn-icon) {
+  border-color: var(--danger);
+  color: var(--danger);
+  font-weight: var(--w-semi);
+}
+
 .btn-danger:hover {
   background: var(--danger);
   border-color: var(--danger);
@@ -1398,6 +1415,12 @@ kbd {
   max-width: 380px;
 }
 
+.sync-note {
+  margin: 0 0 var(--s3);
+  color: var(--text-faint);
+  font-size: var(--t-small);
+}
+
 .sync-loading {
   margin: 0;
   padding: var(--s5) 0;
@@ -1453,6 +1476,35 @@ kbd {
    transient kinds carry the same control rather than a second layout: one
    toast shape, and the difference is how long it stays.
 */
+/*
+   Undo rides inside the sentence rather than under it. The toast is a single
+   line of report; a second row of buttons under it would make a dialog out of
+   something that must not stop anyone.
+*/
+.toast-action {
+  pointer-events: auto;
+  margin-left: var(--s2);
+  padding: 0;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  color: var(--accent);
+  font: inherit;
+  text-transform: var(--case);
+  letter-spacing: var(--track-label);
+  cursor: pointer;
+}
+
+.toast-action:hover {
+  color: var(--accent-strong);
+}
+
+.toast-action:focus-visible {
+  box-shadow: var(--focus-shadow);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
 .toast-dismiss {
   /*
      The only part of a toast that catches a pointer. The stack above is
@@ -1785,7 +1837,18 @@ kbd {
    written one at a time onto whatever the home screen needed, and a label down
    here was simply never one of them.
 */
-.field label,
+/*
+   The caption, and nothing else.
+
+   Field writes its caption as <label for>, pointing at the one control it
+   names. A label without a `for` is wrapping its own input instead — a
+   checkbox and the sentence explaining it — and those are prose. Unscoped,
+   this rule set that prose in 12px bold tracked capitals too, and the longest
+   of them is the sync panel's warning about what signing out does to a local
+   catalog: the one paragraph in the app that most needs reading, in the least
+   readable style it has.
+*/
+.field > label[for],
 .field-label {
   font-size: var(--t-label);
   font-weight: var(--w-semi);

@@ -24,6 +24,8 @@ interface Props {
   onAccountChange: (account: Account | null) => Promise<void>;
   onSignOut: () => Promise<void>;
   onConnectionChange: () => void;
+  onWipeCatalog: () => void;
+  catalogCount: number;
 }
 
 export function SyncPanel({
@@ -36,6 +38,8 @@ export function SyncPanel({
   onAccountChange,
   onSignOut,
   onConnectionChange,
+  onWipeCatalog,
+  catalogCount,
 }: Props) {
   const notify = useNotify();
   const [settings, setSettings] = useState<GoogleSettings | null>(null);
@@ -314,6 +318,23 @@ export function SyncPanel({
                 catalogs apart in the app, not from someone inspecting storage directly.
               </dd>
             </div>
+          </Section>
+
+          <Section title="Danger zone">
+            <p className="sync-note">
+              Deleting the catalog removes every design on this device at once. Unlike
+              deleting one, it is not staged and there is nothing to undo it with — take a
+              backup from the header first if you want one.
+            </p>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={onWipeCatalog}
+              disabled={catalogCount === 0}
+            >
+              Delete entire catalog
+              {catalogCount > 0 ? ` (${catalogCount})` : ''}
+            </button>
           </Section>
         </div>
       </div>

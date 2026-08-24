@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ANALYZER_VERSION, analyzeBlob, reseedSpec, seedSpec } from './lib/analyze';
 import {
+  binDesign,
   clearCatalog,
   currentDatabase,
-  deleteDesign,
   estimateStorage,
   getBlobs,
   listDesigns,
+  purgeBin,
   requestPersistence,
+  restoreDesign,
   saveDesign,
 } from './lib/db';
 import { GROUPS, SORTS, groupRecords } from './lib/grouping';
@@ -213,6 +215,16 @@ export default function App() {
       }
       void refreshUsage();
       void requestPersistence();
+      /*
+         Apply the deletions that have aged out of the bin. Their tombstones
+         went out when they were staged, so the catalog on every device already
+         agrees they are gone; this is only the kept copy on this machine, and
+         reclaiming it is what stops a month of deletions counting against the
+         storage the header reports.
+      */
+      void purgeBin().then((purged) => {
+        if (purged) void refreshUsage();
+      });
     })();
     return () => releaseAllImages();
   }, [notify, refreshUsage]);
@@ -519,11 +531,43 @@ export default function App() {
     [markChanged],
   );
 
+  /**
+   * Puts a design back after a staged deletion, and says so.
+   *
+   * Shared by the single and bulk paths: both stage, so both undo the same
+   * way, and neither needs a dialog in front of it.
+   */
+  const undoRemoval = useCallback(
+    async (ids: string[]) => {
+      const restored: DesignRecord[] = [];
+      for (const id of ids) {
+        const record = await restoreDesign(id);
+        if (record) restored.push(record);
+      }
+      if (!restored.length) return;
+      setRecords(await listDesigns());
+      markChanged();
+      void refreshUsage();
+      notify(
+        restored.length === 1
+          ? `"${restored[0].title}" is back in the catalog.`
+          : `${restored.length} designs are back in the catalog.`,
+        'success',
+      );
+    },
+    [markChanged, notify, refreshUsage],
+  );
+
   const removeRecord = useCallback(
     async (id: string) => {
+      /*
+         No confirm dialog. The deletion is staged and reversible for a month,
+         and an undo you can reach is a better guard than a dialog you learn to
+         dismiss — which is what the native one had become on the one control
+         that sat on every card.
+      */
       const record = records.find((r) => r.id === id);
-      if (record && !confirm(`Delete "${record.title}" from the catalog?`)) return;
-      await deleteDesign(id);
+      await binDesign(id);
       releaseImage(id);
       setRecords((current) => current.filter((r) => r.id !== id));
       setSelected((current) => {
@@ -534,6 +578,10 @@ export default function App() {
       if (openId === id) setOpenId(null);
       markChanged();
       void refreshUsage();
+      notify(record ? `Deleted "${record.title}".` : 'Design deleted.', 'info', {
+        label: 'Undo',
+        run: () => void undoRemoval([id]),
+      });
       notify('Design deleted.', 'success');
     },
     [markChanged, notify, openId, records, refreshUsage],
@@ -712,18 +760,35 @@ export default function App() {
     );
   };
 
+  /*
+     The end of the filter bar is where every toolbar on the web puts a reset,
+     which is exactly why "Clear all" could not stay there: it wiped the
+     catalog. The slot now holds what its position promises, and only when
+     there is something to clear.
+  */
+  const clearFilters = () => {
+    setQuery('');
+    setScheme('all');
+    setFavoritesOnly(false);
+    setActiveTags([]);
+  };
+
   const deleteSelected = async () => {
-    if (!confirm(`Delete ${selectedRecords.length} design(s) from the catalog?`)) return;
+    const binned = selectedRecords.map((r) => r.id);
     for (const record of selectedRecords) {
-      await deleteDesign(record.id);
+      await binDesign(record.id);
       releaseImage(record.id);
     }
-    const ids = new Set(selectedRecords.map((r) => r.id));
+    const ids = new Set(binned);
     setRecords((current) => current.filter((r) => !ids.has(r.id)));
     setSelected(new Set());
     markChanged();
     void refreshUsage();
-    notify(`Deleted ${ids.size} design(s).`, 'success');
+    notify(
+      `Deleted ${ids.size} design${ids.size === 1 ? '' : 's'}.`,
+      'info',
+      { label: 'Undo', run: () => void undoRemoval(binned) },
+    );
   };
 
   const backupCatalog = async () => {
@@ -1013,9 +1078,11 @@ export default function App() {
           <span style={{ marginLeft: 'auto', color: 'var(--text-faint)', fontSize: 'var(--t-label)' }}>
             {visible.length} shown
           </span>
-          <button type="button" className="btn btn-ghost btn-danger" onClick={wipeCatalog}>
-            Clear all
-          </button>
+          {filtersActive && (
+            <button type="button" className="btn btn-ghost" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
         </div>
       )}
 
@@ -1027,12 +1094,7 @@ export default function App() {
         ) : visible.length === 0 ? (
           <EmptyState
             filtered={filtersActive}
-            onClearFilters={() => {
-              setQuery('');
-              setScheme('all');
-              setFavoritesOnly(false);
-              setActiveTags([]);
-            }}
+            onClearFilters={clearFilters}
             onPickFiles={() => fileInput.current?.click()}
             onPickFolder={() => folderInput.current?.click()}
             onPaste={pasteFromButton}
@@ -1098,6 +1160,8 @@ export default function App() {
           onAccountChange={switchAccount}
           onSignOut={signOut}
           onConnectionChange={() => void refreshConnection()}
+          onWipeCatalog={() => void wipeCatalog()}
+          catalogCount={records.length}
         />
       )}
 
