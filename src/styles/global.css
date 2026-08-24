@@ -1157,12 +1157,37 @@ select {
   border: var(--edge);
 }
 
+/*
+   On a card the strip is the first thing in the footer and runs the full
+   width of it, edge to edge under the screenshot — the band a design is
+   recognised by, rather than a 22px detail below its name.
+*/
+.card-footer .palette {
+  height: var(--s6);
+  /*
+     Full width, but not flush to the screenshot above it. Pulled to the image
+     the band merged into it on exactly the designs colour matters most for —
+     a dark dashboard's near-black swatches against a near-black capture — and
+     the card read as one block. The footer's own top padding separates them,
+     which is a gap of the card's surface rather than a rule this design does
+     not otherwise use anywhere.
+  */
+  margin: 0 calc(var(--s3) * -1) var(--s3);
+  width: auto;
+  border-radius: 0;
+}
+
+/*
+   No transition on flex-grow: it is a layout property, so animating it
+   relayouts the whole strip on every frame, once per card. The hover still
+   widens — it simply arrives rather than being tweened there.
+*/
 .palette-swatch {
   position: relative;
+  display: block;
   border: 0;
   padding: 0;
   height: 100%;
-  transition: flex-grow 0.15s ease;
 }
 
 .palette-swatch:hover {
@@ -1925,6 +1950,21 @@ kbd {
   color: var(--text-faint);
 }
 
+/*
+   An empty field is shaped differently, not just fainter.
+
+   The placeholder was --text-faint against a --text value at the same size and
+   weight, which made "nothing was written here" and "this is the measurement"
+   two shades of one thing. That distinction is the product's whole claim about
+   honesty — the app refuses to guess a font family and leaves it blank — so it
+   cannot be carried by a grey. :placeholder-shown is exactly the empty case,
+   and the dashed rule is already in the token set.
+*/
+.field input:placeholder-shown,
+.field textarea:placeholder-shown {
+  border: var(--edge-dashed);
+}
+
 .field input,
 .field textarea,
 .field select {
@@ -2038,6 +2078,84 @@ kbd {
 .readout dd {
   margin: 0;
   color: var(--text-muted);
+}
+
+/*
+   Measured geometry, drawn at its own scale.
+
+   The sample sits on the catalogued design's OWN background rather than on
+   this app's surface, for the same reason the contrast rows do: a radius or a
+   hairline read against the wrong ground is a different measurement. The
+   figure and the sample count sit under it, so what was measured and how
+   firmly are both readable without opening the export.
+*/
+.measured-none {
+  margin: 0;
+  color: var(--text-faint);
+  font-size: var(--t-label);
+}
+
+.measured-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+/*
+   A fixed plate, not a stretched one. auto-fit made a single measurement fill
+   the drawer, and a 64px corner in a 540px panel reads as a dark slab with a
+   caption on it rather than as a corner.
+*/
+.measured-item {
+  flex: 0 1 156px;
+}
+
+.measured-item {
+  margin: 0;
+  padding: var(--s3);
+  border: var(--edge-control);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.measured-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Room for the largest cast the sample can throw, so it is not clipped. */
+  height: 72px;
+  margin-bottom: var(--s3);
+  overflow: hidden;
+}
+
+.measured-rule {
+  width: 100%;
+}
+
+.measured-block {
+  width: 76px;
+  height: 48px;
+  box-sizing: border-box;
+}
+
+.measured-caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  font-size: var(--t-label);
+  /*
+     The sample's ground is the catalogued design's, which can be anything, so
+     the caption cannot inherit this app's text colour and stay readable. It
+     takes its own plate instead.
+  */
+  padding: var(--s2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.measured-samples {
+  color: var(--text-faint);
 }
 
 .contrast-row {

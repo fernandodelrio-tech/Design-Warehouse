@@ -25,7 +25,8 @@ import type { ColorToken, DesignRecord, TypeStep } from '../lib/types';
 import { useNotify } from './Toast';
 import { ListEditor } from './ListEditor';
 import { PaletteStrip } from './PaletteStrip';
-import { Field, Section, TextArea, TextField } from './SpecFields';
+import { MeasuredDetail } from './MeasuredDetail';
+import { Field, Section, TextArea, TextField, recordedLabel } from './SpecFields';
 import {
   IconClose,
   IconCopy,
@@ -487,7 +488,7 @@ export function DesignDetail({
               </div>
             </Section>
 
-            <Section title="Typography" defaultOpen>
+            <Section title="Typography" defaultOpen badge={recordedLabel(draft.spec.typography)}>
               <div className="field-row">
                 <TextField
                   label="Heading family"
@@ -600,10 +601,18 @@ export function DesignDetail({
               />
             </Section>
 
-            <Section title="Layout" defaultOpen>
+            <Section title="Layout" defaultOpen badge={recordedLabel(draft.spec.layout)}>
               <div style={{ color: 'var(--text-muted)', fontSize: 'var(--t-label)' }}>
                 {draft.auto.layout.summary}
               </div>
+              {/*
+                 What the analyzer measured, before the fields it seeded from
+                 it. The corner, the hairline and the elevation were previously
+                 only ever strings in the inputs below.
+              */}
+              <Field label="Measured geometry">
+                <MeasuredDetail detail={draft.auto.detail} palette={draft.auto.palette} />
+              </Field>
               <div className="field-row">
                 <TextField
                   label="Structure"
@@ -674,7 +683,7 @@ export function DesignDetail({
               />
             </Section>
 
-            <Section title="Effects & detail">
+            <Section title="Effects & detail" badge={recordedLabel(draft.spec.effects)}>
               <div className="field-row">
                 <TextField
                   label="Shadows / elevation"
