@@ -1391,9 +1391,17 @@ kbd {
 
 .progress-bar span {
   display: block;
+  /*
+     Full width, scaled down, rather than a width that grows. Width is a
+     layout property: animating it relayouts the bar on every frame of every
+     image in an import. A transform is composited, and on a bar anchored at
+     its left edge the two look identical.
+  */
+  width: 100%;
   height: 100%;
+  transform-origin: left center;
   background: var(--accent);
-  transition: width 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .toasts {
@@ -1426,6 +1434,66 @@ kbd {
   padding: var(--s5) 0;
   color: var(--text-faint);
   font-size: var(--t-small);
+}
+
+/*
+   Import placeholders. They inherit .card, so they take the same fixed height
+   and land on the same grid track the real card will — what changes is only
+   what is drawn inside. Everything here is a fill on the scale; the tiles are
+   still, because the count in the masthead and the bar at the top are the two
+   things already moving.
+*/
+.card-skeleton {
+  cursor: default;
+}
+
+/* A shade off the card, where the screenshot will be. */
+.skeleton-block {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 60px;
+  background: var(--surface-hover);
+}
+
+.card-skeleton-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s4);
+}
+
+/*
+   The muted fill, not the elevated one: --bg-elevated and --surface are the
+   same measured colour in this design, so a placeholder drawn in it on a card
+   is invisible — the tile reads as one blank slab rather than as a card
+   waiting for its contents.
+*/
+.skeleton-line {
+  display: block;
+  height: var(--s2);
+  border-radius: var(--radius-sm);
+  background: var(--muted-fill);
+  opacity: 0.55;
+}
+
+.skeleton-line-title {
+  width: 60%;
+  height: var(--s3);
+}
+
+.skeleton-line-meta {
+  width: 80%;
+}
+
+/* The palette strip, which is the full width of the footer on a real card. */
+.skeleton-line-strip {
+  width: 100%;
+  height: var(--s5);
+}
+
+.skeleton-line-row {
+  width: 100%;
 }
 
 .toast-region {

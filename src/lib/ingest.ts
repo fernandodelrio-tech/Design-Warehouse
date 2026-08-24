@@ -1,4 +1,5 @@
-import { analyzeBlob, seedSpec } from './analyze';
+import { seedSpec } from './analyze';
+import { analyzeInWorker } from './analyze-client';
 import { saveDesign } from './db';
 import { nameDesign } from './naming';
 import { isGenericFileName, titleFromFileName, uniqueTitle } from './title';
@@ -42,7 +43,7 @@ export async function ingestBlob(
   blob: Blob,
   options: IngestOptions,
 ): Promise<DesignRecord> {
-  const { image, auto, thumb } = await analyzeBlob(blob);
+  const { image, auto, thumb } = await analyzeInWorker(blob);
   const spec = seedSpec(image, auto);
   const taken = options.takenTitles ?? new Set<string>();
   // A name someone chose is worth keeping; a camera-roll id or a timestamped
@@ -87,6 +88,12 @@ export async function ingestFiles(
   source: IngestSource,
   onProgress?: (done: number, total: number) => void,
   takenTitles?: Set<string>,
+  /**
+   * Called as each design lands, so a long import fills the grid rather than
+   * delivering it in one piece at the end. The report still carries all of
+   * them: a caller that would rather wait can ignore this.
+   */
+  onRecord?: (record: DesignRecord) => void,
 ): Promise<IngestReport> {
   const report: IngestReport = { added: [], skipped: [], failed: [] };
   const taken = takenTitles ?? new Set<string>();
@@ -107,6 +114,7 @@ export async function ingestFiles(
         takenTitles: taken,
       });
       report.added.push(record);
+      onRecord?.(record);
     } catch (err) {
       report.failed.push({
         name: file.name,

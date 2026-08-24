@@ -1,4 +1,31 @@
-/** Canvas plumbing: decoding, thumbnailing, and pixel sampling. */
+/**
+ * Canvas plumbing: decoding, thumbnailing, and pixel sampling.
+ *
+ * Everything here runs in a worker as well as on the page, because the
+ * analyzer it feeds does. A worker has no document, so the canvas comes from
+ * OffscreenCanvas there — and only the <img> decode fallback is genuinely
+ * window-only, which is why it is guarded rather than ported.
+ */
+
+type AnyCanvas = HTMLCanvasElement | OffscreenCanvas;
+
+/** A canvas from whichever of the two environments this is. */
+function makeCanvas(width: number, height: number): AnyCanvas {
+  if (typeof document === 'undefined') return new OffscreenCanvas(width, height);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+function context2d(canvas: AnyCanvas): CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true }) as
+    | CanvasRenderingContext2D
+    | OffscreenCanvasRenderingContext2D
+    | null;
+  if (!ctx) throw new Error('Canvas 2D is unavailable in this browser.');
+  return ctx;
+}
 
 export interface Bitmap {
   width: number;
@@ -21,6 +48,15 @@ export async function loadBitmap(blob: Blob): Promise<Bitmap> {
       // Fall through to the <img> path — some formats decode there instead.
     }
   }
+  /*
+     The <img> path decodes what createImageBitmap will not — SVG, chiefly.
+     There is no Image constructor in a worker, so a format that needs this is
+     a format the worker cannot take: it says so, and the caller runs the
+     analysis on the page instead.
+  */
+  if (typeof Image === 'undefined') {
+    throw new Error('Could not decode this image.');
+  }
   const url = URL.createObjectURL(blob);
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -41,22 +77,20 @@ export async function loadBitmap(blob: Blob): Promise<Bitmap> {
   }
 }
 
-function drawScaled(bitmap: Bitmap, maxEdge: number): HTMLCanvasElement {
+function drawScaled(bitmap: Bitmap, maxEdge: number): AnyCanvas {
   const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas 2D is unavailable in this browser.');
+  const canvas = makeCanvas(width, height);
+  const ctx = context2d(canvas);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(bitmap.source, 0, 0, width, height);
+  ctx.drawImage(bitmap.source as CanvasImageSource, 0, 0, width, height);
   return canvas;
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {
+function canvasToBlob(canvas: AnyCanvas, type: string, quality: number): Promise<Blob> {
+  if ('convertToBlob' in canvas) return canvas.convertToBlob({ type, quality });
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error('Could not encode thumbnail.'))),
@@ -76,12 +110,10 @@ export async function makeThumbnail(bitmap: Bitmap, maxEdge = 720): Promise<Blob
   }
 }
 
-/** Downsampled pixels for the analyzer. Small on purpose: it runs on the UI thread. */
+/** Downsampled pixels for the analyzer's first pass. */
 export function samplePixels(bitmap: Bitmap, maxEdge = 320): ImageData {
   const canvas = drawScaled(bitmap, maxEdge);
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas 2D is unavailable in this browser.');
-  return ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return context2d(canvas).getImageData(0, 0, canvas.width, canvas.height);
 }
 
 export interface DetailSample extends ImageData {
@@ -103,15 +135,12 @@ export function sampleDetail(bitmap: Bitmap, maxPixels = 4_000_000): DetailSampl
   const scale = total > maxPixels ? Math.sqrt(maxPixels / total) : 1;
   const width = Math.max(1, Math.round(bitmap.width * scale));
   const height = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas 2D is unavailable in this browser.');
+  const canvas = makeCanvas(width, height);
+  const ctx = context2d(canvas);
   // Nearest-neighbour: smoothing would blur a hairline into the two regions it
   // separates, which is precisely the thing being measured.
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(bitmap.source, 0, 0, width, height);
+  ctx.drawImage(bitmap.source as CanvasImageSource, 0, 0, width, height);
   const data = ctx.getImageData(0, 0, width, height) as DetailSample;
   data.scale = bitmap.width / width;
   return data;

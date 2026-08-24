@@ -48,6 +48,7 @@ import { SyncPanel } from './components/SyncPanel';
 import { DesignCard } from './components/DesignCard';
 import { DesignDetail } from './components/DesignDetail';
 import { EmptyState } from './components/EmptyState';
+import { SkeletonTile, pendingCells } from './components/SkeletonTiles';
 import { CatalogGrid } from './components/CatalogGrid';
 import { useNotify } from './components/Toast';
 import {
@@ -244,13 +245,19 @@ export default function App() {
       if (files.length === 0) return;
       setProgress({ done: 0, total: files.length });
       try {
+        /*
+           Records are added as they land, not in one delivery at the end.
+           Analysis is a couple of seconds an image, so a folder of two hundred
+           used to leave the grid empty for minutes and then fill it at once;
+           now each card replaces a placeholder as its image finishes.
+        */
         const report = await ingestFiles(
           files,
           source,
           (done, total) => setProgress({ done, total }),
           takenTitles(),
+          (record) => addRecords([record]),
         );
-        addRecords(report.added);
 
         const parts: string[] = [];
         if (report.added.length) {
@@ -896,8 +903,16 @@ export default function App() {
   return (
     <div className="app">
       {progress && (
-        <div className="progress-bar">
-          <span style={{ width: `${(progress.done / Math.max(1, progress.total)) * 100}%` }} />
+        <div
+          className="progress-bar"
+          role="progressbar"
+          aria-label="Analysing images"
+          aria-valuemin={0}
+          aria-valuemax={progress.total}
+          aria-valuenow={progress.done}
+        >
+          {/* scaleX rather than width: the same 2px line, off the layout path. */}
+          <span style={{ transform: `scaleX(${progress.done / Math.max(1, progress.total)})` }} />
         </div>
       )}
 
@@ -913,8 +928,14 @@ export default function App() {
           </span>
           Design Warehouse
           <span className="brand-count">
-            {records.length}
-            {usage ? ` · ${usage}` : ''}
+            {/*
+               During an import this slot carries the count that matters. A
+               folder of two hundred screenshots used to report itself as a
+               2px hairline and nothing else, under a page still headed
+               "your catalog is empty".
+            */}
+            {progress ? `Analysing ${progress.done + 1} of ${progress.total}` : records.length}
+            {progress || !usage ? '' : ` · ${usage}`}
           </span>
         </div>
 
@@ -1091,7 +1112,7 @@ export default function App() {
           <div className="empty">
             <p>Opening the catalog…</p>
           </div>
-        ) : visible.length === 0 ? (
+        ) : visible.length === 0 && !progress ? (
           <EmptyState
             filtered={filtersActive}
             onClearFilters={clearFilters}
@@ -1116,8 +1137,16 @@ export default function App() {
             </section>
           ))
         ) : (
-          <CatalogGrid items={visible} keyFor={(record) => record.id} minWidth={cardMin}>
-            {(record) => renderCard(record)}
+          /*
+             One grid, so the placeholders continue the row the real cards are
+             on rather than starting a second block underneath them.
+          */
+          <CatalogGrid
+            items={pendingCells(visible, progress && !filtersActive ? progress : null)}
+            keyFor={(cell) => (cell.kind === 'record' ? cell.record.id : `pending-${cell.index}`)}
+            minWidth={cardMin}
+          >
+            {(cell) => (cell.kind === 'record' ? renderCard(cell.record) : <SkeletonTile />)}
           </CatalogGrid>
         )}
       </main>
