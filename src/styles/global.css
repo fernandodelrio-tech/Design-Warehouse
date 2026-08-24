@@ -734,11 +734,37 @@ select {
   gap: var(--s2);
 }
 
+/*
+   A flex item's min-width is auto, so these buttons refused to shrink below
+   their labels and pushed the page 4px wider than a 320px viewport — the
+   reference width WCAG reflow is measured at, and the narrowest phones still
+   in use. They may shrink now; the labels ellipsis rather than the page
+   scrolling sideways.
+*/
+.topbar-primary,
+.topbar-utility,
+.topbar-primary > *,
+.topbar-utility > * {
+  min-width: 0;
+}
+
 .filters {
   display: flex;
   align-items: center;
   gap: var(--s2);
   flex-wrap: wrap;
+  /*
+     Sticky, directly under the masthead.
+
+     The topbar was sticky and this was not, so scrolling past the second row
+     of a catalog took away every control that governs what you are looking at
+     — sort, group, scheme, the tag chips and the count — while keeping the
+     four that do not. You had to hold your own filter state in your head, or
+     scroll back up to read it.
+  */
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 90;
   padding: var(--s3) var(--page-inset-right) var(--s3) var(--page-inset-left);
   /*
      THE MEASURED TOOLBAR, and it is the one component in this capture that
@@ -774,6 +800,17 @@ select {
   border: var(--edge-control);
   border-radius: var(--radius-sm);
   outline: none;
+}
+
+/*
+   The four controls that govern what is on screen had `outline: none` and no
+   replacement, so tabbing across them changed nothing visible: you could not
+   tell Sort by from Group by without opening one. --focus-shadow was defined
+   at the top of this file and used on three rules; these are the four that
+   needed it most.
+*/
+.filters select:focus-visible {
+  box-shadow: var(--focus-shadow);
 }
 
 .filter-label {
@@ -904,7 +941,9 @@ select {
   border: var(--edge);
   border-radius: var(--radius);
   overflow: hidden;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.2s ease-out;
+  /* No transform entry: nothing sets one on a card, so it only ever cost a
+     property to watch. Hover is a fill and an elevation here. */
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 /* Hover lifts the fill one step toward the light — and the step is measured,
@@ -983,17 +1022,12 @@ select {
      hero, the band, the control and the accent — and the other eight blocks
      are flat fills, which the spec says in as many words not to ramp. */
   background: var(--surface-hover);
-  background-size: 200% 100%;
-  animation: shimmer 1.4s infinite linear;
-}
-
-@keyframes shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
-  }
+  /*
+     No shimmer. The gradient this animated across was removed when the fill
+     went flat — the comment above records that — and animating the position of
+     a background image that is `none` changes no pixels while keeping the
+     element on the compositor's animation list for as long as it exists.
+  */
 }
 
 .card-hover-actions {
@@ -1011,8 +1045,18 @@ select {
   opacity: 1;
 }
 
+/*
+   These sit on the screenshot, which is the one surface in this app whose
+   colour is not ours to choose. The page colour on a pale capture measured
+   1.02:1 — the controls were invisible except for a 4px shadow, and on a
+   touch screen they are permanently visible, so they are also the only thing
+   between a thumb and a delete. This design is borderless by measurement
+   everywhere its own ground is underneath; here the ground is a stranger's,
+   which is exactly the case that rule cannot cover.
+*/
 .card-hover-actions .btn {
   background: var(--bg);
+  border-color: var(--border);
   box-shadow: var(--lift-sm);
 }
 
@@ -1213,7 +1257,7 @@ select {
   margin: 6vh auto;
 }
 
-.empty h1 {
+.empty h2 {
   /*
      There is no display step to take: one row was measured and it is the body.
      So this keeps the app's own largest size, in the measured medium and the
@@ -2479,6 +2523,16 @@ kbd {
     scrollbar-width: none;
     gap: var(--s2);
     padding: var(--s3) var(--s3);
+    /*
+       A cue that it keeps going. At 390px this row is 1104px wide, so roughly
+       two thirds of it — group by, size, favourites, the count and the tag
+       chips — sat past a hard edge with no fade, no chevron and no scrollbar,
+       which makes them not hidden so much as undiscoverable. The mask fades
+       the last few pixels out, so the row visibly continues past the edge
+       rather than stopping at one.
+    */
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--s6)), transparent);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--s6)), transparent);
   }
 
   .filters::-webkit-scrollbar {
@@ -2570,6 +2624,24 @@ kbd {
   .brand-count {
     display: none;
   }
+
+  /*
+     Three intake buttons across a 320px page.
+
+     At the standard padding they come to 313px inside a 296px content box and
+     pushed the document 4px wider than the viewport — sideways scroll on the
+     whole page, at the reference width WCAG measures reflow against. The
+     labels are the point of these controls, so the room comes out of the
+     padding and the gap rather than out of the words.
+  */
+  .topbar-primary {
+    gap: var(--s1);
+  }
+
+  .topbar-primary .btn {
+    padding: var(--s2) var(--s2);
+    gap: var(--s1);
+  }
 }
 
 /*
@@ -2656,5 +2728,59 @@ kbd {
   .detail-preview img {
     position: sticky;
     top: 0;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   REDUCED MOTION
+
+   Not a blanket kill. `* { animation-duration: 0.01ms !important }` is the
+   usual shape of this block and it is the wrong one here: almost all the
+   motion in this file is state feedback — a fill changing on hover, a border
+   on focus, a toast arriving — and switching those off removes the signal
+   along with the movement, leaving a person who asked for less motion with
+   less information as well.
+
+   So what goes is travel and repetition, and what stays is the change of
+   state. The spinner stops turning and reads as a dimmed mark instead, since
+   an indefinite rotation is the one thing on the page that never settles. The
+   disclosure marker and the progress bar jump to their new value rather than
+   sweeping to it. Toasts and overlays appear rather than fading in. Every
+   colour and border change is left exactly as it was, because that is the
+   feedback rather than the motion — a card's hover is a fill and an elevation
+   here, and nothing on this page travels on hover to begin with.
+
+   The app tells other people's designs to honour this preference (see
+   lib/ux.ts) and had no such block of its own.
+   --------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sweeps become steps. The value still changes; it stops being animated. */
+  .spec-section > summary::before {
+    transition: none;
+  }
+
+  .progress-bar span {
+    transition: none;
+  }
+
+  .palette-swatch {
+    transition: none;
+  }
+
+  /* Arrive, do not fade in. */
+  .toast,
+  .overlay {
+    animation: none;
+  }
+
+  /*
+     The spinner is the only indefinite animation left. Stopped rather than
+     hidden: it still marks the control as busy, and the control is disabled
+     while it is there, so the state survives without the rotation.
+  */
+  .btn.spinning svg {
+    animation: none;
+    opacity: 0.55;
   }
 }

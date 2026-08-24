@@ -917,7 +917,15 @@ export default function App() {
       )}
 
       <header className="topbar">
-        <div className="brand">
+        {/*
+           The wordmark is the page heading.
+
+           It was a div, and the only <h1> in the app lived in the empty state —
+           which unmounts the moment a design exists. So a populated catalog
+           offered a screen reader a flat run of <h3> card titles with no page
+           heading and nothing above them to group by.
+        */}
+        <h1 className="brand">
           <span className="brand-mark" aria-hidden>
             {/* The three greens, which carry no type anywhere in this design,
                 and the marigold that carries all of it. */}
@@ -934,10 +942,12 @@ export default function App() {
                2px hairline and nothing else, under a page still headed
                "your catalog is empty".
             */}
-            {progress ? `Analysing ${progress.done + 1} of ${progress.total}` : records.length}
-            {progress || !usage ? '' : ` · ${usage}`}
+            {progress
+              ? `Analysing ${progress.done + 1} of ${progress.total}`
+              : records.length || ''}
+            {progress || !usage || !records.length ? '' : ` · ${usage}`}
           </span>
-        </div>
+        </h1>
 
         <div className="search">
           <span className="search-icon">
@@ -1030,20 +1040,24 @@ export default function App() {
 
       {records.length > 0 && (
         <div className="filters">
-          <span className="filter-label">Scheme</span>
-          <select value={scheme} onChange={(e) => setScheme(e.target.value as SchemeFilter)}>
+          <label className="filter-label" htmlFor="filter-scheme">
+            Scheme
+          </label>
+          <select
+            id="filter-scheme"
+            value={scheme}
+            onChange={(e) => setScheme(e.target.value as SchemeFilter)}
+          >
             <option value="all">Any</option>
             <option value="light">Light</option>
             <option value="dark">Dark</option>
             <option value="mixed">Mixed</option>
           </select>
 
-          <span className="filter-label">Sort by</span>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value)}
-            aria-label="Sort the catalog"
-          >
+          <label className="filter-label" htmlFor="filter-sort">
+            Sort by
+          </label>
+          <select id="filter-sort" value={sortKey} onChange={(e) => setSortKey(e.target.value)}>
             {SORTS.map((option) => (
               <option key={option.key} value={option.key}>
                 {option.label}
@@ -1051,12 +1065,10 @@ export default function App() {
             ))}
           </select>
 
-          <span className="filter-label">Group by</span>
-          <select
-            value={groupKey}
-            onChange={(e) => setGroupKey(e.target.value)}
-            aria-label="Group the catalog into sections"
-          >
+          <label className="filter-label" htmlFor="filter-group">
+            Group by
+          </label>
+          <select id="filter-group" value={groupKey} onChange={(e) => setGroupKey(e.target.value)}>
             {GROUPS.map((option) => (
               <option key={option.key} value={option.key}>
                 {option.label}
@@ -1064,8 +1076,14 @@ export default function App() {
             ))}
           </select>
 
-          <span className="filter-label">Size</span>
-          <select value={cardMin} onChange={(e) => setCardMin(Number(e.target.value))}>
+          <label className="filter-label" htmlFor="filter-size">
+            Size
+          </label>
+          <select
+            id="filter-size"
+            value={cardMin}
+            onChange={(e) => setCardMin(Number(e.target.value))}
+          >
             {CARD_SIZES.map(([label, value]) => (
               <option key={value} value={value}>
                 {label}
@@ -1141,13 +1159,24 @@ export default function App() {
              One grid, so the placeholders continue the row the real cards are
              on rather than starting a second block underneath them.
           */
-          <CatalogGrid
-            items={pendingCells(visible, progress && !filtersActive ? progress : null)}
+          <>
+            {/*
+               Grouping already writes an <h2> per section. Without it the grid
+               is a flat run of card titles under the wordmark, so it gets the
+               level it is missing — named for what is actually on screen,
+               which is the filtered set rather than the whole catalog.
+            */}
+            <h2 className="visually-hidden">
+              {filtersActive ? `${visible.length} matching designs` : 'Catalog'}
+            </h2>
+            <CatalogGrid
+              items={pendingCells(visible, progress && !filtersActive ? progress : null)}
             keyFor={(cell) => (cell.kind === 'record' ? cell.record.id : `pending-${cell.index}`)}
             minWidth={cardMin}
           >
-            {(cell) => (cell.kind === 'record' ? renderCard(cell.record) : <SkeletonTile />)}
-          </CatalogGrid>
+              {(cell) => (cell.kind === 'record' ? renderCard(cell.record) : <SkeletonTile />)}
+            </CatalogGrid>
+          </>
         )}
       </main>
 
@@ -1211,6 +1240,7 @@ export default function App() {
         accept="image/*"
         multiple
         className="visually-hidden"
+        tabIndex={-1}
         onChange={(e) => {
           void handleFiles(Array.from(e.target.files ?? []), 'file');
           e.target.value = '';
@@ -1221,6 +1251,7 @@ export default function App() {
         type="file"
         multiple
         className="visually-hidden"
+        tabIndex={-1}
         // @ts-expect-error - non-standard but supported in Chromium, Safari and Firefox
         webkitdirectory=""
         directory=""
@@ -1234,6 +1265,7 @@ export default function App() {
         type="file"
         accept="application/json,.json"
         className="visually-hidden"
+        tabIndex={-1}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) void restoreCatalog(file);

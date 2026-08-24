@@ -18,7 +18,7 @@ export function EmptyState({
   if (filtered) {
     return (
       <div className="empty">
-        <h1>No designs match</h1>
+        <h2>No designs match</h2>
         <p>Nothing in the catalog fits the current search and filters.</p>
         <div className="empty-actions">
           <button type="button" className="btn" onClick={onClearFilters}>
@@ -31,7 +31,7 @@ export function EmptyState({
 
   return (
     <div className="empty">
-      <h1>Your catalog is empty</h1>
+      <h2>Your catalog is empty</h2>
       <p>
         Paste a screenshot, drop a folder of them, or pick files. Each one is analysed on
         the spot — palette, contrast, layout structure — and filed as a vignette with a

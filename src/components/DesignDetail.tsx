@@ -188,6 +188,13 @@ export function DesignDetail({
 
         <div className="detail-side">
           <header className="detail-head">
+            {/*
+               The title on screen is an editable input, which is right — it is
+               the field you rename a design in — but an input is not a heading,
+               and the drawer had no heading at all. A screen reader navigating
+               by heading landed nowhere inside it.
+            */}
+            <h2 className="visually-hidden">{draft.title}</h2>
             <div className="detail-head-row">
               <input
                 className="detail-title"

@@ -62,6 +62,18 @@ export function usePinchZoom(scrollerFor: (target: HTMLElement) => HTMLElement |
     { dist: number; zoom: Zoom; cx: number; cy: number; ox: number; oy: number } | null
   >(null);
   const lastTap = useRef(0);
+  /**
+   * The scroller this gesture is driving, resolved once when it starts.
+   *
+   * Finding it walks up the ancestors calling getComputedStyle and reading
+   * scrollHeight against clientHeight — both of which force layout — and that
+   * was happening on every pointermove, immediately before writing scrollTop.
+   * Read, write, read again at up to 120Hz, in the handler whose whole purpose
+   * is to make dragging over the picture feel smooth. It cannot change
+   * mid-gesture, so it is looked up on the way down and forgotten on the way
+   * up.
+   */
+  const scroller = useRef<HTMLElement | null>(null);
 
   const reset = useCallback(() => setZoom({ scale: 1, x: 0, y: 0 }), []);
 
@@ -80,6 +92,7 @@ export function usePinchZoom(scrollerFor: (target: HTMLElement) => HTMLElement |
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     const el = event.currentTarget;
     el.setPointerCapture(event.pointerId);
+    if (points.current.size === 0) scroller.current = scrollerFor(el);
     points.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (points.current.size === 2) {
       // The transformed box keeps its centre at (origin + translation), so the
@@ -132,14 +145,14 @@ export function usePinchZoom(scrollerFor: (target: HTMLElement) => HTMLElement |
          pane cannot do it itself — `touch-action: none` is what lets the pinch
          be ours — so the movement is handed to the scroller directly.
       */
-      const scroller = scrollerFor(event.currentTarget);
-      if (scroller) scroller.scrollTop -= dy;
+      if (scroller.current) scroller.current.scrollTop -= dy;
     }
   };
 
   const release = (event: ReactPointerEvent<HTMLElement>) => {
     points.current.delete(event.pointerId);
     if (points.current.size < 2) anchor.current = null;
+    if (points.current.size === 0) scroller.current = null;
   };
 
   const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
