@@ -406,6 +406,23 @@ Leave sync switched off and use **⬇** / **⬆** in the header, which write and
 a single backup file holding every design. That moves a catalog between machines by
 hand, with nothing leaving them in between.
 
+## Deleting, and changing your mind
+
+Deleting a design does not destroy it. The record and its image stay on the machine
+and stop being listed, so the **Undo** in the toast puts it straight back — there is
+no dialog in front of a delete, because an undo you can reach is a better guard than
+one more thing to dismiss. Anything still in the bin after thirty days is applied for
+real on the next launch.
+
+The deletion still reaches your other devices immediately: what is kept is this
+machine's own copy, not the design's place in the catalog. Undoing it puts the design
+back everywhere, because a restore is newer than the deletion it undoes and the most
+recent edit is what wins.
+
+**Delete entire catalog**, in the sync panel under *Danger zone*, is the exception. It
+removes every design on the device at once, it is not staged, and nothing undoes it —
+take a backup first.
+
 ## Backups
 
 The catalog lives in the browser profile you use, and each profile has its own.
@@ -424,6 +441,8 @@ src/
     layout.ts      column, section, margin and density heuristics
     image.ts       decoding, thumbnailing, pixel sampling
     analyze.ts     orchestrates analysis and seeds a spec from it
+    analyze.worker.ts   the same analysis, off the main thread
+    analyze-client.ts   talks to the worker, and falls back to the page
     title.ts       decides whether a filename is worth keeping as a title
     naming.ts      names a design when it is not — evocative, and deterministic
     grouping.ts    the sort and group-by options behind the grid controls
