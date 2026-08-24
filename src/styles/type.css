@@ -6,23 +6,25 @@
    Nothing was recorded for the families — a bitmap cannot hold them — so this
    is a choice.
 
-   ONE face, not two. "Flint Panorama" alternates between a light and a
-   semibold across its five measured steps and never uses anything between
-   them; the serif that used to sit over this app has a single 500 cut, which
-   cannot set an H1 the spec measures as light. Public Sans is variable across
-   the whole range, so it can.
+   ONE face, not two. "Copper Panorama" measures three steps and spends its
+   contrast on weight rather than shape: the two large ones are light and the
+   smallest is the bold, a 4px stem on 14px of ink. That inversion needs a 300
+   and a 700 out of the same family, and the serif that used to sit over this
+   app has a single 500 cut, which can set neither end of it. Public Sans is
+   variable across the whole range, so it can.
 
-   It is also the right character for the page. This design holds no hue, no
-   texture and almost no elevation — what it has is space and tracking, and a
-   plain grotesque is what lets those be the event. The serif file is deleted
-   rather than shipped unused.
+   It is also the right character for the page. The hue here is spent in two
+   places — the copper accent and the toolbar band — and everything else is
+   ground, space and tracking. A plain grotesque set in capitals is what lets
+   those be the event without competing for the colour. The serif file is
+   deleted rather than shipped unused.
 */
 
 /*
    One variable file rather than static cuts: Google serves the same variable
    font for every weight asked of this family now, so declaring the range is
    honest — and here the range is the point, since the design wants a 300 and a
-   600 out of the same face.
+   700 out of the same face.
 */
 @font-face {
   font-family: 'Public Sans';

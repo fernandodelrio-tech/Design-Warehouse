@@ -1398,6 +1398,26 @@ kbd {
   max-width: 380px;
 }
 
+.sync-loading {
+  margin: 0;
+  padding: var(--s5) 0;
+  color: var(--text-faint);
+  font-size: var(--t-small);
+}
+
+.toast-region {
+  display: contents;
+}
+
+/*
+   The 3px accent border this used to wear is gone.
+
+   It was the only thing separating an error from a success, and in a palette
+   measured off a screenshot with no red and no green in it, --danger is the
+   body-text ink and --success is a brown — so the two states rendered as very
+   nearly the same toast. Severity is a mark and a word now, and the border is
+   back to the one hairline every other panel in this design carries.
+*/
 .toast {
   display: flex;
   align-items: flex-start;
@@ -1405,19 +1425,65 @@ kbd {
   padding: var(--s3) var(--s4);
   background: var(--bg-elevated);
   border: var(--edge);
-  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
   box-shadow: var(--lift);
   font-size: var(--t-small);
   animation: toast-in 0.18s ease;
 }
 
-.toast.error {
-  border-left-color: var(--danger);
+.toast-mark {
+  display: flex;
+  flex: none;
+  /* Optical: the cap-height of the first line, not the line box. */
+  margin-top: 1px;
+  color: var(--text-faint);
 }
 
-.toast.success {
-  border-left-color: var(--success);
+.toast-error .toast-mark {
+  color: var(--accent);
+}
+
+.toast-body {
+  flex: 1;
+  margin: 0;
+}
+
+/*
+   An error outlives the moment it was raised, so it needs a way out. The
+   transient kinds carry the same control rather than a second layout: one
+   toast shape, and the difference is how long it stays.
+*/
+.toast-dismiss {
+  /*
+     The only part of a toast that catches a pointer. The stack above is
+     deliberately transparent to them so a swipe that starts on a message
+     still reaches the drawer behind it — re-enabling the whole toast to get
+     this control back would undo that, so only the target does.
+  */
+  pointer-events: auto;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s5);
+  height: var(--s5);
+  margin: calc(var(--s1) * -1) calc(var(--s2) * -1) 0 0;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  cursor: pointer;
+}
+
+.toast-dismiss:hover {
+  border-color: var(--border);
+  color: var(--text-loud);
+}
+
+.toast-dismiss:focus-visible {
+  box-shadow: var(--focus-shadow);
+  outline: none;
 }
 
 @keyframes toast-in {
@@ -1456,7 +1522,11 @@ kbd {
      A container that cannot scroll must not advertise that it can.
   */
   overflow: hidden;
-  background: color-mix(in srgb, #2b1b21 66%, transparent);
+  /* The scrim takes the masthead's own ink. This was a literal #2b1b21 — a
+     token from a superseded palette, and the only hard-coded colour left in
+     this file — so it kept the previous design's ground while every surface
+     around it moved on, and did not answer the theme at all. */
+  background: color-mix(in srgb, var(--chrome) 66%, transparent);
   display: flex;
   justify-content: center;
   /*

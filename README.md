@@ -49,43 +49,51 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Vermilion Frontispiece**, a design catalogued in the app itself and then
+The app wears **Copper Panorama**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#fdf1ee` `#ffffff` `#8f40c5` `#e37658` `#9c515b` `#9b4a96` `#2b1b21` `#c67080` |
+| **Colour** | Eight measured tokens, exact — `#fbf7ec` `#e4dbcc` `#a1593e` `#322d2f` `#c5b4a1` `#a89b8b` `#917662` `#c08b55` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
-| **Page inset** | 5% left and right |
-| **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale |
-| **Corners** | 8px — a frontispiece is a plate, and this design is panels on a ground rather than rules |
-| **Faces** | Young Serif for the wordmark and headings, Hanken Grotesk for everything else |
+| **Page inset** | 4% left, 1% right — asymmetric, as measured, rather than tidied into a symmetry the capture does not have |
+| **Type scale** | 12 · 14 · 17 · 24 · 34, and a head that clamps between 30 and 47 |
+| **Corners** | 24px — one radius, used everywhere, large enough that a 35px control reads as a lozenge |
+| **Faces** | Public Sans, one variable file, cut at 300 and 700 |
 
-A generous palette: **10 of the 28 pairs clear 4.5:1**. Two things about it shape the
-whole skin.
+**The accent is allowed to be a letter.** `#a1593e` is 4.89:1 on the page — AA, measured,
+and reported as a pass rather than a failure — so for once the colour a spec calls
+"primary action, links, highlights" can actually be one. On the surface it drops to 3.81,
+so there it is a fill and not type, and the app's own contrast walk is what holds that
+line.
 
-**Three of the tokens sit within 0.006 of one another in luminance** — the purple, the
-maroon and the magenta — so they cannot stack into a hierarchy, but they all clear AA on
-both light grounds. They are spent on *hue* rather than on level: the maroon is the
-faintest text, the purple is what focus looks like, and the magenta is a mark. A coloured
-secondary tier is something this palette can afford and none of the previous four could.
+**The hover convention inverts.** The spec says hover shifts an accent toward the light,
+and gives its reason: darkening a saturated accent drops its own label below AA. That
+reasoning assumes a dark label. Here the copper takes the page colour at 4.89 and the ink
+at 2.59, so the label is light — and lightening the fill is what would drop it. The
+reasoning transfers and the direction does not: hover goes darker, to the measured
+`#844e38`, and the pair opens from 4.89 to 6.27.
 
-**And the vermilion carries the ink at 5.46:1** while failing at 2.71 as type on the
-page. That is the ordinary shape of an accent, and it means the primary button is a
-filled one again rather than the outlined one Scarlet Threshold had to settle for.
+**Two measured bands, and the app has two slots for them.** A `#2b2b2b` footer, which
+becomes the masthead and carries four levels on it — the page colour at 13.23, the
+surface at 10.32, the muted at 7.02 and muted-4 at 4.76 — and a copper toolbar of five
+controls on one baseline, which is exactly what the filter row is.
 
-**The evening edition.** The three mid tokens that carry the light theme's colour all die
-on the ink — 2.89, 2.92 and 2.98 — so none survives the inversion, and each is lifted
-toward the blush until it reads. The vermilion needs no help: it clears 5.46 on the ink
-as type *and* still carries the ink as a fill, the one token that means the same thing in
-both themes.
+**All three type steps are capitals, and the smallest is the only bold one.** A 4px stem
+on 14px of ink where the two above it are light. The heavy end of this design is its
+labels, which is why the app's base weight is a 300 and its "semibold" a 700.
+
+**The evening edition.** The dark theme is derived rather than inverted: its ground is the
+capture's own measured footer band, not the light theme turned upside down. The copper
+needs no help across the change — it clears AA on the ink as type *and* still carries the
+ink as a fill, the one token that means the same thing in both themes.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
 
-The two faces are self-hosted from `src/styles/fonts/` — 80 KB of latin-subset woff2,
-five static instances. The app has to work with the network switched off, and opening it
-should not tell a font CDN that you did.
+The face is self-hosted from `src/styles/fonts/` — a single 27 KB latin-subset variable
+woff2. The app has to work with the network switched off, and opening it should not tell
+a font CDN that you did.
 
 ## Getting designs in
 

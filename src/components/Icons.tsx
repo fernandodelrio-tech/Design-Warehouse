@@ -126,3 +126,32 @@ export const IconCloud = ({ size = 15, connected = false }: Props & { connected?
     )}
   </svg>
 );
+
+/*
+   Severity marks. The catalogue's palette is measured off a screenshot and
+   holds no red and no green, so --danger and --success are an ink and a brown
+   in the light theme and a cream and a tan in the dark one. Hue cannot carry
+   severity here. These do, alongside the word.
+*/
+export const IconAlert = ({ size = 15 }: Props) => (
+  <svg {...base(size)}>
+    <path d="M12 4.5 2.8 20h18.4z" />
+    <path d="M12 10.5v4" />
+    <path d="M12 17.4h.01" />
+  </svg>
+);
+
+export const IconCheck = ({ size = 15 }: Props) => (
+  <svg {...base(size)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="m8.2 12.2 2.6 2.6 5-5.2" />
+  </svg>
+);
+
+export const IconInfo = ({ size = 15 }: Props) => (
+  <svg {...base(size)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 11v5" />
+    <path d="M12 7.9h.01" />
+  </svg>
+);

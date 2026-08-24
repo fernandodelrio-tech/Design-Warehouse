@@ -104,6 +104,20 @@ function searchIndex(record: DesignRecord): string {
     .toLowerCase();
 }
 
+/**
+ * Names the files that failed, and stops before the list becomes its own
+ * problem. Three is enough to recognise what went wrong — a run of HEIC, a
+ * half-copied directory — and a count carries the rest.
+ */
+function nameList(failed: Array<{ name: string; reason: string }>): string {
+  const names = failed.map((f) => f.name);
+  if (names.length <= 3) {
+    if (names.length === 1) return names[0];
+    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  }
+  return `${names.slice(0, 3).join(', ')} and ${names.length - 3} more`;
+}
+
 export default function App() {
   const notify = useNotify();
   const [records, setRecords] = useState<DesignRecord[]>([]);
@@ -126,9 +140,10 @@ export default function App() {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
-  // "Flint Panorama" is a light design — a #e2e1dd page with a black band and a
-  // near-black field punched into it — so light is the resting state and the
-  // dark theme is the derived one.
+  // "Copper Panorama" is a light design — a #fbf7ec page carrying a #2b2b2b
+  // band and a copper toolbar — so light is the resting state and the dark
+  // theme is the derived one, built from that measured band rather than by
+  // inverting the light one.
   const [theme, setTheme] = useState<'dark' | 'light'>(
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
   );
@@ -229,11 +244,26 @@ export default function App() {
         if (report.added.length) {
           parts.push(`Catalogued ${report.added.length} design${report.added.length === 1 ? '' : 's'}.`);
         }
-        if (report.skipped.length) parts.push(`Skipped ${report.skipped.length} non-image file(s).`);
-        if (report.failed.length) parts.push(`${report.failed.length} could not be read.`);
+        // Skipping a readme in a folder of screenshots is the documented
+        // behaviour, not a fault, so it never colours the whole import.
+        if (report.skipped.length) {
+          parts.push(
+            `Skipped ${report.skipped.length} non-image file${report.skipped.length === 1 ? '' : 's'}.`,
+          );
+        }
+        /*
+           A file that could not be read is named.
+
+           This used to report a bare count inside a toast marked success,
+           which auto-expired: on a folder of two hundred screenshots the one
+           that failed was unidentifiable and then gone. The names are what
+           make it actionable, and the failure is what sets the kind — a run
+           that half worked is not a success.
+        */
+        if (report.failed.length) parts.push(`Could not read ${nameList(report.failed)}.`);
         notify(
           parts.join(' ') || 'Nothing to import.',
-          report.added.length ? 'success' : 'error',
+          report.failed.length ? 'error' : report.added.length ? 'success' : 'error',
         );
       } catch (err) {
         notify(err instanceof Error ? err.message : 'Import failed.', 'error');
