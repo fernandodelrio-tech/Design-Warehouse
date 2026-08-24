@@ -1,27 +1,26 @@
 /* -----------------------------------------------------------------------------
-   COPPER PANORAMA
+   TANGERINE LONGFORM
 
-   The first of these with an accent that is allowed to be a letter. #a1593e is
-   4.89 on the page — AA, measured, reported as a pass rather than a failure —
-   so for once the colour a spec calls "primary action, links, highlights" can
-   actually be one. On the surface it drops to 3.81, so it is a fill there and
-   not type, and the app's contrast walk is what holds that line.
+   EVERY TYPE ROW MEASURED HERE IS REVERSED. H2 is set in #f8f8f8, H3 in
+   #e7e8e7, Body in #f8f8f8 — the page colour and a hair off it — and all three
+   are capitals. Not one of the sixteen text rows in this capture is dark type
+   on a light ground, which for a design whose page is #f8f8f8 means the type
+   this spec records lives entirely on dark fills. So the masthead is the ink,
+   at 15.76, and it carries four levels where nothing else here carries three.
 
-   THE HOVER CONVENTION INVERTS. The spec says hover shifts the accent toward
-   the light, and gives its reason: darkening a saturated accent drops its own
-   label below AA. That reasoning assumes a DARK label. Here the copper takes
-   the page colour at 4.89 and the ink at 2.59, so the label is light — and
-   lightening the fill is what would drop it. The reasoning transfers and the
-   direction does not: hover goes darker, to the measured #844e38, and the pair
-   opens from 4.89 to 6.27.
+   THE ACCENT CANNOT BE A LETTER, and the spec says so twice: #f0be74 is 1.60
+   on the page and 1.35 on the surface, both reported as failures, and the
+   accessibility section repeats the pair. Knock the ink out of it and it is
+   9.82 — so the apricot fills the one primary action and marks the focus ring,
+   and nothing is ever written in it. Hover goes toward the light exactly as
+   the spec argues, because here the label really is the ink: 9.82 to 12.18.
 
-   TWO MEASURED BANDS, and the app has two slots for them: a #2b2b2b footer,
-   which becomes the masthead, and a copper toolbar of five controls on one
-   baseline, which is exactly what the filter row is.
+   NO COMPONENTS. Thirty-nine solid regions and no repeat among them — "a
+   single composition rather than a component set" — so every size in this app
+   is its own and none of it is a claim.
 
-   ALL THREE TYPE STEPS ARE CAPITALS, and the smallest of them is the only bold
-   one — a 4px stem on 14px of ink where the two above it are light. The heavy
-   end of this design is its labels.
+   THE TEXTURE IS BACK, and it is the faintest yet: a woven relief over 51% of
+   the flat area at 2.9/255, which is about 1% of alpha either way.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
@@ -30,136 +29,135 @@
   color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     background #fbf7ec 48%   text    #322d2f 18%   accent  #a1593e 10%
-     surface    #e4dbcc  7%   muted   #c5b4a1  5%   muted-2 #a89b8b  4%
-     muted-3    #917662  4%   muted-4 #c08b55  3%
-     radius 24px · 1px #dad9d3 border on 6 of 42 blocks, 36 borderless
-     elevation 7px of falloff at 29/255, offset 7px LEFT and 6px down, on 7
-     footer  full-width band ~176px in #2b2b2b, borderless, no shadow
-     toolbar 5 controls of ~135x35px, 72px apart, in #ab5d3f,
-       1px #b38470 border on 3 of 5, 6px shadow
-     avatar  2 circles of ~30px in #5c3517
-     type    H3 91px light · Body 33px light · Small 14px BOLD, all capitals
-     gutter ~14px · content 1290px of 1364, 4% left and 1% right
-     dense: 38% of the canvas carries detail                              */
+     background #f8f8f8 35%   text    #1d1e1c 20%   surface #e4e5e6 16%
+     muted      #9eacb5  9%   muted-2 #becad5  7%   muted-3 #738895  7%
+     muted-4    #675542  4%   accent  #f0be74  2%
+     radius 15px · 1px #3f3f3f border on 4 of 39 blocks, 35 borderless
+     elevation 7px of falloff at 44/255, offset 7px RIGHT and nothing down, on 5
+     ramps on 6 of 39 · strongest vertical #708d9f -> #94a1aa, 25/255
+     type H2 54px medium · H3 15px bold · Body 10px light, ALL reversed capitals
+     texture woven relief over 51% of the flat area at 2.9/255
+     content 1040px of 1050, 0px left and 10px right · dense, 32% detail   */
 
-  --bg: #fbf7ec;
-  /* Darker than the page, like the last light design and unlike the four
-     before it: a raised thing here is a deeper beige, not a paler one. */
-  --bg-elevated: #e4dbcc;
-  --surface: #e4dbcc;
-  --surface-hover: #f0e9dc;
+  --bg: #f8f8f8;
+  /* The surface is darker than the page, and hover goes the other way — to
+     halfway between the surface and white, since "one step toward the light"
+     from a #e4e5e6 panel on an #f8f8f8 page has nowhere else to go. */
+  --bg-elevated: #e4e5e6;
+  --surface: #e4e5e6;
+  --surface-hover: #f2f2f3;
   /*
-     The masthead is the measured FOOTER band. Its slot moves — the capture's
-     sits at the bottom and is 176px tall, which the app's bar cannot be — but
-     what it is does not: a full-width dark band, borderless, with no shadow.
-     It carries four levels, more than any ground in this palette: the page
-     colour at 13.23, the surface at 10.32, the muted at 7.02 and muted-4 at
-     4.76.
+     The masthead is the ink. Every type row in this capture is reversed out of
+     something dark, and #1d1e1c is the only measured colour dark enough to
+     carry all of them: the page colour at 15.76, the H3's own #e7e8e7 at
+     13.62, the pale blue at 10.04 and the accent itself at 9.82.
   */
-  --chrome: #2b2b2b;
+  --chrome: #1d1e1c;
   /*
-     The measured TOOLBAR: five controls of ~135x35px on one baseline, which is
-     what the filter row is. Its own sample is #ab5d3f and the page colour
-     lands on that at 4.49 — a hundredth under AA — so the band takes the
-     accent the token table names instead, ten levels darker, where the same
-     colour reads 4.89. Two measurements of one copper; the one that passes
-     wins.
+     The one ramp worth spending, and it goes where nothing is read: the
+     strongest measured is #708d9f to #94a1aa, and the lightest ink in this
+     palette reaches 3.30 at its head and 2.49 at its foot. It cannot carry a
+     word, so it lines the thumbnail wells.
   */
-  --toolbar: #a1593e;
+  --ramp-well: linear-gradient(to bottom, #708d9f, #94a1aa);
 
   /*
-     Two border tokens and a third for the affordances. #b38470 is the rule
-     measured on three of the toolbar's five controls, and at 3.04 it is just
-     enough for something that has to be found. #dad9d3 is the measured
-     hairline, on six blocks of forty-two, and at 1.32 it divides and nothing
-     more.
+     Two border tokens. #3f3f3f is the measured rule — on four blocks of
+     thirty-nine — and at 9.92 it is far more than a control needs to be found.
+     #97abb4 is the hairline the behaviour section names, and at 2.25 it
+     divides and nothing more.
   */
-  --border: #b38470;                                        /* measured, 3.04 */
-  --rule: #dad9d3;                                          /* measured, 1.32 */
-  --rule-heavy: #c5b4a1;
-  --border-strong: #322d2f;
+  --border: #3f3f3f;                                        /* measured, 9.92 */
+  --rule: #97abb4;                                          /* named, 2.25 */
+  --rule-heavy: #9eacb5;
+  --border-strong: #1d1e1c;
 
   /*
-     Three levels. The first is measured; the two under it are the measured
-     muted-3 carried toward the ink, because at 3.95 on the page and 3.08 on
-     the surface it cannot be type on either.
+     Three levels. The first and the third are measured; the middle one is the
+     measured muted-3 carried toward the ink, because at 3.48 on the page it
+     cannot be type on either ground.
   */
-  --text: #322d2f;                                 /* 12.64 page · 9.86 surface */
-  --text-muted: #4f433e;                           /* 8.90 · 6.94 */
-  --text-faint: #6b594e;                           /* 6.20 · 4.84 */
-  --text-loud: #322d2f;
-  --ink-on-bg: #322d2f;
-  --mark: #917662;                                 /* 3.95 — measured, never type */
-
-  /* The ring the spec names, and the first one in six designs that works as
-     named: the accent is 4.89 on the page, comfortably past the 3:1 an
-     indicator has to clear. */
-  --focus: #a1593e;
-  --focus-ring: #c5b4a1;
-
-  --accent: #a1593e;                                        /* 4.89 — a real link */
-  /* DARKER on hover, against the spec's direction and with its reasoning: this
-     label is the page colour, not the ink, so the pair opens by going down.
-     #844e38 is measured — it is the colour the capture's own H3 is set in. */
-  --accent-strong: #844e38;                                 /* 6.27 */
-  --accent-soft: #e4dbcc;
-  --accent-deep: #5c3517;                                   /* the avatar fill, 9.92 */
-  --on-fill: #fbf7ec;
-  --on-deep: #fbf7ec;
-
-  --muted-fill: #c5b4a1;
-  --muted-fill-2: #a89b8b;
-  --muted-fill-3: #c08b55;
+  --text: #1d1e1c;                                 /* 15.76 page · 13.27 surface */
+  --text-muted: #444e52;                           /* 8.05 · 6.78 — derived */
+  --text-faint: #675542;                           /* 6.69 · 5.63 — measured */
+  --text-loud: #1d1e1c;
+  --ink-on-bg: #1d1e1c;
+  --mark: #738895;                                 /* 3.48 — measured, never type */
 
   /*
-     Derived. Copper, tan, brown and a near-black — no red, no green — so the
-     states are tone. Danger is the ink rather than the copper, because the
-     copper is already the primary and a warning that looks like the main
-     action is worse than one that looks severe.
+     The spec asks for a 2px ring in the accent, offset 2px from the #97abb4
+     hairline. The accent alone is 1.60 against this page and a focus indicator
+     has to clear 3:1 against what is beside it — so the apricot is the ring
+     you see and the ink is drawn just outside it.
   */
-  --success: #5c3517;                                       /* page on it 9.92 */
-  --warning: #c08b55;                                       /* ink on it 4.55 */
-  --danger: #322d2f;                                        /* page on it 12.64 */
-  --on-success: #fbf7ec;
-  --on-warning: #322d2f;
-  --on-danger: #fbf7ec;
+  --focus: #1d1e1c;
+  --focus-ring: #f0be74;
 
-  /* --- measured: the DECISIONS -------------------------------------------
-     The four that used to stay on the home screen. Set once, consumed
-     everywhere — the drawer included. */
-  /* Thirty-six of forty-two blocks are borderless. */
+  --accent: #f0be74;                                        /* a fill, never type */
+  /* Toward the light, and here the spec's reasoning holds without inverting:
+     this label IS the ink, so lightening the fill opens the pair from 9.82 to
+     12.18 rather than closing it. */
+  --accent-strong: #f4d8af;
+  --accent-soft: #becad5;
+  --accent-deep: #675542;
+  --on-fill: #1d1e1c;                                       /* 9.82 on the apricot */
+  --on-deep: #f8f8f8;                                       /* 6.69 on the brown */
+
+  --muted-fill: #becad5;
+  --muted-fill-2: #9eacb5;
+  --muted-fill-3: #738895;
+
+  /*
+     Derived. An apricot, a brown and three blue-greys — no red and no green —
+     so the states are tone, and each is marked by more than its fill. Danger
+     is the measured #3f3f3f with the page knocked out of it, which is the
+     nearest this palette comes to severe.
+  */
+  --success: #becad5;                                       /* ink on it 10.04 */
+  --warning: #f0be74;                                       /* ink on it 9.82 */
+  --danger: #3f3f3f;                                        /* page on it 9.92 */
+  --on-success: #1d1e1c;
+  --on-warning: #1d1e1c;
+  --on-danger: #f8f8f8;
+
+  /* --- measured: the DECISIONS ------------------------------------------- */
+  /* Thirty-five of thirty-nine blocks are borderless. */
   --edge: 1px solid transparent;
-  /* Three of the toolbar's five controls carry a rule, and a control needs one
-     to be found whatever the blocks do. */
+  /* The measured rule, which is a control's edge here: 9.92 on the page. */
   --edge-control: 1px solid var(--border);
-  --edge-dashed: 1px dashed var(--border);
-  /* Seven of forty-two are lifted, so raised things are. */
+  --edge-dashed: 1px dashed var(--rule-heavy);
+  /* Five of thirty-nine are lifted. */
   --lift-sm: var(--shadow-sm);
   --lift: var(--shadow);
   --lift-lg: var(--shadow-lg);
-  /* All three measured type steps are capitals. */
+  /* All three measured steps are capitals. */
   --case: uppercase;
   --focus-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 3px var(--focus);
 
-  /* --- measured: corners --------------------------------------------------
-     One radius, and it is large: 24px. On a 35px control that clamps to a
-     pill, which is what a 24px corner on a 35px box means. */
-  --radius-sm: 24px;
-  --radius: 24px;
-  --radius-lg: 24px;
+  /* --- measured: corners -------------------------------------------------- */
+  --radius-sm: 15px;
+  --radius: 15px;
+  --radius-lg: 15px;
 
   /* --- measured: elevation ------------------------------------------------
-     Tight, and thrown DOWN AND TO THE LEFT: 7px of falloff reaching 29/255,
-     7px further left than right and 6px further down than up. That is a 7px
-     blur at a -4px, 3px offset — the smallest shadow measured in any of these
-     and the first in four designs to fall downward at all.
+     Thrown SIDEWAYS. 7px of falloff reaching 44/255, offset 7px to the right
+     and nothing at all up or down — so the shadow sits beside the thing
+     casting it rather than under it. That is a 7px blur at a 4px, 0 offset.
 
-     The alpha follows the ground: this page is 247/255, so a 29-level drop
-     leaves 88% showing and that is black at 0.12. */
-  --shadow-sm: -2px 2px 4px rgb(0 0 0 / 0.08);
-  --shadow: -4px 3px 7px rgb(0 0 0 / 0.12);
-  --shadow-lg: -7px 5px 14px rgb(0 0 0 / 0.16);
+     The alpha follows the ground: this page is 248/255, so a 44-level drop
+     leaves 82% showing and that is black at 0.18. */
+  --shadow-sm: 2px 0 4px rgb(0 0 0 / 0.10);
+  --shadow: 4px 0 7px rgb(0 0 0 / 0.18);
+  --shadow-lg: 7px 0 14px rgb(0 0 0 / 0.24);
+
+  /* --- measured: the surface ----------------------------------------------
+     A woven relief over 51% of the flat area at about 2.9/255 — the faintest
+     texture measured in any of these, and about 1% of alpha either way. Two
+     crossed gratings carry it without an asset to fetch, which keeps it inside
+     the app's own content policy. */
+  --weave:
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.012) 0 1px, transparent 1px 4px);
 
   /* --- measured: spacing scale ------------------------------------------- */
   --s1: 4px;
@@ -172,158 +170,158 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     ASYMMETRIC, which nothing here has been before: 1290px of content in a
-     1364px capture with 64px on the left and 10px on the right — 4% against
-     1%. It is not a centred column that drifted, it is a page hung off its
-     left margin, and it is honoured as measured rather than tidied into a
-     symmetry the capture does not have.
+     THE TWO READINGS DISAGREE and the firmer one wins. The measured max width
+     says 1040px of content in a 1050px capture, 0px on the left and 10px on
+     the right — a page hard against its own left edge. The estimate under it
+     says 5% left and 1% right, which on 1050px is 52px and cannot be the same
+     page. The pixel figure is the measurement; the percentage is called an
+     estimate in its own line, so the frame runs to its edges with the app's
+     smallest step keeping a tile off the window.
 
-     The gutter is ~14px across two gaps and takes the lower step of the
-     scale, because this design is dense: 38% of the canvas carries detail,
-     the highest of any of them. */
-  --page-inset-left: clamp(16px, 4vw, 72px);             /* measured 4% */
-  --page-inset-right: clamp(8px, 1vw, 20px);             /* measured 1% */
-  --page-inset: var(--page-inset-left);
-  --gutter: 12px;                                        /* measured ~14px */
+     No column gap was measured: the content reads as one column. The grid's
+     gutter is therefore the app's own, and it is tight because this design is
+     dense — 32% of the canvas carries detail. */
+  --page-inset: 12px;
+  --page-inset-left: 12px;
+  --page-inset-right: 12px;
+  --gutter: 16px;
 
   /* --- measured: type -----------------------------------------------------
-     Three steps — 91, 33 and 14 px of ink — which is 2.76 between the top two
-     and 2.36 between the bottom two. NEITHER RATIO SURVIVES INTACT. A 2.36
-     step between a body and a label puts the label at 7px off a 17px body,
-     and a body big enough to make the label 12px puts the body at 28. This
-     app has six steps to fill between a chip and a hero; the capture has
-     three, spread across a 1364px marketing page. So the scale widens toward
-     the measurement rather than to it, and the H3 ratio is honoured exactly
-     at the top where there is room for it: 2.76 times the body.
+     Three steps — 54, 15 and 10px of ink — which is 5.4 from the top to the
+     bottom and only 1.5 between the middle and the bottom. That shape is a
+     display line and then two sizes that nearly touch, and it transfers: the
+     app's lede sits at 1.5x its body, and its hero takes the 5.4.
 
-     The leadings need converting before they mean anything. 149px against
-     91px of INK is 1.64, but ink on capitals is about 0.7 of the font size,
-     so the real figure is nearer 1.15 — and that one transfers. Body's 35
-     against 33 converts to 0.74, which no line height can be; it is the pitch
-     of a single row, not a leading. */
+     Body's leading is the one that survives arithmetic. 15px against 10px of
+     ink is 1.5, and unlike every design before it that figure is a plausible
+     line height rather than the pitch between rows on a scroll — so it is used
+     as one. H2's 116 against 54 and H3's 59 against 15 are 2.15 and 3.93,
+     which are not leadings. */
   --t-label: 12px;
   --t-small: 14px;
-  --t-body: 17px;
-  --t-lede: 24px;
-  --t-sub: 34px;
-  --t-head: clamp(30px, 3.8vw, 47px);                    /* 2.76, exactly */
+  --t-body: 16px;
+  --t-lede: 24px;                                        /* 1.5, exactly */
+  --t-sub: 40px;
+  --t-head: clamp(38px, 5.6vw, 86px);                    /* 5.4, exactly */
 
   /*
      --- measured: weight, case and tracking --------------------------------
-     THE SMALL STEP IS THE BOLD ONE. A 4px stem on 14px of ink, where H3 has 5
-     on 91 and Body has 2 on 33 — so the two large steps are light and the
-     label is heavy. That is the inversion this design runs on, and it is why
-     the app's "semibold" is a 700 here and its base weight a 300.
+     Three weights, and they run light at the bottom: Body light on a 1px stem,
+     H2 medium on 10px, H3 bold. The app's base weight is the 300 and its
+     emphasis the 700.
 
-     All three steps are capitals. Body is ranged CENTRE and Small ranged left;
-     the centring goes on the tile footer, which is the app's most repeated
-     row, and running prose keeps its left rag.
+     THE H3 STEM READING IS NOT CREDIBLE and is treated as direction only. An
+     18px stem on 15px of ink is a stroke wider than the letter is tall, which
+     no typeface does — it is a filled shape read as a glyph. "Bold" transfers;
+     the number does not.
 
-     Only the small step is tracked, at +1px on 14px of ink — about 0.05em.
+     All three steps are capitals. H3 is ranged centre, which goes on the tile
+     footer — the app's nearest equivalent — and running prose keeps its left
+     rag. Tracking is normal on all three, so nothing here is tracked but the
+     capitals, which get the small opening they need not to collide.
   */
   --w-light: 300;
   --w-semi: 700;                                         /* the measured bold */
   --track-display: 0;                                    /* measured normal */
-  --track-label: 0.05em;                                 /* measured +1px */
+  --track-label: 0.05em;                                 /* not measured; capitals need it */
   --track-body: 0;                                       /* measured normal */
 
   /* --- chosen: one voice --------------------------------------------------
-     Nothing was recorded for the families. Public Sans, still: this design
-     needs a 300 and a 700 out of one face, sets everything in capitals, and
-     spends its contrast on weight rather than on shape. A variable grotesque
-     with an even colour is what carries a 300 at 17px and a 700 at 12px
-     without either looking like a different family. */
+     Nothing was recorded for the families. Public Sans: this design needs a
+     300 and a 700 out of one face and sets everything in capitals, and a plain
+     grotesque with an even colour is what carries reversed capitals on a
+     near-black band without the counters filling in. Already self-hosted. */
   --font: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-ui: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
 
-  /* The toolbar's control height and the avatar's diameter, both measured. The
-     band they sit in is 176px in the capture and cannot be here, so the bar is
-     the taller of its contents plus a pair of steps. */
-  --topbar-height: 56px;
-  --field-height: 35px;                                  /* measured */
-  --avatar: 30px;                                        /* measured */
-  --avatar-fill: #5c3517;                                /* measured, page on it 9.92 */
+  /* No component was measured in this capture, so every size below is the
+     app's own and none of it is a claim about the design. */
+  --topbar-height: 60px;
+  --field-height: 40px;
+  --avatar: 32px;
+  --avatar-fill: #675542;                                /* measured, page on it 6.69 */
 }
 
-/* --- after hours -------------------------------------------------------------
-   Derived, out of the design's own dark end: the ground is #2b2b2b, the colour
-   measured on its footer band, and the panel is a step along it. The three
-   light tones become the three text levels at 13.23, 10.32 and 7.02 — every
-   one a measured hex. The copper cannot come with them: at 2.71 on this ground
-   it is the one token that has to be lifted, and muted-4 carried toward the
-   page is where it lands. */
+/* --- after dark --------------------------------------------------------------
+   Derived, and it barely has to move: this design's own type is already
+   reversed out of dark fills, so the dark theme is the ground the capture's
+   letters already sit on. #1d1e1c is the page and #2c2d2b the panel; the page
+   colour, the surface and the pale blue become the three levels at 15.76,
+   13.27 and 10.04. The apricot comes with them at 9.82, which is the one thing
+   it could never be on the light side. */
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #2b2b2b;
-  --bg-elevated: #3c3835;
-  --surface: #3c3835;
-  --surface-hover: #4b4642;
-  --chrome: #1f1f1f;
-  --toolbar: #a1593e;
+  --bg: #1d1e1c;
+  --bg-elevated: #2c2d2b;
+  --surface: #2c2d2b;
+  --surface-hover: #3f3f3f;
+  --chrome: #131413;
+  --ramp-well: linear-gradient(to bottom, #708d9f, #94a1aa);
 
-  --border: #c08b55;                                       /* 4.76 on the ground */
-  --rule: #4b4642;
-  --rule-heavy: #5e5852;
-  --border-strong: #fbf7ec;
+  --border: #9eacb5;                                       /* 7.19 on the page */
+  --rule: #3f3f3f;
+  --rule-heavy: #4e4f4d;
+  --border-strong: #f8f8f8;
 
-  --text: #fbf7ec;                                 /* 13.23 page · 10.84 surface */
-  --text-muted: #e4dbcc;                           /* 10.32 · 8.46 */
-  --text-faint: #c5b4a1;                           /* 7.02 · 5.76 */
-  --text-loud: #fbf7ec;
-  --ink-on-bg: #fbf7ec;
-  --mark: #917662;
+  --text: #f8f8f8;                                 /* 15.76 page · 13.03 surface */
+  --text-muted: #e4e5e6;                           /* 13.27 · 10.97 */
+  --text-faint: #becad5;                           /* 10.04 · 8.30 */
+  --text-loud: #f8f8f8;
+  --ink-on-bg: #f8f8f8;
+  --mark: #738895;
 
-  --focus: #cca173;
-  --focus-ring: #5e5852;
+  --focus: #f8f8f8;
+  --focus-ring: #f0be74;
 
-  --accent: #cca173;                                       /* 6.01 · 4.93 */
-  --accent-strong: #dec1a1;
-  --accent-soft: #4b4642;
-  --accent-deep: #5c3517;
-  --on-fill: #2b2b2b;
-  --on-deep: #fbf7ec;
+  --accent: #f0be74;                                       /* 9.82 · 8.12 */
+  --accent-strong: #f4d8af;
+  --accent-soft: #3f3f3f;
+  --accent-deep: #675542;
+  --on-fill: #1d1e1c;
+  --on-deep: #f8f8f8;
 
-  --muted-fill: #5e5852;
-  --muted-fill-2: #4b4642;
-  --muted-fill-3: #917662;
+  --muted-fill: #4e4f4d;
+  --muted-fill-2: #3f3f3f;
+  --muted-fill-3: #738895;
 
-  --success: #c5b4a1;
-  --warning: #c08b55;
-  --danger: #fbf7ec;
-  --on-success: #2b2b2b;
-  --on-warning: #2b2b2b;
-  --on-danger: #2b2b2b;
+  --success: #becad5;
+  --warning: #f0be74;
+  --danger: #f8f8f8;
+  --on-success: #1d1e1c;
+  --on-warning: #1d1e1c;
+  --on-danger: #1d1e1c;
 
-  --avatar-fill: #5c3517;
+  --avatar-fill: #675542;
 }
 
 /*
-   The masthead wears the measured footer band. It is the richest ground in the
-   palette: four levels read on #2b2b2b — the page colour at 13.23, the surface
-   at 10.32, the muted at 7.02, muted-4 at 4.76 — where the light side manages
-   three and the surface manages two.
+   The band, and the only typography this capture records: the page colour, in
+   capitals, reversed out of the ink. Four levels read on #1d1e1c — the page at
+   15.76, the H3's own #e7e8e7 at 13.62, the pale blue at 10.04 and the apricot
+   at 9.82 — which is one more than any ground in the light theme carries and
+   the reason the masthead is this colour rather than the measured hairline.
 */
 .topbar {
-  --text: #fbf7ec;
-  --text-muted: #e4dbcc;
-  --text-faint: #c5b4a1;
-  --border: #917662;
-  --rule: #4b4642;
-  --surface: #3c3835;
-  --surface-hover: #4b4642;
-  --focus: #c08b55;
-  --focus-ring: #5e5852;
-  --accent: #c08b55;
-  --accent-strong: #cca173;
-  --accent-soft: #3c3835;
-  --on-fill: #2b2b2b;
-  --on-deep: #2b2b2b;
-  --mark: #c5b4a1;
+  --text: #f8f8f8;
+  --text-muted: #e7e8e7;
+  --text-faint: #becad5;
+  --border: #9eacb5;
+  --rule: #3f3f3f;
+  --surface: #2c2d2b;
+  --surface-hover: #3f3f3f;
+  --focus: #f8f8f8;
+  --focus-ring: #f0be74;
+  --accent: #f0be74;
+  --accent-strong: #f4d8af;
+  --accent-soft: #3f3f3f;
+  --on-fill: #1d1e1c;
+  --on-deep: #1d1e1c;
+  --mark: #becad5;
   background: var(--chrome);
   color: var(--text);
 }
@@ -339,9 +337,15 @@ body,
 
 body {
   margin: 0;
-  /* Flat to the pixel, at any scale — the texture pass found none, so the
-     ground is one colour and nothing is laid over it. */
-  background: var(--bg);
+  /*
+     THE WOVEN GROUND. Measured over 51% of the flat area — which on this page
+     is the page — at about 2.9/255, the faintest of any of these: roughly 1%
+     of alpha either way. It is a material rather than a noise filter, and the
+     spec says to expect the surfaces to read as plastic without it.
+  */
+  background: var(--weave), var(--bg);
+  background-color: var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   font-size: var(--t-body);
@@ -724,31 +728,13 @@ select {
   flex-wrap: wrap;
   padding: var(--s3) var(--page-inset-right) var(--s3) var(--page-inset-left);
   /*
-     THE MEASURED TOOLBAR, and it is the one component in this capture that
-     maps onto the app one-for-one: five controls of ~135x35px on a single
-     baseline, filled copper. So the filter row is copper, and its contents
-     take the page colour at 4.89 — the accent's own reading, and the reason
-     the band is #a1593e rather than the #ab5d3f the toolbar itself sampled at,
-     which lands at 4.49.
+     No component was measured in this capture, so the filter row is the app's
+     own: the measured surface, closed by the hairline the behaviour section
+     names. Quiet, because thirty-five of thirty-nine blocks here are
+     borderless and this one is not a band the design records.
   */
-  background: var(--toolbar);
-  --text: #fbf7ec;
-  --text-muted: #fbf7ec;
-  --text-faint: #fbf7ec;
-  --border: #b38470;                          /* the measured rule, on 3 of 5 */
-  --rule: #b38470;
-  --surface: #8f4e35;
-  --surface-hover: #7c4229;
-  --focus: #fbf7ec;
-  --focus-ring: #e4dbcc;
-  --accent: #fbf7ec;
-  --accent-strong: #ffffff;
-  --accent-soft: #8f4e35;
-  --on-fill: #a1593e;
-  --on-deep: #a1593e;
-  --mark: #fbf7ec;
-  color: var(--text);
-  border-bottom: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
 }
 
 .filters select {
@@ -962,10 +948,13 @@ select {
 .card-image-placeholder {
   width: 100%;
   height: 100%;
-  /* Flat. Four of the twelve ramps measured here are all accounted for — the
-     hero, the band, the control and the accent — and the other eight blocks
-     are flat fills, which the spec says in as many words not to ramp. */
-  background: var(--surface-hover);
+  /* The strongest measured ramp goes here, on the one surface that carries
+     pictures rather than words: #708d9f to #94a1aa is a blue-grey the
+     lightest ink in this palette reaches only 3.30 on, so it can be itself
+     only where nothing has to be read. Six of thirty-nine blocks are ramped;
+     the other thirty-three are flat, which the spec says in as many words not
+     to ramp. */
+  background: var(--ramp-well);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite linear;
 }
