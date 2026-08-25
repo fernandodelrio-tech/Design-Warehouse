@@ -1,146 +1,177 @@
 /* -----------------------------------------------------------------------------
-   GRAPHITE LONGFORM
+   COPPER PANORAMA
 
-   A dark page at 86% of the canvas, five greys and nothing else — no accent
-   was measured, and the spec says so. Which makes this the first of these the
-   app has worn where colour cannot carry a single meaning on its own: not the
-   primary action, not danger, not a status. All of it goes to type, to fill,
-   to the one rule, and to the words.
+   The first spec this app has worn that carries a reading it did not have a
+   week ago: a BEZEL. Inset, a 1px band, 10/255 darker at the top and 33/255
+   lighter at the foot, on 1 of 43 blocks. That is the analyzer's new eye
+   working — and with a 24px corner, a shadow thrown 7px LEFT and 6px down,
+   and a radial ramp, this is the first of these with real relief in it.
 
-   FOUR OF THE SEVEN MEASURED TYPE COLOURS CANNOT BE TYPE. The spec records
-   the colour of every step it read — and Body #7d7c81 is 3.30 on the page,
-   H3 #817d80 is 3.37, the ~70px level #848387 is 3.63 and Display #717075 is
-   2.78. None clears AA. The design's own body colour is not usable as body
-   text, which is a strange sentence to write and it is what the pixels say.
-   They are kept as marks and fills; the writing is done in the four that
-   clear: #fbfafc, #e2e2e2, #b3b2b7 and #aaaaad.
+   THE ACCENT CANNOT CARRY A LABEL — and unlike the last time, the palette
+   fixes that itself. #b06746 is 3.99 on the page and 3.14 on the card, and the
+   two inks it might wear read 3.99 and 3.34: neither clears AA, so it is a
+   fill and a ring, not a button. But this capture also holds #72523d at 6.50,
+   a measured deeper member of the same copper family, and the page colour on
+   it reads 6.50. Nothing had to be mixed. Every colour below is measured.
 
-   THE NAV BAND IS LIGHT. #e0e0e0, full width, with the one measured rule
-   under it — a near-white bar on a near-black page, which is the single most
-   distinctive thing in this capture. Its 34px height does not transfer: the
-   measured BUTTON is 41px tall, and a 34px bar cannot hold a 41px control, so
-   the two readings cannot both describe the same band. The fill and the rule
-   transfer; the height does not.
+   AND THE SPEC'S HOVER RULE IS RIGHT IN ONE THEME AND WRONG IN THE OTHER, for
+   exactly the reason it states. It says hover shifts the accent toward the
+   light because darkening a saturated accent drops its own label — true when
+   the label is the INK. In the light theme the label is the page colour on a
+   deep fill, so lightening drops it 6.50 to 3.99 and the arrow inverts. In the
+   dark theme the label IS the ink on a lightened accent, so lightening raises
+   it 4.59 to 5.33 and the arrow is honoured exactly. Same rule, same reason,
+   opposite directions, and both are in the code below.
 
-   NOTHING IS RAISED. All 11 measured blocks step straight to the page with no
-   falloff, so every shadow token here is `none` and hover and selection are
-   carried by fill and by rule — which is what the spec's own behaviour note
-   says to do when depth is unavailable.
-
-   And the corner is 0px. Not small: none.
+   Everything is in capitals here — H3, Body and Small alike. The labels take
+   it; running prose does not, and that is called out where it happens.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
 
-/*
-   THE DESIGN IS DARK, so the app's dark theme is the measurement and its
-   light theme is derived — which the brief provides for in as many words, a
-   second theme being one of the things a single frame cannot hold.
-
-   The light theme is built entirely out of measured colours rather than out
-   of new ones: the page is #e2e2e2, the card is #fbfafc, the masthead keeps
-   the measured band #e0e0e0, and the ink is #181719 at 13.79 on the page and
-   17.17 on the card. Nothing in it was invented; it is the same five greys
-   read from the other end.
-*/
-
 :root {
   color-scheme: light;
 
-  /* --- derived from the measured colours, second theme ---------------------
-     page #e2e2e2 (the measured text colour) · card #fbfafc (the measured H1)
-     masthead #e0e0e0 (the measured nav band) · ink #181719 (measured border)
-     Every value below appears in the capture; only their ROLES are derived. */
+  /* --- measured, exact ---------------------------------------------------
+     background #faf6eb 46%  text    #2e2926 12%  accent  #b06746 11%
+     surface    #e4dbcd  8%  muted   #a7917c  6%  muted-2 #c2b29f  6%
+     muted-3    #72523d  5%  muted-4 #313649  5%   <- a NAVY, in a copper page
+     radius 24px · 1px #dad9d3 border on 5 of 43 blocks, 38 borderless
+     elevation 7px of falloff at 29/255, offset 7px LEFT and 6px DOWN, 7 of 43
+     BEZEL inset, 1px, 10/255 darker top and 33/255 lighter foot, 1 of 43
+     TWO ramps in 43 blocks: radial #434343 -> #2c2c2c, travelling 23/255
+     footer band ~176px in #2b2b2b · toolbar 5 of ~135x35px in #ab5d3f, 1px
+       #b38470 on 3 of 5, 6px shadow at 20/255 · avatar 2 circles of ~30px
+       in #5c3517
+     dense: 38% of the canvas carries detail, 48% flat                     */
 
-  --bg: #e2e2e2;
-  --bg-elevated: #fbfafc;
-  --surface: #fbfafc;
-  --surface-hover: #e0e0e0;
-  --chrome: #e0e0e0;                           /* the measured band, in both themes */
+  --bg: #faf6eb;
+  --bg-elevated: #e4dbcd;
+  --surface: #e4dbcd;
+  --surface-hover: #eee8dc;                    /* derived: surface 45% toward the page */
+  /*
+     THE ONE FULL-WIDTH BAND, mapped to the one full-width region this app has.
 
-  /* The measured ramp, horizontally as measured, travelling 39/255. */
-  --ramp-well: linear-gradient(90deg, #3f3e41, #1a1718);
+     It was measured as a FOOTER — #2b2b2b, ~176px tall, borderless, no shadow
+     — and this app has no footer. Its fill goes to the masthead rather than
+     being dropped, because a near-black band across a cream page is the
+     loudest structural move this design makes and there is exactly one place
+     to put it. The height does not transfer: 176px of masthead is not a
+     masthead. The ink on it is the page colour, at 13.11.
+  */
+  --chrome: #2b2b2b;
 
-  --field-fill: #fbfafc;
-  --ink-on-field: #181719;                     /* 17.17 */
-  --ink-on-field-soft: #414045;                /* 9.87 */
-
-  /* The one measured rule is 1px #aaaaad, on 1 of 11 blocks. Against a light
-     page it is 1.79 and cannot be found, so the light theme's edge is the
-     measured muted grey at 7.93 and #aaaaad stays the quiet divider. */
-  --border: #414045;                                        /* measured, 7.93 */
-  --rule: #aaaaad;                                          /* measured, 1.79 */
-  --rule-heavy: #7d7c81;
-  --border-strong: #181719;
-
-  --text: #181719;                                 /* 13.79 page · 17.17 card */
-  --text-muted: #2e2d32;                           /* 10.54 · 13.13 */
-  --text-faint: #414045;                           /* 7.93 · 9.87 */
-  --text-loud: #181719;
-  --ink-on-bg: #181719;
-  --mark: #7d7c81;                                 /* 3.20 — the measured body, never type */
-
-  /* No accent was measured, so the ring takes the strongest colour the
-     palette holds and is never the value of the thing it rings. */
-  --focus: #181719;
-  --focus-ring: #181719;
-
-  --accent: #414045;                                        /* a fill, never type */
-  --accent-deep: #2e2d32;                                   /* the measured button fill */
-  --accent-strong: #181719;                                 /* hover: AWAY from the label */
-  --accent-soft: #e0e0e0;
-  --on-fill: #e0e0e0;                                       /* 10.35 on the button fill */
-  --on-deep: #e0e0e0;
-
-  --muted-fill: #e0e0e0;
-  --muted-fill-2: #aaaaad;
-  --muted-fill-3: #7d7c81;
+  /* The measured ramp, radially as measured, travelling 23/255. */
+  --ramp-well: radial-gradient(circle at 50% 40%, #434343, #2c2c2c);
 
   /*
-     FIVE GREYS AND NO HUE. Nothing here can say "danger" by colour, which the
-     spec's own behaviour note asks for anyway — nothing signalled by colour
-     alone. Status is the loudest ink plus the mark and the words the app
-     already carries, and the fills are steps of the same grey.
+     The field takes the measured surface and the measured BEZEL — the one
+     block in 43 that carried one, and an inset band is what a well wants. It
+     is built from the fill rather than from a fixed white and black, which is
+     what the reading says to do: 10/255 of shade at the top and 33/255 of
+     light at the foot.
   */
-  --success: #aaaaad;                                       /* ink on it 8.65 */
-  --warning: #7d7c81;                                       /* ink on it 5.44 */
-  --danger: #181719;                                        /* 13.79 — the loudest */
-  --on-success: #181719;
-  --on-warning: #181719;
-  --on-danger: #e0e0e0;
+  --field-fill: #e4dbcd;
+  --ink-on-field: #2e2926;                     /* 10.48 */
+  --ink-on-field-soft: #72523d;                /* 5.12 */
+  --bezel-inset:
+    inset 0 1px 0 rgb(0 0 0 / 0.039),
+    inset 0 -1px 0 rgb(255 255 255 / 0.129);
+
+  /*
+     TWO measured rules and they do different jobs. #dad9d3 is the page's, at
+     1.31 — a hairline you see and cannot read against, on 5 of 43 blocks.
+     #b38470 is the one measured on the toolbar's controls, at 3.01, which
+     clears what a non-text edge needs and is what a control wears.
+  */
+  --border: #b38470;                                        /* measured, 3.01 */
+  --rule: #dad9d3;                                          /* measured, 1.31 */
+  --rule-heavy: #a7917c;
+  --border-strong: #2e2926;
+
+  /*
+     Four writable levels, all measured, and the two middle ones are close —
+     6.50 and 6.25 — because this palette spends its range on copper rather
+     than on greys. The faint level clears the card at 4.92, which is the
+     tightest pair here and the reason it is not taken any lighter.
+  */
+  --text: #2e2926;                                 /* 13.31 page · 10.48 card */
+  --text-muted: #72523d;                           /* 6.50 · 5.12 — measured */
+  --text-faint: #834e38;                           /* 6.25 · 4.92 — the measured H3 ink */
+  --text-loud: #2e2926;
+  --ink-on-bg: #2e2926;
+  --mark: #a7917c;                                 /* 2.78 — measured, never type */
+
+  /* Exactly the ring the spec names, at exactly the offset it names, following
+     the 24px corner. 3.99 on the page clears the 3:1 an indicator needs. */
+  --focus: #2e2926;
+  --focus-ring: #b06746;
+
+  --accent: #b06746;                                        /* measured — a fill, never type */
+  /*
+     The measured deeper copper, and the reason nothing had to be mixed this
+     time: the page colour on it reads 6.50, so this is the fill a label can
+     sit on. Hover goes DOWN to 7.25 — against the spec's arrow and in service
+     of its reason, because here the label is the page colour and not the ink.
+  */
+  --accent-deep: #72523d;                                   /* measured; label 6.50 */
+  --accent-strong: #684c3a;                                 /* hover, 7.25 */
+  --accent-soft: #e4dbcd;
+  --on-fill: #faf6eb;                                       /* 6.50 on the deep */
+  --on-deep: #faf6eb;
+
+  --muted-fill: #c2b29f;                                    /* measured */
+  --muted-fill-2: #e4dbcd;
+  --muted-fill-3: #ab5d3f;                                  /* the measured toolbar */
+
+  /*
+     THE NAVY IS THE SECOND VOICE. #313649 is the one cool colour in a page of
+     copper — 5% of the canvas, 11.08 on the page — and in a palette with no
+     red that is not already the accent, that is what a destructive action
+     needs: told apart by hue as well as by its mark and its words, which the
+     spec's own note asks for.
+  */
+  --success: #c2b29f;                                       /* ink on it 5.35 */
+  --warning: #ab5d3f;                                       /* page colour on it 4.45 */
+  --danger: #313649;                                        /* measured navy, 11.08 */
+  --on-success: #2e2926;
+  --on-warning: #faf6eb;
+  --on-danger: #faf6eb;
 
   /* --- measured: the DECISIONS ------------------------------------------- */
-  /* 10 of 11 blocks are borderless — the lowest share this app has carried. */
+  /* 38 of 43 blocks are borderless. */
   --edge: 1px solid transparent;
   --edge-control: 1px solid var(--border);
   --edge-dashed: 1px dashed var(--rule);
-  /* NOTHING is raised. All 11 blocks step straight to the page. */
-  --lift-sm: none;
-  --lift: none;
-  --lift-lg: none;
-  /* H1, H2 and H3 are all set in capitals — the first of these to measure a
-     case at all, and it is on every heading step there is. */
+  /* 7 of 43 are lifted, and the lift has a DIRECTION. */
+  --lift-sm: var(--shadow-sm);
+  --lift: var(--shadow);
+  --lift-lg: var(--shadow-lg);
+  /* Every measured step is in capitals — H3, Body and Small alike. */
   --case: uppercase;
-  /* The spec's rule exactly: 2px, offset 2px, following the 0px corner, drawn
-     on top of whatever edge is already there. */
   --focus-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus-ring);
 
   /* --- measured: corners --------------------------------------------------
-     0px. Not a small radius — none at all, on every one of the 11 blocks. */
-  --radius-sm: 0;
-  --radius: 0;
-  --radius-lg: 0;
+     24px, the roundest this app has worn by six times. On the measured
+     toolbar control — 135x35px — a 24px corner is very nearly a pill, and
+     that is what a 24px corner on a 35px control IS. It is not softened. */
+  --radius-sm: 24px;
+  --radius: 24px;
+  --radius-lg: 24px;
 
   /* --- measured: elevation ------------------------------------------------
-     There is none. Every one of the 11 blocks steps straight to the page with
-     no falloff, so these are `none` rather than a small number, and depth is
-     simply not a thing this design has. */
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-lg: none;
+     7px of falloff reaching 29/255, thrown 7px LEFT and 6px DOWN — a real
+     direction, and the first of these in a while that is a lift rather than a
+     glow. 29/255 is black at 0.114. Seven blocks of 43 carry it; the other
+     36 sit flat, so it is the exception and not the posture. */
+  --shadow-sm: -3px 3px 4px rgb(0 0 0 / 0.07);
+  --shadow: -7px 6px 7px rgb(0 0 0 / 0.114);
+  --shadow-lg: -12px 10px 14px rgb(0 0 0 / 0.16);
+  /* The measured toolbar's own, shallower cast: 6px at 20/255. */
+  --shadow-control: -6px 5px 6px rgb(0 0 0 / 0.078);
 
   /* --- measured: spacing scale --------------------------------------------
-     4, 8, 12, 16, 24, 32, 48, 64 — the same scale again, so nothing moves. */
+     4, 8, 12, 16, 24, 32, 48, 64 — the same scale again. */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -151,56 +182,59 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     974px of content in a 977px capture — 0px left, 3px right, margins at 0%
-     left and 1% right. A page that runs to its edges, on three columns with a
-     ~79px gutter between them, which is by a distance the most generous this
-     app has measured. 79 is not on the scale; 64 is the step nearest it, and
-     at 22% detail against 68% flat space this design can afford it. */
-  --page-inset: 0px;
-  --page-inset-left: 0px;
-  --page-inset-right: 3px;
-  --gutter: 64px;                                        /* measured ~79px */
+     1290px of content in a 1364px capture — 64px left, 10px right, margins at
+     4% left and 1% right. An asymmetric page, and the asymmetry is measured
+     rather than a rounding. The gutter is 14px across two gaps, which on a
+     page carrying 38% detail is a tight grid and is taken as measured. */
+  --page-inset: 64px;
+  --page-inset-left: 64px;
+  --page-inset-right: 10px;
+  --gutter: 14px;
 
   /* --- measured: type -----------------------------------------------------
-     Five steps of ink — 52, 33, 19, 13 and 9px — which is 5.78 from Display to
-     Body and 3.67 from H1 to Body. Both transfer onto the app's head and sub;
-     its label, small and lede steps are its own, because this capture records
-     five sizes for a longform page and the app needs six for an application.
+     Three steps of ink — 91, 33 and 14px — which is 2.76 from H3 to Body.
+     That ratio transfers onto the app's head; the sub and lede steps are its
+     own, because this capture records three sizes for a marketing page and
+     the app needs six for an application.
 
-     Two of the leadings are real and one is not: 75 against 52px of ink is
-     1.44 and 51 against 33 is 1.55, both plausible line heights. 17 against
-     19 is 0.89 — a leading shorter than the letters it holds, which is a row
-     pitch and not a line height, so it does not transfer. */
+     THE SMALL RATIO DOES NOT TRANSFER. 14 against 33 is 0.42, and 0.42 of a
+     16px body is a seven-pixel label, which is not a size an interface can
+     use. Its WEIGHT and its TRACKING do, and both are below.
+
+     Nor do the leadings: 136 against 33px of ink is 4.12, the pitch between
+     rows on a 2399px scroll rather than the space inside a paragraph. 177
+     against 91 is 1.95 and that one is real. */
   --t-label: 12px;                                       /* the app's own */
   --t-small: 14px;                                       /* the app's own */
   --t-body: 16px;
-  --t-lede: 24px;                                        /* the app's own */
-  --t-sub: 59px;                                         /* 3.67, exactly */
-  --t-head: clamp(32px, 6.4vw, 92px);                    /* 5.78, exactly */
+  --t-lede: 22px;                                        /* the app's own */
+  --t-sub: 30px;                                         /* the app's own */
+  --t-head: clamp(28px, 3.4vw, 44px);                    /* 2.76, exactly */
 
   /*
      --- measured: weight ---------------------------------------------------
-     Readable for once, and consistent: a 3px stem on 52px of ink is a light,
-     and 7px on 33, 4px on 19 and 3px on 13 are all semibolds. The spec says
-     weight is not attempted below 10px of ink, so Body's is the app's own.
+     Legible and consistent: a 5px stem on 91px of ink and a 3px on 33 are
+     both LIGHTS, and a 4px stem on 14px of ink is a bold. So this design sets
+     its display and its body light and its labels heavy, which is the
+     opposite of the app's habit and is what the pixels say. Body at a 300 on
+     a 13.31 ground is legible; it is the ratio that carries it, not the mass.
   */
-  --w-light: 300;                                        /* the Display stem */
-  --w-semi: 600;                                         /* the three heading stems */
-  --w-prose: 400;                                        /* not measured — the app's own */
-  /*
-     H1 is the one step with tracking worth transferring: ~4px between glyphs
-     on 33px of ink, set in capitals. The others read "normal" at ~1px.
-  */
-  --track-display: 0.09em;
-  --track-label: 0.06em;
+  --w-light: 300;                                        /* the display stem */
+  --w-semi: 700;                                         /* the label stem, genuinely bold */
+  --w-prose: 300;                                        /* the body stem */
+  --track-display: 0;
+  /* The Small step's measured +1px on 14px of ink, which is the one tracking
+     this capture actually spends. */
+  --track-label: 0.05em;
   --track-body: 0;
 
-  /* --- chosen: one voice --------------------------------------------------
-     Nothing was recorded for the families. Public Sans stays: already
-     self-hosted, and this design needs a 300 and a 600 out of one file, which
-     a variable face gives and a second download would only repeat. It also
-     has to hold capitals at every heading step without turning into a
-     texture, which a plain grotesque does and a display face does not. */
+  /* --- derived: one voice --------------------------------------------------
+     The spec derives these rather than leaving them blank — which is this
+     app's own new behaviour reading back to it — and its argument is the one
+     the measurements make: dense at 38%, a ladder of 2.8x, which reads as an
+     application wanting a workhorse rather than a document wanting character.
+     Public Sans is that workhorse, already self-hosted, and it holds the 300
+     and the 700 this design's two measured stems ask for from one file. */
   --font: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-ui: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -208,126 +242,134 @@
     monospace;
 
   /*
-     The measured button is ~303x41px with ~15px padding, so 41 is what a
-     target is here. The nav band measures 34px tall and cannot be honoured:
-     a 34px bar cannot contain a 41px button, so the two readings do not
-     describe the same thing and the masthead keeps the app's own height. No
-     input and no icon-sized shape was measured at all, so those are the
-     app's own and are marked as such.
+     The measured toolbar control is ~135x35px, so 35 is what a control is
+     here — and it is also what a field is, since no separate input was
+     measured. The avatar is a measured 30px circle.
   */
-  --topbar-height: 60px;                                 /* the app's own — see above */
-  --field-height: 32px;                                  /* the app's own — none measured */
-  --control-height: 41px;                                /* the measured button */
-  --avatar: 30px;                                        /* the app's own — none measured */
-  --avatar-fill: #aaaaad;                                /* measured, ink on it 8.65 */
+  --topbar-height: 60px;                                 /* the app's own — the band's 176 is a footer's */
+  --field-height: 35px;                                  /* the measured control */
+  --control-height: 35px;                                /* the measured control */
+  --avatar: 30px;                                        /* measured */
+  --avatar-fill: #5c3517;                                /* measured; page colour on it 9.84 */
 }
 
-/* --- the design as measured --------------------------------------------------
-   86% of the canvas is #2e2d32 and the ink is #e2e2e2 at 10.54. Every value in
-   this block is read off the capture; nothing is derived except the two hover
-   steps, which say so. */
+/* --- after hours -------------------------------------------------------------
+   Derived, and out of measured colours only: the ground is the measured band
+   #2b2b2b and every text level is a colour this capture holds — the page, the
+   card, and the two muted greys. The panel is the one derived value, the band
+   carried a tenth of the way to the page.
+
+   The accent is the one thing that changes shape here. At 3.29 on this ground
+   it is still a fill and never type — but the label that sits on it is now the
+   INK rather than the page colour, so for once the spec's hover rule applies
+   exactly as written: lighten, and the pair opens. */
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #2e2d32;                                         /* measured, 86% */
-  --bg-elevated: #262529;                                /* measured surface */
-  --surface: #262529;
-  --surface-hover: #414045;                              /* measured muted — one step to the light */
-  --chrome: #e0e0e0;                                     /* the measured nav band */
-  --ramp-well: linear-gradient(90deg, #3f3e41, #1a1718);
+  --bg: #2b2b2b;                                         /* the measured band */
+  --bg-elevated: #3e3d3c;                                /* derived, band 9% toward the page */
+  --surface: #3e3d3c;
+  --surface-hover: #4c4b4a;
+  --chrome: #1f1f1f;
+  --ramp-well: radial-gradient(circle at 50% 40%, #434343, #2c2c2c);
 
-  --field-fill: #262529;
-  --ink-on-field: #e2e2e2;                               /* 11.75 */
-  --ink-on-field-soft: #b3b2b7;                          /* 7.23 */
+  --field-fill: #3e3d3c;
+  --ink-on-field: #faf6eb;                               /* 10.04 */
+  --ink-on-field-soft: #c2b29f;                          /* 5.25 */
+  /* Inverted, because the reading says the band is a departure FROM the fill:
+     on a dark surface the shade seats at the top and the light lifts the foot. */
+  --bezel-inset:
+    inset 0 1px 0 rgb(0 0 0 / 0.16),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1);
 
-  /* The one measured rule, 1px #aaaaad on 1 of 11 blocks: 5.89 on the page,
-     which is the only edge here strong enough to find. #181719 is the border
-     token at 1.31 — a hairline you see and cannot read against. */
-  --border: #aaaaad;                                        /* measured, 5.89 */
-  --rule: #181719;                                          /* measured, 1.31 */
-  --rule-heavy: #414045;
-  --border-strong: #fbfafc;
+  --border: #a7917c;                                     /* 4.71 on the ground */
+  --rule: #4c4b4a;
+  --rule-heavy: #5f5e5c;
+  --border-strong: #faf6eb;
 
-  --text: #e2e2e2;                                 /* 10.54 page · 11.75 surface */
-  --text-muted: #b3b2b7;                           /* 6.48 · 7.23 — the measured H2 */
-  --text-faint: #aaaaad;                           /* 5.89 · 6.57 — the measured rule */
-  --text-loud: #fbfafc;                            /* 13.13 · 14.63 — the measured H1 */
-  --ink-on-bg: #e2e2e2;
-  --mark: #7d7c81;                                 /* 3.30 — the measured BODY, never type */
+  --text: #faf6eb;                                       /* 13.11 ground · 10.04 panel */
+  --text-muted: #e4dbcd;                                 /* 10.32 · 7.90 — measured */
+  --text-faint: #c2b29f;                                 /* 6.85 · 5.25 — measured */
+  --text-loud: #faf6eb;
+  --ink-on-bg: #faf6eb;
+  --mark: #a7917c;
 
-  --focus: #fbfafc;
-  --focus-ring: #fbfafc;                           /* 13.13; never the value it rings */
+  --focus: #faf6eb;
+  --focus-ring: #b06746;
 
-  --accent: #414045;                               /* measured muted — a fill */
-  --accent-deep: #414045;
-  --accent-strong: #353438;                        /* derived hover, AWAY from the label */
-  --accent-soft: #262529;
-  --on-fill: #fbfafc;                              /* 9.87 on the muted fill */
-  --on-deep: #fbfafc;
+  --accent: #b06746;
+  /* The accent carried toward the page until the INK clears on it, which is
+     4.59 — and then hover goes UP, exactly as the spec says, to 5.33. */
+  --accent-deep: #bf8467;
+  --accent-strong: #c69278;
+  --accent-soft: #4c4b4a;
+  --on-fill: #2e2926;                                    /* 4.59 on the deep */
+  --on-deep: #2e2926;
 
-  --muted-fill: #414045;
-  --muted-fill-2: #262529;
-  --muted-fill-3: #7d7c81;
+  --muted-fill: #4c4b4a;
+  --muted-fill-2: #3e3d3c;
+  --muted-fill-3: #ab5d3f;
 
-  --success: #b3b2b7;                                       /* ink on it 5.61 */
-  --warning: #aaaaad;                                       /* ink on it 5.16 */
-  --danger: #fbfafc;                                        /* 13.13 — the loudest */
-  --on-success: #181719;
-  --on-warning: #181719;
-  --on-danger: #2e2d32;
+  /*
+     The navy is 1.18 on this ground and disappears, so the destructive voice
+     in the dark is the lightened copper instead — the one hue that is not the
+     near-white text, and light enough to be read on a near-black band.
+  */
+  --success: #c2b29f;
+  --warning: #bf8467;
+  --danger: #d5af99;
+  --on-success: #2b2b2b;
+  --on-warning: #2e2926;
+  --on-danger: #2b2b2b;
 
-  --avatar-fill: #414045;
+  --avatar-fill: #5c3517;
 }
 
 /*
-   THE NAV BAND IS LIGHT, and it is the same band in both themes — #e0e0e0
-   with the one measured rule under it. On a dark page that is a near-white
-   bar over a near-black field, which is the loudest thing this design does
-   and the reason it is worth honouring even though it inverts the masthead
-   against everything below it.
-
-   Its ink is the measured border colour at 13.53, the darkest value the
-   capture holds on the lightest fill it holds.
+   THE MEASURED BAND, on the one full-width region this app has. Borderless
+   and unlifted, both of which are measured, and carrying the page colour as
+   its ink at 13.11 — the highest ratio anything in this capture offers.
 */
 .topbar {
-  --text: #181719;                                       /* 13.53 on the band */
-  --text-muted: #2e2d32;                                 /* 10.35 */
-  --text-faint: #414045;                                 /* 7.78 */
-  --text-loud: #181719;
-  --border: #aaaaad;                                     /* the measured 1px rule */
-  --rule: #aaaaad;
-  --surface: #fbfafc;
-  --surface-hover: #e2e2e2;
-  --focus: #181719;
-  --focus-ring: #181719;
-  --accent: #2e2d32;
-  --accent-deep: #2e2d32;
-  --accent-strong: #181719;
-  --accent-soft: #e2e2e2;
-  --on-fill: #e0e0e0;                                    /* 10.35 */
-  --on-deep: #e0e0e0;
-  --mark: #7d7c81;
+  --text: #faf6eb;                                       /* 13.11 on the band */
+  --text-muted: #e4dbcd;                                 /* 10.32 */
+  --text-faint: #c2b29f;                                 /* 6.85 */
+  --text-loud: #faf6eb;
+  --border: #a7917c;
+  --rule: #4c4b4a;
+  --surface: #3e3d3c;
+  --surface-hover: #4c4b4a;
+  --focus: #faf6eb;
+  --focus-ring: #b06746;
+  --accent: #b06746;
+  --accent-deep: #bf8467;
+  --accent-strong: #c69278;
+  --accent-soft: #4c4b4a;
+  --on-fill: #2e2926;
+  --on-deep: #2e2926;
+  --mark: #a7917c;
+  --field-fill: #3e3d3c;
+  --ink-on-field: #faf6eb;
+  --ink-on-field-soft: #c2b29f;
+  --bezel-inset:
+    inset 0 1px 0 rgb(0 0 0 / 0.16),
+    inset 0 -1px 0 rgb(255 255 255 / 0.1);
   background: var(--chrome);
   color: var(--text);
-  /* The measured rule, and the only border this design puts on anything. */
-  border-bottom: 1px solid #aaaaad;
 }
 
-/* The band does not change between themes, so neither does its ink. */
+/* The band is the same in both themes, so its ink does not move either. */
 :root[data-theme='dark'] .topbar {
-  --text: #181719;
-  --text-muted: #2e2d32;
-  --text-faint: #414045;
-  --text-loud: #181719;
-  --border: #aaaaad;
-  --rule: #aaaaad;
-  --surface: #fbfafc;
-  --surface-hover: #e2e2e2;
-  --focus: #181719;
-  --focus-ring: #181719;
-  --mark: #7d7c81;
-  --on-deep: #e0e0e0;
+  --text: #faf6eb;
+  --text-muted: #e4dbcd;
+  --text-faint: #c2b29f;
+  --border: #a7917c;
+  --surface: #3e3d3c;
+  --surface-hover: #4c4b4a;
+  --focus: #faf6eb;
+  --mark: #a7917c;
+  --on-deep: #2e2926;
 }
 
 * {
@@ -719,7 +761,17 @@ select {
   background: var(--field-fill);
   border: var(--edge-control);
   border-radius: var(--radius-sm);
-  box-shadow: var(--lift);
+  /*
+     THE MEASURED BEZEL, on the one thing that should wear it.
+
+     One block in 43 carried a two-tone edge and it read INSET — 10/255 of
+     shade at the top over 33/255 of light at the foot. A field is a well, so
+     this is where it goes, and it is built as a departure from the fill the
+     way the reading says rather than as a fixed white and black: on the light
+     theme's surface a shade seats the top, and the dark theme inverts both
+     bands for the same reason.
+  */
+  box-shadow: var(--bezel-inset);
   color: var(--ink-on-field);
   outline: none;
 }
@@ -815,11 +867,18 @@ select {
   border-bottom: 1px solid var(--rule);
 }
 
+/*
+   The measured toolbar: five controls of ~135x35px, three of the five wearing
+   a 1px #b38470 rule and all of them a 6px cast at 20/255. Shallower than the
+   page's own lift and thrown the same way, because it is the same light.
+*/
 .filters select {
   padding: var(--s1) var(--s2);
+  min-height: var(--control-height);
   background: var(--surface);
   border: var(--edge-control);
   border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-control);
   outline: none;
 }
 
@@ -2343,6 +2402,22 @@ kbd {
    showed. A textarea keeps its padding and takes twice the height as a floor,
    because a control measured on one line does not describe a box for prose.
 */
+/*
+   The same well, on the light page.
+
+   The search field wears the measured bezel too, but it lives inside the
+   masthead band and so takes that band's inverted pair — which is right for a
+   dark fill and means the light theme's own bezel had nowhere to appear. The
+   drawer's fields are the same component on the page's own surface, so they
+   are where the reading as measured is actually seen: a shade seating the top
+   and a light lifting the foot, both departures from the fill they edge.
+*/
+.field input,
+.field select,
+.field textarea {
+  box-shadow: var(--bezel-inset);
+}
+
 .field input,
 .field select {
   height: var(--field-height);
