@@ -98,7 +98,7 @@ export const DesignCard = memo(function DesignCard({
            into the button's accessible name. It takes no pointer events, so
            the whole picture stays one click target.
         */}
-        <CardOverlay record={record} />
+        <CardOverlay record={record} cropped={cropped} />
 
         <div className="card-hover-actions">
           <button

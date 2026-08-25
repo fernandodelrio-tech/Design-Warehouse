@@ -1053,6 +1053,7 @@ select {
   line-height: 1.5;
   letter-spacing: var(--track-label);
   pointer-events: none;
+  transition: opacity 0.12s ease;
 }
 
 .card-image-placeholder {
@@ -1216,6 +1217,18 @@ select {
 }
 
 /*
+   The crop badge and the slab both anchor to the picture's bottom edge, and
+   the slab is opaque — so while the sheet is up the badge was simply behind
+   it. The sheet carries the same sentence as its own line; the badge steps
+   aside rather than being covered, which is the difference between one
+   statement and two fighting for a 20px band.
+*/
+.card:hover .card-crop-badge,
+.card:focus-within .card-crop-badge {
+  opacity: 0;
+}
+
+/*
    A rule where a gutter actually measured, not a column count divided into
    equal parts. Three pixels wide rather than one: the ink is a hairline, and
    the two flanking lines of the design's own ground are what keep it visible
@@ -1300,6 +1313,16 @@ select {
   color: color-mix(in srgb, var(--ov-ink) 62%, var(--ov-ground));
 }
 
+/* A fact about the tile, not about the design: the picture is longer than the
+   box it is in. Set in the ground's own ink at full strength, because it is
+   the one line here that changes what pressing the tile gets you. */
+.ov-crop {
+  margin-top: var(--s2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Written by hand rather than measured off pixels, and told apart by a rule
    of the ground's own ink rather than by being quietly dimmer. */
 .ov-written {
@@ -1335,6 +1358,12 @@ select {
 
   .ov-gutter,
   .ov-block {
+    display: none;
+  }
+
+  /* The sheet is permanent here, so the badge would be permanently behind it.
+     The slab's own crop line is the only statement that can be read. */
+  .card-crop-badge {
     display: none;
   }
 }
@@ -3003,7 +3032,8 @@ kbd {
 
   /* The sheet arrives, it does not fade in — and it still waits out the
      delay, so crossing the wall does not flash it on every tile. */
-  .card-overlay {
+  .card-overlay,
+  .card-crop-badge {
     transition-property: none;
   }
 

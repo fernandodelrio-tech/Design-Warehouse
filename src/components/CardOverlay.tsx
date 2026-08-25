@@ -30,6 +30,14 @@ import type { DesignRecord } from '../lib/types';
 
 interface Props {
   record: DesignRecord;
+  /**
+   * Whether the tile is showing a crop. The picture carries its own badge for
+   * this, and the slab is opaque and lands on the same bottom edge — so while
+   * the sheet is up the badge is behind it. On a coarse pointer the sheet is
+   * never down, which made the crop affordance permanently invisible there.
+   * The sheet says it instead, and the badge steps aside.
+   */
+  cropped: boolean;
 }
 
 /**
@@ -59,7 +67,7 @@ function Row({
   );
 }
 
-export function CardOverlay({ record }: Props) {
+export function CardOverlay({ record, cropped }: Props) {
   const { auto, image, spec, tags } = record;
   const detail = auto.detail;
   const bg = groundOf(auto.palette);
@@ -158,6 +166,10 @@ export function CardOverlay({ record }: Props) {
             of 1280×1400 and reading it off a thumbnail you can see tells you
             nothing you did not have. The drawer still carries it. */}
         <Row label="Size" value={`${image.width}×${image.height}`} />
+
+        {/* A fact about the tile rather than about the design, which is why it
+            is not a measured row: the screenshot is longer than the box. */}
+        {cropped && <div className="ov-crop">Cropped — full length on open</div>}
 
         {/* Written rather than measured, and kept apart so the difference is
             visible rather than asserted. */}
