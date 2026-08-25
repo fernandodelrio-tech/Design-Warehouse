@@ -1,30 +1,33 @@
 /* -----------------------------------------------------------------------------
-   OCHRE BROADSHEET
+   VERMILION SCROLL
 
-   TWO OF THIS SPEC'S READINGS ARE NOT USABLE, and saying so is the honest part
-   of applying it.
+   A near-white page, a near-black ink, and one vermilion at 27% of the canvas
+   — the largest share any accent has taken in this app. That is the whole
+   design: it is not a page with a red button on it, it is a page a quarter
+   covered in red.
 
-   THE WEIGHT COLUMN IS BROKEN. All three type steps report the SAME stem —
-   27.4px — for ink heights of 59, 36 and 14. Three sizes cannot share one stem
-   width, and 27.4px on 14px of ink is a stroke twice as tall as the letter it
-   is meant to be inside. That is one global number printed three times, not
-   three measurements, so NO WEIGHT TRANSFERS from this capture. The app's
-   weights below are chosen, and they are marked as chosen.
+   THE VERMILION CANNOT CARRY A LABEL AT REST, and the spec says so twice
+   without drawing the conclusion. #e6553e is 3.45 on the page and 2.4 on the
+   surface, which the accessibility block reports as AA Large and Fail. What it
+   does not report is the other direction: the INK on that vermilion is 4.17,
+   and the page colour on it is 3.45. Neither clears AA at body size. So a
+   primary button in the measured colour has no legible label in any ink this
+   palette holds, and the fill has to be carried somewhere before it can be
+   pressed. Measured, then derived, then checked — see --accent-deep.
 
-   THE "TOP NAVIGATION" IS 797px TALL. A navigation band is not eight hundred
-   pixels deep; on a 6073px capture that is the nav plus everything under it,
-   read as one region. Its FILL transfers — #fffdf1, a near-white cream that
-   takes the ink at 17.09 — and its height does not.
+   AND THE SPEC'S HOVER RULE INVERTS HERE. It says hover shifts the accent
+   toward the LIGHT, because "darkening a saturated accent drops its own label
+   below AA" — true, and it assumes the label is the ink. On the pairing this
+   design actually needs, white on a deepened vermilion, the assumption is the
+   wrong way round: darkening RAISES the label from 4.60 to 4.95 and lightening
+   drops it to 3.45. The rule's reason is honoured and its direction is not,
+   which is the only way to keep every state above AA. Called out below.
 
-   What is solid is the colour, and it is the most colourful of these by a
-   distance: a cream page at 63% of the canvas, a near-black ink at 15.51, and
-   then a vivid yellow, a light blue card, an orange field and a gold rule. The
-   yellow is 1.34 as a letter and 11.56 with the ink knocked out of it, so it
-   is a fill — and for once hover toward the light does exactly what the spec
-   says it does, because this label really is the ink: 11.56 opens to 13.58.
-
-   And it is DENSE: 50% of the canvas carries detail, the highest yet, on a
-   4px corner — the sharpest yet.
+   The rest transfers cleanly. A 3px corner, the sharpest this app has worn. A
+   spacing scale identical to the one already here. Elevation that is a GLOW —
+   14px of falloff reaching 36/255 with no offset at all, the same distance on
+   every side — on 11 of 212 blocks, the other 201 flat. And a type scale with
+   a 6.09 ratio from head to body, the widest yet.
    --------------------------------------------------------------------------- */
 
 @import './type.css';
@@ -33,136 +36,158 @@
   color-scheme: light;
 
   /* --- measured, exact ---------------------------------------------------
-     background #faf0e6 63%   text    #191a1a 11%   surface #ede5d9  9%
-     accent     #e5d53b  6%   muted   #bb7158  5%   muted-2 #99c0da  4%
-     border     #cfd4d1  2%
-     radius 4px · 1px #ecc862 border on 29 of 125 blocks, 96 borderless
-     elevation 7px of falloff at 60/255, offset 4px LEFT, on 28 of 125
-     ONE ramp in 125 blocks: radial #6f5f2a -> #fdc521, travelling 101/255
-     nav band #fffdf1 · card grid 4 of ~198x175px in #aae1fe, 1px #0a242d
-     tabs 5 segments of ~116x44px in #fceee5 · field 2 of ~192x30px, flat
-       #f86c45, 1px #110000 · badge #f2ede5 · avatar 5 of ~30px in #eae5e7
-     dense: 50% of the canvas carries detail                              */
+     background #faf8f4 34%   accent  #e6553e 27%   text    #272524 20%
+     muted      #b6b5b4  6%   surface #d1d1d0  5%   muted-2 #545353  3%
+     muted-3    #c94d39  2%   border  #878685  2%
+     radius 3px · 1px #959595 border on 32 of 212 blocks, 180 borderless
+     elevation 14px of falloff at 36/255, NO offset — even on every side —
+       on 11 of 212; the other 201 flat
+     TWO ramps in 212 blocks: vertical #5c5c5c -> #4c4c4c, travelling 16/255
+     card grid 4 of ~236x180px in #e7573e · field 2 of ~141x24px in #e05848,
+       1px #96382a · icon button 2 squares of ~23px in #0c0000, 1px #3d2f2f
+     dense: 37% of the canvas carries detail, 49% flat                     */
 
-  --bg: #faf0e6;
-  --bg-elevated: #ede5d9;
-  --surface: #ede5d9;
-  /* The measured badge fill, which is the next tone up from the surface. */
-  --surface-hover: #f2ede5;
+  --bg: #faf8f4;
   /*
-     The masthead takes the measured nav band's FILL and not its height: a
-     near-white cream that carries the ink at 17.09, the highest ratio anything
-     in this capture offers. So the bar is light here — the first light
-     masthead in five designs — which is what a cream page with a near-black
-     ink actually wants.
+     The measured surface, and it is a real grey rather than a tint of the
+     page — 1.44 against it, the widest page-to-card step this app has had.
+     Cards read as panels laid ON the page instead of cut out of it.
   */
-  --chrome: #fffdf1;
+  --bg-elevated: #d1d1d0;
+  --surface: #d1d1d0;
+  --surface-hover: #dfdfdd;                    /* derived: surface 35% toward the page */
   /*
-     The one ramp in a hundred and twenty-five blocks, and it can hold no
-     label: the ink reads 2.78 at its dark-olive head and the page colour 1.42
-     at its gold foot, so neither survives the whole travel. It goes where
-     nothing is read. The field it was measured on has a flat sibling —
-     #f86c45, which takes the ink at 6.00 — and that is what a field wears.
+     CHOSEN. No navigation band was measured in this capture, so the masthead
+     takes the page colour and stays borderless, which is what 180 borderless
+     blocks out of 212 say this design does with a region.
   */
-  --ramp-well: radial-gradient(circle at 50% 40%, #fdc521, #6f5f2a);
-  --field-fill: #f86c45;                       /* measured, ink on it 6.00 */
-  --ink-on-field: #191a1a;
-  /* One step off the field's ink, and no further: at 4.47 on the measured
-     orange there is nowhere lighter to go and still clear AA. */
-  --ink-on-field-soft: #422722;
+  --chrome: #faf8f4;
+
+  /* The measured ramp, and the only one worth having: 16/255 of travel is a
+     shift you feel rather than see, which is what a loading well wants. */
+  --ramp-well: linear-gradient(180deg, #5c5c5c, #4c4c4c);
 
   /*
-     THREE border readings, and each goes where its ratio allows. #110000 is
-     the rule measured on the field, at 18.24 — that is a control's edge.
-     #ecc862 is the gold measured on twenty-nine blocks of a hundred and
-     twenty-five, at 1.44 — a warm hairline you see but cannot read against.
-     #cfd4d1 is the token table's border at 1.33, the quieter of the two.
+     THE FIELD. Measured at #e05848 with a measured 1px #96382a rule — and
+     typed text on that fill is 4.11 in the ink and 3.50 in the page colour,
+     so neither clears. The fill is carried to --accent-deep, where the page
+     colour reads 4.60, and the measured rule is kept exactly.
   */
-  --border: #110000;                                        /* measured, 18.24 */
-  --rule: #ecc862;                                          /* measured, 1.44 */
-  --rule-heavy: #cfd4d1;                                    /* measured, 1.33 */
-  --border-strong: #191a1a;
+  --field-fill: #c04b39;                       /* derived; page colour on it 4.60 */
+  --ink-on-field: #faf8f4;                     /* 4.60 */
+  /*
+     The SAME colour, and that is the finding rather than a shortcut. On this
+     fill the page colour reads 4.60 and every softening of it falls under AA
+     — four percent toward the fill is already 4.36. A 27%-accent design buys
+     its saturation with exactly one legible ink per fill, so the placeholder
+     takes the ink at full strength and is told from typed text by the field's
+     own label, which the spec's component note requires anyway.
+  */
+  --ink-on-field-soft: #faf8f4;                /* 4.60 — no softer step clears */
 
   /*
-     Three levels. The first is measured; the two under it are the measured
-     terracotta carried toward the ink, because at 3.32 on the page and 2.99 on
-     the surface it cannot be type on either.
+     TWO border readings. #878685 is the token table's, at 3.43 on the page —
+     which clears the 3:1 a non-text indicator needs and nothing more, so it is
+     an edge and never a letter. #959595 is the rule measured on 32 of the 212
+     blocks, at 2.82 — a hairline you see and cannot read against.
   */
-  --text: #191a1a;                                 /* 15.51 page · 13.96 surface */
-  --text-muted: #624136;                           /* 8.02 · 7.22 */
-  --text-faint: #7a4e3f;                           /* 6.25 · 5.62 */
-  --text-loud: #191a1a;
-  --ink-on-bg: #191a1a;
-  --mark: #bb7158;                                 /* 3.32 — measured, never type */
-
-  /* The ring the spec names is the yellow, which is 1.34 against this page and
-     nowhere near the 3:1 an indicator needs. The yellow is the ring you see
-     and the ink is drawn just outside it. */
-  --focus: #191a1a;
-  --focus-ring: #e5d53b;
-
-  --accent: #e5d53b;                                        /* a fill, never type */
-  /*
-     Toward the light, and this is the one design where the spec's convention
-     needs no argument at all: the label on this fill is the ink, so lightening
-     opens the pair from 11.56 to 13.58 exactly as it says.
-  */
-  --accent-strong: #efe689;
-  --accent-soft: #fceee5;                                   /* the measured tabs fill */
-  --accent-deep: #0a242d;                                   /* the measured card rule */
-  --on-fill: #191a1a;                                       /* 11.56 on the yellow */
-  --on-deep: #faf0e6;                                       /* 14.33 */
-
-  --muted-fill: #aae1fe;                                    /* the measured card */
-  --muted-fill-2: #fceee5;
-  --muted-fill-3: #eae5e7;                                  /* the measured avatar */
+  --border: #878685;                                        /* measured, 3.43 */
+  --rule: #959595;                                          /* measured, 2.82 */
+  --rule-heavy: #878685;
+  --border-strong: #272524;
 
   /*
-     Derived, and for once out of a palette with real hues in it: a yellow, a
-     terracotta, a blue and an orange, all measured. Each takes the ink, which
-     clears on every one of them.
+     Two writable levels on the card, not three. #272524 reads 9.98 on the
+     measured surface and #545353 reads 5.02; the next step up the palette,
+     #b6b5b4, is 1.93 on the page and cannot be type anywhere. So the faint
+     level is derived for the PAGE and scoped back to the measured grey inside
+     a card, where nothing lighter clears.
   */
-  --success: #aae1fe;                                       /* ink on it 12.38 */
-  --warning: #e5d53b;                                       /* ink on it 11.56 */
-  --danger: #f86c45;                                        /* ink on it 6.00 */
-  --on-success: #191a1a;
-  --on-warning: #191a1a;
-  --on-danger: #191a1a;
+  --text: #272524;                                 /* 14.38 page · 9.98 surface */
+  --text-muted: #545353;                           /* 7.23 · 5.02 — measured */
+  --text-faint: #656463;                           /* derived, 5.57 on the page */
+  --text-loud: #272524;
+  --ink-on-bg: #272524;
+  --mark: #b6b5b4;                                 /* 1.93 — measured, never type */
+
+  /* Exactly what the spec asks for: a 2px ring in the accent, offset 2px, on
+     top of whatever edge the element already has. 3.45 on the page clears the
+     3:1 an indicator needs, so for once the accent IS the ring. */
+  --focus: #272524;
+  --focus-ring: #e6553e;
+
+  --accent: #e6553e;                                        /* measured — a fill, never type */
+  /*
+     Derived, and the reason the whole palette works: the measured vermilion
+     carried 20% toward the measured ink. The page colour on it is 4.60, which
+     is the only pairing in this design that puts a legible label on red.
+     Hover goes DOWN to 25% (4.95), against the spec's stated direction and in
+     service of its stated reason. Active returns to rest.
+  */
+  --accent-deep: #c04b39;                                   /* page colour on it 4.60 */
+  --accent-strong: #b64938;                                 /* hover, 4.95 */
+  --accent-soft: #f1ded8;                                   /* derived tint for quiet fills */
+  --on-fill: #faf8f4;                                       /* 4.60 on the deep */
+  --on-deep: #faf8f4;
+
+  --muted-fill: #b6b5b4;                                    /* measured */
+  --muted-fill-2: #d1d1d0;                                  /* measured surface */
+  --muted-fill-3: #e6553e;                                  /* measured accent */
+
+  /*
+     Derived, and constrained: this palette is one red and four greys, so
+     status cannot be said in hue alone — which is what the spec's own
+     behaviour note asks for anyway. Success and warning take greys and are
+     told apart by their mark and their words; danger takes the measured
+     icon-button fill, a near-black at 19.49, because in a design whose accent
+     IS red the destructive action cannot also be red and still be read as
+     different.
+  */
+  --success: #d1d1d0;                                       /* ink on it 9.98 */
+  --warning: #b6b5b4;                                       /* ink on it 7.45 */
+  --danger: #0c0000;                                        /* measured; page colour 19.49 */
+  --on-success: #272524;
+  --on-warning: #272524;
+  --on-danger: #faf8f4;
 
   /* --- measured: the DECISIONS ------------------------------------------- */
-  /* Ninety-six of a hundred and twenty-five blocks are borderless — but the
-     twenty-nine that are not is the highest share any of these has carried. */
+  /* 180 of 212 blocks are borderless. */
   --edge: 1px solid transparent;
   --edge-control: 1px solid var(--border);
   --edge-dashed: 1px dashed var(--rule);
-  /* Twenty-eight of a hundred and twenty-five are lifted. */
+  /* 11 of 212 are lifted. */
   --lift-sm: var(--shadow-sm);
   --lift: var(--shadow);
   --lift-lg: var(--shadow-lg);
-  /* No case was recorded on any of the three steps. */
   --case: none;
-  --focus-shadow: 0 0 0 2px var(--focus-ring), 0 0 0 3px var(--focus);
+  /* The spec's focus rule, literally: 2px of page colour, then a 2px ring. */
+  --focus-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--focus-ring);
 
   /* --- measured: corners --------------------------------------------------
-     4px. The sharpest of any of these by a factor of three, and on a page this
-     dense it is the difference between a grid and a pile of pills. */
-  --radius-sm: 4px;
-  --radius: 4px;
-  --radius-lg: 4px;
+     3px. The sharpest this app has worn, and on a page where 37% of the
+     canvas carries detail it is the difference between a grid and a pile. */
+  --radius-sm: 3px;
+  --radius: 3px;
+  --radius-lg: 3px;
 
   /* --- measured: elevation ------------------------------------------------
-     7px of falloff reaching 60/255, offset 4px to the LEFT and nothing
-     vertical — so the shadow sits beside its surface, on the far side from
-     where a light would be. That is a 10px blur at a -2px offset.
+     A GLOW, not a lift. 14px of falloff reaching 36/255 and the SAME distance
+     on every side — no offset at all, which is the first time this app has
+     measured a shadow with no direction in it. 36/255 on a page of luminance
+     249 is black at 0.14. Eleven blocks of 212 carry it; the other 201 sit
+     flat, so this is the exception and not the posture.
 
-     The alpha follows the ground and it is the heaviest here yet on a light
-     page: 241/255, so a 60-level drop leaves 75% showing and that is black at
-     0.25. Twenty-eight blocks of a hundred and twenty-five carry it. */
-  --shadow-sm: -1px 0 5px rgb(0 0 0 / 0.14);
-  --shadow: -2px 0 10px rgb(0 0 0 / 0.25);
-  --shadow-lg: -4px 0 18px rgb(0 0 0 / 0.32);
+     This is the one place the measurement argues with the craft floor, which
+     says a zero-offset halo is decoration. The measurement wins: it is what
+     the design is, it is on 5% of its blocks, and the floor's own preface
+     says a pinned brief overrides it. */
+  --shadow-sm: 0 0 7px rgb(0 0 0 / 0.08);
+  --shadow: 0 0 14px rgb(0 0 0 / 0.14);
+  --shadow-lg: 0 0 24px rgb(0 0 0 / 0.2);
 
-  /* --- measured: spacing scale ------------------------------------------- */
+  /* --- measured: spacing scale --------------------------------------------
+     4, 8, 12, 16, 24, 32, 48, 64 — identical to the scale already here, so
+     nothing moves. */
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
@@ -173,59 +198,53 @@
   --s8: 64px;
 
   /* --- measured: the frame ------------------------------------------------
-     1017px of content in a 1024px capture — 6px left, 1px right, margins
-     reported at 0% all round. A page that runs to its edges. The gutter is
-     ~19px across one gap and the card grid is measured at ~24px apart, so the
-     grid takes the step of the scale between them, which is 16 — and that
-     suits a design where 50% of the canvas carries detail, the densest of any
-     of these. */
-  --page-inset: 12px;
-  --page-inset-left: 12px;
-  --page-inset-right: 12px;
-  --gutter: 16px;                                        /* measured ~19px */
+     1007px of content in a 1024px capture — ~8px left, ~9px right, margins
+     reported at 0% left / 1% right. A page that runs to its edges, on one
+     column with no gutter measured across it; the grid takes the step of the
+     scale that suits 37% detail. */
+  --page-inset: 8px;
+  --page-inset-left: 8px;
+  --page-inset-right: 9px;
+  --gutter: 12px;
 
   /* --- measured: type -----------------------------------------------------
-     Three steps — 59, 36 and 14px of ink — which is 4.21 from the top to the
-     bottom and 2.57 between the middle and the bottom. Both ratios transfer,
-     onto the app's body, sub and head; its label, small and lede steps are its
-     own, because this capture records three sizes and the app needs six.
+     Four steps of ink — 67, 31, 11 and 5px — which is 6.09 from head to body
+     and 2.82 from sub to body. Both ratios transfer onto the app's head, sub
+     and body; its label, small and lede steps are its own.
 
-     The leadings do not transfer. 191 against 59px of ink is 3.24, 95 against
-     36 is 2.64, 41 against 14 is 2.93 — all about three times their own type,
-     which is the pitch between rows on a six-thousand-pixel scroll and not the
-     space inside a paragraph. */
+     The leadings do not transfer where they are impossible: 19 against 31px
+     of ink is 0.61, a line height smaller than the letters it holds, which is
+     the pitch of a row on a 4061px scroll rather than the space inside a
+     heading. The head's 69 against 67 is 1.03 and that one is real. */
   --t-label: 12px;                                       /* the app's own */
   --t-small: 14px;                                       /* the app's own */
   --t-body: 16px;
   --t-lede: 24px;                                        /* the app's own */
-  --t-sub: 41px;                                         /* 2.57, exactly */
-  --t-head: clamp(34px, 5.2vw, 67px);                    /* 4.21, exactly */
+  --t-sub: 45px;                                         /* 2.82, exactly */
+  --t-head: clamp(34px, 7vw, 97px);                      /* 6.09, exactly */
 
   /*
      --- CHOSEN: weight -----------------------------------------------------
-     Nothing about weight is measured here. The spec's column reports a 27.4px
-     stem for all three steps — for ink heights of 59, 36 and 14 — which is one
-     global figure printed three times, and on the body row it describes a
-     stroke twice as tall as the letter. It is not a reading, so it is not
-     honoured, and these are the app's own: a regular for prose and a semibold
-     for emphasis, the plainest pair that suits a dense page.
-
-     Tracking is reported as normal on all three, at the same ~1.2px between
-     glyphs each time — uniform in the same suspicious way, but "normal" is
-     what it says and normal is what it gets. No case was recorded either.
+     The stems here are readable for once — 12.2px on 67px of ink, 1px on 31,
+     2px on 11 — but they do not describe one family: 1px on a 31px letter is
+     a hairline and 2px on an 11px letter is a medium, which is a display face
+     next to a UI face rather than two weights of one. This app has one face,
+     so the head takes the light and the body takes the medium, and the split
+     is honoured as weight rather than as two families.
   */
-  --w-light: 400;                                        /* chosen, not measured */
-  --w-semi: 600;                                         /* chosen, not measured */
+  --w-light: 300;                                        /* the head's hairline stem */
+  --w-semi: 600;
   --w-prose: 400;
   --track-display: 0;
-  --track-label: 0.02em;
+  --track-label: 0.02em;                                 /* "normal", ~1px between glyphs */
   --track-body: 0;
 
   /* --- chosen: one voice --------------------------------------------------
-     Nothing was recorded for the families — and this time nothing was usefully
-     recorded for weight either, so the face is carrying less of this design
-     than usual. Public Sans: plain, tightly fitted, legible at 12px on a page
-     where half the canvas is detail. Already self-hosted. */
+     Nothing was recorded for the families — a bitmap cannot hold them. Public
+     Sans stays: it is already self-hosted, it is a workhorse at 12px on a page
+     where 37% of the canvas carries detail, and it holds a 300 and a 600 from
+     one variable file, which is what the two measured stems ask for. Adding a
+     second face would be a second network request to say the same thing. */
   --font: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-ui: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -233,114 +252,150 @@
     monospace;
 
   /*
-     TWO measured control heights and they do different jobs. The field is
-     ~192x30px and the segmented control's segments are ~116x44px, so a text
-     input is 30 and anything you press is 44 — which is also the target size
-     the spec's own component notes ask for. The avatar is ~30px across.
+     The measured field is ~141x24px and the measured icon button is a ~23px
+     square. 24px is a tight box for 16px text and it is what this design
+     gives an input, so it is what the input gets. The 44px is not measured
+     here — it is the spec's own component note, which says the target is at
+     least 44x44 even where the icon is smaller, so the visual stays 23 and
+     the hit area does not.
   */
   --topbar-height: 60px;
-  --field-height: 30px;                                  /* the measured input */
-  --control-height: 44px;                                /* the measured segment */
-  --avatar: 30px;                                        /* measured */
-  --avatar-fill: #eae5e7;                                /* measured, ink on it 14.00 */
+  --field-height: 24px;                                  /* the measured input */
+  --control-height: 44px;                                /* the spec's own target floor */
+  --avatar: 23px;                                        /* the measured icon square */
+  --avatar-fill: #d1d1d0;                                /* measured surface, ink 9.98 */
+}
+
+/*
+   Inside a card the faint level goes back to the measured grey: #656463 reads
+   5.57 on the page and only 3.86 on the measured surface, and a card is where
+   most of this app's small print lives.
+*/
+.card,
+.detail-side,
+.overlay {
+  --text-faint: #545353;                                 /* 5.02 on the surface */
 }
 
 /* --- after hours -------------------------------------------------------------
-   Derived. The ground is the ink and the panel is it lifted a little. The
-   cream, the surface and — for the first time — the ACCENT all become text
-   levels: the yellow that is 1.34 on a cream page is 11.56 on a near-black
-   one, so the colour this design cannot write with in the light is a perfectly
-   good third level in the dark. */
+   Derived. The ground is the measured ink and the panel is it carried a tenth
+   of the way to the page. Every text level here is a MEASURED colour — the
+   page, the surface and the muted grey all become type, which is the one thing
+   a four-grey palette makes easy. The vermilion does not: it is 4.17 on the
+   ground and 3.09 on the panel, so in the dark it stays exactly what it is in
+   the light, a fill and a ring. */
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --bg: #191a1a;
-  --bg-elevated: #26241f;
-  --surface: #26241f;
-  --surface-hover: #34312a;
-  --chrome: #0f100f;
-  --ramp-well: radial-gradient(circle at 50% 40%, #fdc521, #6f5f2a);
-  --field-fill: #7a3020;
-  --ink-on-field: #faf0e6;
-  --ink-on-field-soft: #e0cabe;
+  --bg: #272524;
+  --bg-elevated: #3c3a39;                                /* derived, ink 10% toward the page */
+  --surface: #3c3a39;
+  --surface-hover: #4b4947;
+  --chrome: #1c1b1a;
+  --ramp-well: linear-gradient(180deg, #5c5c5c, #4c4c4c);
+  --field-fill: #c04b39;
+  --ink-on-field: #faf8f4;
+  --ink-on-field-soft: #faf8f4;                          /* same fill, same one ink */
 
-  --border: #ecc862;                                       /* 10.80 on the ground */
-  --rule: #34312a;
-  --rule-heavy: #443f36;
-  --border-strong: #faf0e6;
+  --border: #878685;                                     /* 4.2 on the ground */
+  --rule: #4b4947;
+  --rule-heavy: #656463;
+  --border-strong: #faf8f4;
 
-  --text: #faf0e6;                                 /* 15.51 page · 13.78 surface */
-  --text-muted: #ede5d9;                           /* 13.96 · 12.41 */
-  --text-faint: #e5d53b;                           /* 11.56 · 10.27 — the accent */
-  --text-loud: #faf0e6;
-  --ink-on-bg: #faf0e6;
-  --mark: #bb7158;
+  --text: #faf8f4;                                       /* 14.38 ground · 10.66 panel */
+  --text-muted: #d1d1d0;                                 /* 9.98 · 7.40 — measured */
+  --text-faint: #b6b5b4;                                 /* 7.45 · 5.53 — measured */
+  --text-loud: #faf8f4;
+  --ink-on-bg: #faf8f4;
+  --mark: #878685;
 
-  --focus: #faf0e6;
-  --focus-ring: #e5d53b;
+  --focus: #faf8f4;
+  --focus-ring: #e6553e;
 
-  --accent: #e5d53b;
-  --accent-strong: #efe689;
-  --accent-soft: #34312a;
-  --accent-deep: #0a242d;
-  --on-fill: #191a1a;
-  --on-deep: #faf0e6;
+  --accent: #e6553e;
+  --accent-deep: #c04b39;
+  --accent-strong: #b64938;
+  --accent-soft: #4b4947;
+  --on-fill: #faf8f4;
+  --on-deep: #faf8f4;
 
-  --muted-fill: #443f36;
-  --muted-fill-2: #34312a;
-  --muted-fill-3: #99c0da;
+  --muted-fill: #4b4947;
+  --muted-fill-2: #3c3a39;
+  --muted-fill-3: #e6553e;
 
-  --success: #99c0da;
-  --warning: #e5d53b;
-  --danger: #ecc862;
-  --on-success: #191a1a;
-  --on-warning: #191a1a;
-  --on-danger: #191a1a;
+  --success: #d1d1d0;
+  --warning: #b6b5b4;
+  /*
+     NOT the measured near-black here. #0c0000 is 19.49 on the light page and
+     1.83 on this panel — a destructive label that all but disappears in the
+     dark, which is the state a destructive label can least afford. So the
+     accent is carried 35% toward the page instead: 4.72 on the panel, 6.37 on
+     the ground, and the ink reads 6.37 back on it, so the filled hover works
+     from the same colour. Danger stays red in the dark, and stays told apart
+     from the #faf8f4 text and the #d1d1d0 muted level by hue as well as by
+     its mark and its words.
+  */
+  --danger: #ed8e7e;                                     /* derived, 4.72 on the panel */
+  --on-success: #272524;
+  --on-warning: #272524;
+  --on-danger: #272524;                                  /* 6.37 on the fill */
 
-  --avatar-fill: #eae5e7;
+  --avatar-fill: #4b4947;
+}
+
+.card,
+.detail-side,
+.overlay {
+  --text-faint: #b6b5b4;
+}
+
+:root[data-theme='dark'] .card,
+:root[data-theme='dark'] .detail-side,
+:root[data-theme='dark'] .overlay {
+  --text-faint: #b6b5b4;                                 /* 5.53 on the dark panel */
 }
 
 /*
-   THE FIRST LIGHT MASTHEAD IN FIVE DESIGNS. The measured nav band is #fffdf1,
-   a near-white cream, and the ink reads 17.09 on it — the highest ratio
-   anything in this capture offers. Its 797px height is not honoured and is not
-   a height: on a 6073px capture that region is the nav plus everything under
-   it. What transfers is the fill and the fact that the band is borderless with
-   no shadow, both of which are measured.
+   No navigation band was measured in this capture, so the masthead is not
+   given one: it takes the page colour, stays borderless and carries no
+   shadow, which is what 180 borderless and 201 flat blocks out of 212 say
+   this design does with a region it has not singled out.
 */
 .topbar {
-  --text: #191a1a;
-  --text-muted: #624136;
-  --text-faint: #7a4e3f;
-  --border: #110000;
-  --rule: #ecc862;
-  --surface: #f2ede5;
-  --surface-hover: #ede5d9;
-  --focus: #191a1a;
-  --focus-ring: #e5d53b;
-  --accent: #e5d53b;
-  --accent-strong: #efe689;
-  --accent-soft: #fceee5;
-  --on-fill: #191a1a;
-  --on-deep: #faf0e6;
-  --mark: #bb7158;
+  --text: #272524;
+  --text-muted: #545353;
+  --text-faint: #656463;
+  --border: #878685;
+  --rule: #959595;
+  --surface: #d1d1d0;
+  --surface-hover: #dfdfdd;
+  --focus: #272524;
+  --focus-ring: #e6553e;
+  --accent: #e6553e;
+  --accent-deep: #c04b39;
+  --accent-strong: #b64938;
+  --accent-soft: #f1ded8;
+  --on-fill: #faf8f4;
+  --on-deep: #faf8f4;
+  --mark: #b6b5b4;
   background: var(--chrome);
   color: var(--text);
 }
 
 :root[data-theme='dark'] .topbar {
-  --text: #faf0e6;
-  --text-muted: #ede5d9;
-  --text-faint: #e5d53b;
-  --border: #ecc862;
-  --rule: #34312a;
-  --surface: #26241f;
-  --surface-hover: #34312a;
-  --focus: #faf0e6;
-  --mark: #bb7158;
-  --on-deep: #191a1a;
+  --text: #faf8f4;
+  --text-muted: #d1d1d0;
+  --text-faint: #b6b5b4;
+  --border: #878685;
+  --rule: #4b4947;
+  --surface: #3c3a39;
+  --surface-hover: #4b4947;
+  --focus: #faf8f4;
+  --mark: #878685;
+  --on-deep: #faf8f4;
 }
+
 
 * {
   box-sizing: border-box;
@@ -505,17 +560,35 @@ select {
    its head and the page colour 1.42 on its foot. So the primary is the accent
    at full strength, where the ink reads 11.56.
 */
+/*
+   The deep vermilion, not the measured one, and this is the single most
+   consequential thing in applying this spec.
+
+   #e6553e takes the page colour at 3.45 and the ink at 4.17. Neither clears AA
+   at 14px, so the measured accent has NO legible label in any colour this
+   palette holds — it is a fill for regions, which is what 27% of a canvas
+   means, and not a fill for a button. --accent-deep is that colour carried
+   twenty percent toward the measured ink, where the page colour reads 4.60.
+*/
 .btn-primary {
-  background: var(--accent);
-  background-color: var(--accent);
+  background: var(--accent-deep);
+  background-color: var(--accent-deep);
   border-color: transparent;
   color: var(--on-fill);
   font-weight: var(--w-semi);
 }
 
-/* Toward the light, which the spec argues for in as many words: "darkening a
-   saturated accent drops its own label below AA before the shift is even
-   visible". The label here is the ink, and it goes 6.59 to 9.52. */
+/*
+   DOWN, not up — the one place this build refuses the spec's stated direction.
+
+   Its rule is "hover shifts #e6553e toward the light rather than darkening
+   it", and its reason is that "darkening a saturated accent drops its own
+   label below AA before the shift is even visible". The reason is exactly
+   right and it assumes the label is the ink. Here the label is the PAGE
+   COLOUR, because the ink never cleared on this red at all — so the direction
+   inverts with it: darkening carries the label from 4.60 to 4.95, lightening
+   drops it to 3.45. The reason is honoured; the arrow is not.
+*/
 .btn-primary:hover {
   background: var(--accent-strong);
   background-color: var(--accent-strong);
@@ -523,8 +596,8 @@ select {
 }
 
 .btn-primary:active {
-  background: var(--accent);
-  background-color: var(--accent);
+  background: var(--accent-deep);
+  background-color: var(--accent-deep);
 }
 
 .btn-ghost {
@@ -591,9 +664,11 @@ select {
   white-space: nowrap;
 }
 
+/* A chip is a label on a fill, so it takes the deep for the same reason the
+   primary action does: the measured vermilion carries no legible label. */
 .chip-accent {
-  border-color: var(--accent);
-  background: var(--accent);
+  border-color: var(--accent-deep);
+  background: var(--accent-deep);
   color: var(--on-fill);
   font-weight: var(--w-semi);
 }
@@ -691,14 +766,10 @@ select {
 }
 
 /*
-   No component was measured in this capture at all — sixteen solid regions and
-   no repeat among them — so the field is entirely the app's own geometry, and
-   nothing here is a claim about the design.
-
-   What IS the design: a flat fill, no ramp, and a rule only where one is
-   needed to be found. Fifteen of the sixteen blocks are borderless, so the
-   resting state has none; the measured #725d50 appears on hover and focus,
-   where the field has to say it is a field.
+   Two fields were measured here, both ~141x24px, so the geometry is the
+   design's and not the app's. What is the app's is the width: a search box
+   that has to hold a query is not 141px wide on a 1440px window, and the
+   measurement is a proportion of a 1024px capture rather than a fixed size.
 */
 .search {
   position: relative;
@@ -707,12 +778,17 @@ select {
 }
 
 /*
-   THE MEASURED FIELD, and the flat one of the two. The capture holds two: one
-   filled with the single ramp this design spends, and one flat #f86c45. The
-   ramp carries no label at either end, so the field is the orange — where the
-   ink reads 6.00 — with the measured 1px #110000 rule and the measured 7px
-   shadow. The height is the measured 30px, which is short, and it is the one
-   this design gives a text input rather than the 44 it gives a target.
+   THE MEASURED FIELD. Two of them, ~141x24px, filled #e05848 with a measured
+   1px #96382a rule.
+
+   That fill cannot hold typed text: the ink reads 4.11 on it and the page
+   colour 3.50, so neither clears AA at body size. It is carried to
+   --accent-deep, twenty percent toward the measured ink, where the page
+   colour reads 4.60 — the same derivation the primary action needs, for the
+   same reason. The rule is kept exactly as measured.
+
+   24px is a short box for 16px text and it is what this design gives an
+   input, which is not the 44 its own component note gives a target.
 */
 .search input {
   width: 100%;
@@ -731,12 +807,13 @@ select {
 }
 
 /*
-   The placeholder lands on the FIELD'S fill, not on the bar behind it, and
-   the bar's third text level is 2.42 there. It takes the field's own ink,
-   one step softened — which is as light as this orange allows at 4.47.
+   The placeholder lands on the FIELD'S fill, not on the bar behind it, so it
+   is checked against the vermilion and not against the masthead.
 
-   The contrast walk did not catch this on its own: a placeholder is not a
-   text node, so the harness never looked at one. It does now.
+   It gets the field's ink at full strength because there is no softer step:
+   the page colour is 4.60 on this fill and a four percent shift toward the
+   fill is already 4.36. What tells a placeholder from typed text here is the
+   field's label, not a lighter grey.
 */
 .search input::placeholder {
   color: var(--ink-on-field-soft);
@@ -1643,13 +1720,12 @@ kbd {
   flex: 0 0 auto;
 }
 
-/* The sage, lifted toward the ink until the page colour reads on it: #789f8b
-   alone takes #283829 to 4.22, and carried a third of the way to #dfcbaf it
-   reaches 5.4. The initials are small text, so they get the ratio rather than
-   the raw measurement. */
+/* The measured surface, at the measured icon square's ~23px. The ink reads
+   9.98 on it, so the initials take the ink rather than the page colour — this
+   palette's greys are light enough that a dark letter is the legible one. */
 .account-initial {
   background: var(--avatar-fill);
-  color: var(--on-fill);
+  color: var(--text);
   font-family: var(--font-ui);
   font-size: var(--t-label);
   font-weight: var(--w-semi);
@@ -1953,10 +2029,9 @@ kbd {
      A container that cannot scroll must not advertise that it can.
   */
   overflow: hidden;
-  /* The scrim takes the masthead's own ink. This was a literal #2b1b21 — a
-     token from a superseded palette, and the only hard-coded colour left in
-     this file — so it kept the previous design's ground while every surface
-     around it moved on, and did not answer the theme at all. */
+  /* The scrim takes the masthead's own ground rather than a literal, so it
+     follows the theme and survives a reskin instead of holding a superseded
+     palette's colour while every surface around it moves on. */
   background: color-mix(in srgb, var(--chrome) 66%, transparent);
   display: flex;
   justify-content: center;
@@ -2603,8 +2678,8 @@ kbd {
 }
 
 .suggestions button:hover {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
   color: var(--on-fill);
 }
 
