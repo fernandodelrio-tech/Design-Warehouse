@@ -17,10 +17,21 @@ import type { DesignRecord } from '../lib/types';
  * attended to. Two zones, and the split is deliberate:
  *
  *   - The DRAWINGS sit directly on the screenshot with nothing behind them.
- *     A corner block at the measured radius, wearing the measured hairline
- *     and throwing the measured cast, plus a rule at each measured gutter.
- *     Geometry does not need a contrast ratio to be read, and putting it on
- *     the design means you check it against the design.
+ *     A corner block at the measured radius, wearing the measured hairline,
+ *     plus a rule at each measured gutter. Geometry does not need a contrast
+ *     ratio to be read, and putting it on the design means you check it
+ *     against the design.
+ *
+ *     Which only works if it actually registers. The thumbnail is the source
+ *     scaled by a quarter or less and cropped by `object-fit: cover`, so a
+ *     drawing placed in tile coordinates lands nowhere near what it measured:
+ *     a 12px corner drawn at 12px sits beside the design's own corners at 3px
+ *     and reads as a different radius, and a gutter measured a quarter of the
+ *     way across a wide capture lands a quarter of the way across the tile
+ *     when the sides of that capture are not on screen at all. So the
+ *     drawings live in `.ov-frame`, a box that reproduces the image's cover
+ *     geometry exactly. Inside it a percentage IS a source coordinate, and
+ *     the drawings scale with the picture instead of floating over it.
  *   - The FIGURES sit in a solid slab at the foot, on the design's own
  *     measured background with ink chosen to clear it. Text over an unknown
  *     screenshot is a gamble; text over a colour we measured is not.
@@ -41,11 +52,12 @@ interface Props {
 }
 
 /**
- * The corner block is 72px, so a radius past half of that would round it into
- * a pill and stop being a radius. Past the cap the figure is still exact and
- * the caption says the drawing is not.
+ * The specimen's size in SOURCE pixels, so it draws at the same scale as the
+ * design's own components — roughly one card of a typical capture. It shrinks
+ * with the thumbnail exactly as the design does, which is what makes the
+ * corner beside it comparable rather than merely nearby.
  */
-const MAX_RADIUS = 36;
+const SPECIMEN = 260;
 
 /** One row of the slab: what was measured, the figure, and how firmly. */
 function Row({
@@ -80,20 +92,27 @@ export function CardOverlay({ record, cropped }: Props) {
   const shadow = detail?.shadow ?? null;
 
   /*
-     One drawing carries three measurements, because that is how they occur:
-     a card has a corner, an edge and a cast at the same time, and separating
-     them into three samples would invent a relationship the capture never
-     had. Each keeps its own figure and its own count in the slab below.
+     One drawing carries the corner and the edge together, because that is how
+     they occur: a card has both at once, and splitting them would invent a
+     relationship the capture never had.
+
+     Sized and rounded in source pixels expressed as a share of the frame, so
+     both track the picture's own scale. The hairline cannot join them — CSS
+     takes no percentage border-width, and a measured 1px hairline is a
+     quarter of a device pixel at thumbnail scale anyway — so it draws at its
+     measured COLOUR at the thinnest width a screen can render, and the slab
+     carries its true width. The cast is left off the drawing for the same
+     reason: blur radius takes no percentage either, and an elevation drawn at
+     four times the picture's scale is the error this frame exists to fix. Its
+     figure is in the slab.
   */
+  const pct = (sourcePx: number) => `calc(${sourcePx} / ${image.width} * 100%)`;
   const block = {
     background: fill,
-    border: border ? `${border.px}px solid ${border.hex}` : `1px solid ${edge}`,
-    borderRadius: `${Math.min(radius?.px ?? 0, MAX_RADIUS)}px`,
-    boxShadow: shadow
-      ? `0 ${Math.round(shadow.spread / 3)}px ${shadow.spread}px rgb(0 0 0 / ${(
-          shadow.strength / 255
-        ).toFixed(3)})`
-      : 'none',
+    width: pct(SPECIMEN),
+    height: pct(SPECIMEN),
+    borderColor: border ? border.hex : edge,
+    borderRadius: pct(Math.min(radius?.px ?? 0, SPECIMEN / 2)),
   };
 
   // Real measured positions, not a column count divided into equal parts: the
@@ -106,18 +125,22 @@ export function CardOverlay({ record, cropped }: Props) {
     .join(' · ');
 
   return (
-    <div
-      className="card-overlay"
-      aria-hidden
-      style={{ '--ov-ground': bg, '--ov-ink': ink } as CSSProperties}
-    >
-      {gutters.map((x, i) => (
-        <span className="ov-gutter" key={`${x}-${i}`} style={{ left: `${x * 100}%` }} />
-      ))}
+    <div className="card-overlay" style={{ '--ov-ground': bg, '--ov-ink': ink } as CSSProperties}>
+      {/*
+         The drawings are the figures in another notation, so a screen reader
+         is read the slab and spared the geometry.
+      */}
+      <div
+        className="ov-frame"
+        aria-hidden
+        style={{ aspectRatio: `${image.width} / ${image.height}` }}
+      >
+        {gutters.map((x, i) => (
+          <span className="ov-gutter" key={`${x}-${i}`} style={{ left: `${x * 100}%` }} />
+        ))}
 
-      {detail && (radius || border || shadow) && (
-        <span className="ov-block" style={block} />
-      )}
+        {detail && (radius || border) && <span className="ov-block" style={block} />}
+      </div>
 
       <div className="ov-slab">
         {!detail ? (
@@ -132,7 +155,9 @@ export function CardOverlay({ record, cropped }: Props) {
               samples={
                 radius
                   ? `${radius.samples} corner${radius.samples === 1 ? '' : 's'}${
-                      radius.px > MAX_RADIUS ? ' · drawn to 36px' : ''
+                      // Past half the specimen the drawing is a pill rather
+                      // than a corner. The figure stays exact either way.
+                      radius.px > SPECIMEN / 2 ? ' · drawn to half' : ''
                     }`
                   : undefined
               }
@@ -149,17 +174,26 @@ export function CardOverlay({ record, cropped }: Props) {
               value={shadow ? `${shadow.spread}px at ${shadow.strength}/255` : 'none found'}
               samples={
                 shadow
-                  ? `${shadow.samples} block${shadow.samples === 1 ? '' : 's'} · cast rebuilt`
+                  ? `${shadow.samples} block${shadow.samples === 1 ? '' : 's'} · figure only`
                   : undefined
               }
             />
           </>
         )}
 
+        {/*
+           The column count is documented in its own type as a best guess and
+           is shipped elsewhere under "Estimated from the screenshot". It was
+           set here in the same face as the radius, with the firmness slot
+           spent on two attributes that are not a count — so an estimate wore
+           a measurement's clothes. PRODUCT.md's second principle is binding
+           and says the two must be told apart, so it says which it is.
+        */}
+        <Row label="Columns" value={`${auto.layout.columns}`} samples="estimated" />
         <Row
-          label="Grid"
-          value={`${auto.layout.columns} col`}
-          samples={`${auto.layout.densityLabel} · ${auto.colorScheme}`}
+          label="Ground"
+          value={auto.colorScheme}
+          samples={`${auto.layout.densityLabel} · ${auto.saturation}`}
         />
         {/* Dimensions without the aspect string. The tile is the picture, so
             its shape is already on screen; "32:35" is the exact reduced ratio
@@ -167,9 +201,14 @@ export function CardOverlay({ record, cropped }: Props) {
             nothing you did not have. The drawer still carries it. */}
         <Row label="Size" value={`${image.width}×${image.height}`} />
 
-        {/* A fact about the tile rather than about the design, which is why it
-            is not a measured row: the screenshot is longer than the box. */}
-        {cropped && <div className="ov-crop">Cropped — full length on open</div>}
+        {/*
+           A fact about the tile rather than about the design, which is why it
+           is not a measured row. It used to promise "full length", which was
+           true of a tall capture and a lie about a wide one: those are cut at
+           the SIDES by the same box, and were saying nothing at all. Naming no
+           edge is the honest version, and the marker now fires either way.
+        */}
+        {cropped && <div className="ov-crop">Cropped to the tile — full view on open</div>}
 
         {/* Written rather than measured, and kept apart so the difference is
             visible rather than asserted. */}

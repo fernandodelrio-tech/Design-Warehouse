@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import type { DesignRecord } from '../lib/types';
 import { useThumbUrl } from '../hooks/useImageUrl';
+import { useAttention } from '../lib/attention';
 import { PaletteStrip } from './PaletteStrip';
 import { CardOverlay } from './CardOverlay';
 import { IconCopy, IconStar, IconTrash } from './Icons';
@@ -19,8 +20,10 @@ interface Props {
  * One tile: a picture, a colour band, and a name.
  *
  * The tile is a fixed height and the screenshot is cropped to fill it from the
- * top, which is the part that identifies a design. Anything taller than the
- * crop gets a fade and a marker; opening the tile shows it at full length.
+ * top, which is the part that identifies a design. Anything the box cuts gets
+ * a marker; opening the tile shows the whole capture. The marker names no
+ * edge, because the box cuts the foot off a tall capture and the sides off a
+ * wide one, and it used to promise "full length" to both.
  *
  * Everything the footer used to say — dimensions, aspect, type, layout,
  * scheme, columns, density, keywords, tags — now appears over the screenshot
@@ -45,13 +48,26 @@ export const DesignCard = memo(function DesignCard({
 }: Props) {
   const url = useThumbUrl(record.id);
   const { image, auto } = record;
+  // Null on a pointer device: the hook opts out and never observes.
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const attended = useAttention(node);
 
-  // Compared against the tile's own aspect rather than a fixed number: the
-  // crop box is as wide as its column, so what is cut off depends on the tile.
-  const cropped = image.height / image.width > 0.82;
+  /*
+     The box crops in both directions, so both count. A capture taller than the
+     box loses its foot; one much wider than the box loses its sides, and those
+     were passing as uncropped — five of twelve tiles on a test wall showed
+     half-cut words with no marker at all. The bounds bracket the range of
+     aspects the tile takes across its column widths and Size settings; the
+     sentence names no edge, because which one is cut depends on the tile.
+  */
+  const boxAspect = image.height / image.width;
+  const cropped = boxAspect > 0.82 || boxAspect < 0.62;
 
   return (
-    <article className={`card${selected ? ' selected' : ''}`}>
+    <article
+      ref={setNode}
+      className={`card${selected ? ' selected' : ''}${attended ? ' card-attended' : ''}`}
+    >
       <input
         type="checkbox"
         className="card-select"
@@ -87,7 +103,7 @@ export const DesignCard = memo(function DesignCard({
           {cropped && (
             <>
               <span className="card-crop-fade" aria-hidden />
-              <span className="card-crop-badge">Full length on open</span>
+              <span className="card-crop-badge">Full view on open</span>
             </>
           )}
         </button>

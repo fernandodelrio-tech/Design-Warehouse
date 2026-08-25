@@ -1198,6 +1198,9 @@ select {
 .card-overlay {
   position: absolute;
   inset: 0;
+  /* The frame inside is deliberately larger than this box on one axis — that
+     is what cover means — so the overflow is clipped here. */
+  overflow: hidden;
   /* Never a click target: the picture underneath stays one clean target for
      opening the design, and the actions above it keep their own hit boxes. */
   pointer-events: none;
@@ -1211,9 +1214,30 @@ select {
 }
 
 .card:hover .card-overlay,
-.card:focus-within .card-overlay {
+.card:focus-within .card-overlay,
+.card-attended .card-overlay {
   opacity: 1;
   transition-delay: 0.18s;
+}
+
+/*
+   The picture's own geometry, reproduced.
+
+   `min-width`/`min-height` at 100% with the source's aspect-ratio resolves to
+   the smallest box covering the tile, which is exactly what `object-fit:
+   cover` computes; `top: 0` with a centred left matches `object-position: top
+   center`. The image and this box therefore occupy the same rectangle, so a
+   percentage inside it is a coordinate in the SOURCE — which is the only
+   space the analyzer's measurements are in.
+*/
+.ov-frame {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 100%;
+  min-height: 100%;
+  /* aspect-ratio is set inline, per design: it is the source's own ratio. */
 }
 
 /*
@@ -1224,7 +1248,8 @@ select {
    statement and two fighting for a 20px band.
 */
 .card:hover .card-crop-badge,
-.card:focus-within .card-crop-badge {
+.card:focus-within .card-crop-badge,
+.card-attended .card-crop-badge {
   opacity: 0;
 }
 
@@ -1254,14 +1279,25 @@ select {
 .ov-block {
   position: absolute;
   /*
-     Below the select box, not beside it. Both want the top-left corner, and
-     attending to a tile reveals them together — the checkbox's white backing
-     landed inside the sample and made a 17px radius look chipped.
+     Anchored where the frame and the tile agree.
+
+     The frame is top-aligned and horizontally centred on the tile — that is
+     what `object-position: top center` means — so `top` and a centred `left`
+     are the two offsets that mean the same thing in both boxes. A fixed
+     `left` does not: on a landscape capture the frame is wider than the tile
+     and hangs off both sides, and 12px from ITS edge was 72px off-screen.
+
+     Below the select box on purpose, too: attending to a tile reveals them
+     together, and the checkbox's backing landed inside the sample.
   */
   top: calc(var(--s5) + var(--s4));
-  left: var(--s3);
-  width: 72px;
-  height: 72px;
+  left: 50%;
+  translate: -50% 0;
+  /* Width, height and radius all arrive in source-pixel percentages of the
+     frame. The border width is the one measurement that cannot: CSS takes no
+     percentage there, so it draws at the thinnest a screen can and the slab
+     carries the true figure. */
+  border: 1px solid;
 }
 
 .ov-slab {
@@ -1344,27 +1380,19 @@ select {
 }
 
 /*
-   No hover to trade against, so the sheet is permanent — but only the
-   figures. The drawings are the same facts rendered a second way, and on a
-   phone the picture is most of the screen; covering it with a corner block
-   and a set of rules to repeat what the slab already says would give the wall
-   back to metadata, which is the composition this replaced.
+   No pointer to say which tile is being looked at, so scrolling says it: the
+   tile holding the middle of the viewport carries the sheet, and the rest of
+   the wall stays pictures. See lib/attention.ts.
+
+   The first version here simply set every sheet visible. That is not data on
+   demand — it put a slab on all two hundred tiles and handed the wall back to
+   metadata, which is the arrangement this composition exists to replace. The
+   drawings stay drawn, because the drawings ARE the composition; suppressing
+   them left the metadata and threw away the thesis.
 */
 @media (hover: none) {
-  .card-overlay {
-    opacity: 1;
+  .card-attended .card-overlay {
     transition: none;
-  }
-
-  .ov-gutter,
-  .ov-block {
-    display: none;
-  }
-
-  /* The sheet is permanent here, so the badge would be permanently behind it.
-     The slab's own crop line is the only statement that can be read. */
-  .card-crop-badge {
-    display: none;
   }
 }
 
@@ -2730,13 +2758,34 @@ kbd {
      scrolls sideways rather than wrapping, so the bar keeps a fixed height and
      the grid below it does not jump when a button appears.
   */
+  /*
+     Not sticky here, and the filter bar takes the pin instead.
+
+     The bar grows to three rows at this width — `height: auto` above — while
+     `.filters` is pinned at `--topbar-height`, a fixed 60px. So the filter bar
+     stuck 90px short of the bar's real foot and, being the higher layer, drew
+     straight over the Paste, Files and Folder buttons on every scroll: the
+     three ways of adding a design, covered by the controls for filtering the
+     ones already there.
+
+     Pinning both would need the bar's rendered height, which varies with how
+     the three rows wrap and is not a number CSS can be told here. It does not
+     need to be: 150px is a fifth of a phone viewport spent on a wordmark and a
+     search field, and the controls worth keeping on screen while scrolling a
+     wall are the ones that govern what is on it. The masthead scrolls away,
+     the filters pin to the top, and the collision cannot recur.
+  */
   .topbar {
-    position: sticky;
+    position: static;
     height: auto;
     flex-wrap: wrap;
     gap: var(--s2);
     padding: var(--s2) var(--s3);
     padding-top: max(var(--s2), env(safe-area-inset-top));
+  }
+
+  .filters {
+    top: 0;
   }
 
   .brand {
