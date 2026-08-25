@@ -167,7 +167,25 @@ export function CardOverlay({ record, cropped }: Props) {
          applied to both squashed the specimen and turned its corner into an
          ellipse.
       */}
-      {block && (radius || border || shadow) && <span className="ov-block" style={block} />}
+      {block && (radius || border || shadow) && (
+        <>
+          <span className="ov-block" style={block} />
+          {/*
+             Named, because an unlabelled rectangle on a stranger's screenshot
+             is a defect however honest its geometry. It says what it is drawn
+             from, and the three rows underneath carry the figures.
+          */}
+          <span
+            className="ov-block-label"
+            style={{
+              top: `calc(${block.height} + var(--s5) + var(--s4) + var(--s1))`,
+              left: 'var(--s3)',
+            }}
+          >
+            One card, as measured
+          </span>
+        </>
+      )}
 
       <div className="ov-slab">
         {!detail ? (

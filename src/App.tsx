@@ -593,11 +593,16 @@ export default function App() {
     [markChanged, notify, openId, records, refreshUsage],
   );
 
+  /**
+   * `quiet` suppresses the per-design toast and rethrows instead, so a bulk
+   * run can report once at the end rather than stacking a toast per design.
+   */
   const reanalyze = useCallback(
-    async (id: string) => {
+    async (id: string, { quiet = false }: { quiet?: boolean } = {}) => {
       const record = records.find((r) => r.id === id);
       const blobs = await getBlobs(id);
       if (!record || !blobs) {
+        if (quiet) throw new Error('missing image');
         notify('The stored image for that design is missing.', 'error');
         return;
       }
@@ -637,16 +642,53 @@ export default function App() {
         releaseImage(id);
         setRecords((current) => current.map((r) => (r.id === id ? next : r)));
         markChanged();
+        if (quiet) return;
         notify(
           kept ? 'Re-analysed; your edited spec was kept as it stands.' : 'Re-analysed and the measured fields refreshed.',
           'success',
         );
       } catch (err) {
+        if (quiet) throw err;
         notify(err instanceof Error ? err.message : 'Re-analysis failed.', 'error');
       }
     },
     [markChanged, notify, records],
   );
+
+
+  /**
+   * Re-analyze everything currently selected.
+   *
+   * Re-analysis is how a design catalogued by an older analyzer gets the
+   * measurements it never had — and those are exactly the designs a person has
+   * a lot of at once, because they were all catalogued before the same
+   * release. Reaching them one drawer at a time is not a way to do that, so
+   * the selection bar carries it: filter down to the old ones, select, run.
+   *
+   * Serial rather than parallel: analysis is CPU-bound and already queued
+   * behind one worker, so overlapping the calls would contend for the same
+   * cores and finish no sooner.
+   */
+  const reanalyzeSelected = useCallback(async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    let done = 0;
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await reanalyze(id, { quiet: true });
+        done += 1;
+      } catch {
+        failed += 1;
+      }
+    }
+    notify(
+      failed === 0
+        ? `Re-analysed ${done} design${done === 1 ? '' : 's'}; edited fields were kept.`
+        : `Re-analysed ${done}, and ${failed} could not be read.`,
+      failed === 0 ? 'success' : 'error',
+    );
+  }, [notify, reanalyze, selected]);
 
   const downloadImage = useCallback(
     async (record: DesignRecord) => {
@@ -1186,6 +1228,9 @@ export default function App() {
           </button>
           <button type="button" className="btn" onClick={downloadSelectedSpecs}>
             Download .md
+          </button>
+          <button type="button" className="btn" onClick={() => void reanalyzeSelected()}>
+            Re-analyze
           </button>
           <button type="button" className="btn btn-danger" onClick={deleteSelected}>
             Delete
