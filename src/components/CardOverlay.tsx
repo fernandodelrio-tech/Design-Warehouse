@@ -201,7 +201,13 @@ export function CardOverlay({ record, cropped }: Props) {
               value={shadow ? `${shadow.spread}px at ${shadow.strength}/255` : 'none found'}
               samples={
                 shadow
-                  ? `${shadow.samples} block${shadow.samples === 1 ? '' : 's'} · figure only`
+                  ? // The direction is not measurable off a still frame, so
+                    // the cast is even — the same wording the drawer uses, and
+                    // the same honesty: rebuilt from the spread and the
+                    // strength rather than seen. It went stale for one commit
+                    // reading "figure only", which was true while the cast was
+                    // not drawn and false the moment it was.
+                    `${shadow.samples} block${shadow.samples === 1 ? '' : 's'} · cast rebuilt`
                   : undefined
               }
             />
