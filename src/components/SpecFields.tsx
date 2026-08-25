@@ -106,3 +106,43 @@ export function Section({
     </details>
   );
 }
+
+/**
+ * How much of a spec section somebody has actually filled in.
+ *
+ * The app is careful not to guess what a bitmap cannot hold — font families,
+ * component inventories, interaction notes — and leaves those blank on
+ * purpose. But a blank field and a recorded one looked identical in the
+ * drawer, so a spec with two of nine fields written read as a full one, and
+ * the gap only showed up in the export, where empty fields are dropped.
+ *
+ * Strings are the fields. A list counts as one field, filled when it has
+ * anything in it: counting a type scale's thirty-five inputs individually
+ * would drown the figure that matters.
+ */
+export function recorded(value: unknown): { filled: number; total: number } {
+  if (typeof value === 'string') {
+    return { filled: value.trim() ? 1 : 0, total: 1 };
+  }
+  if (Array.isArray(value)) {
+    return { filled: value.length ? 1 : 0, total: 1 };
+  }
+  if (value && typeof value === 'object') {
+    let filled = 0;
+    let total = 0;
+    for (const inner of Object.values(value)) {
+      const count = recorded(inner);
+      filled += count.filled;
+      total += count.total;
+    }
+    return { filled, total };
+  }
+  return { filled: 0, total: 0 };
+}
+
+/** "4 of 9 recorded", or nothing at all when a section has no fields to count. */
+export function recordedLabel(value: unknown): string | undefined {
+  const { filled, total } = recorded(value);
+  if (!total) return undefined;
+  return `${filled} of ${total} recorded`;
+}

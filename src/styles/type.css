@@ -6,23 +6,26 @@
    Nothing was recorded for the families — a bitmap cannot hold them — so this
    is a choice.
 
-   ONE face, not two. "Flint Panorama" alternates between a light and a
-   semibold across its five measured steps and never uses anything between
-   them; the serif that used to sit over this app has a single 500 cut, which
-   cannot set an H1 the spec measures as light. Public Sans is variable across
-   the whole range, so it can.
+   ONE face, not two. "Ochre Broadsheet" reports the same 27.4px stem for all
+   three of its type steps, on ink heights of 59, 36 and 14 — one global number
+   printed three times rather than three measurements — so no weight transfers
+   from that capture at all. The 400 and 600 this app sets are chosen, and a
+   variable family is what lets a chosen pair be adjusted later without
+   swapping the face. The serif that used to sit over this app has a single 500
+   cut and could not have offered the choice.
 
-   It is also the right character for the page. This design holds no hue, no
-   texture and almost no elevation — what it has is space and tracking, and a
-   plain grotesque is what lets those be the event. The serif file is deleted
-   rather than shipped unused.
+   It is also the right character for the page. This is the most colourful of
+   these designs by a distance — a vivid yellow, a light blue card, an orange
+   field and a gold rule over a cream ground — and a plain grotesque is what
+   keeps the type out of that argument. The serif file is deleted rather than
+   shipped unused.
 */
 
 /*
    One variable file rather than static cuts: Google serves the same variable
    font for every weight asked of this family now, so declaring the range is
    honest — and here the range is the point, since the design wants a 300 and a
-   600 out of the same face.
+   700 out of the same face.
 */
 @font-face {
   font-family: 'Public Sans';

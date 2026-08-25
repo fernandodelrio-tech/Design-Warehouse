@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useOverlay } from '../lib/overlay';
 import { adoptLocalCatalog, countLocalCatalog } from '../lib/session';
 import type { Account } from '../lib/accounts';
@@ -23,6 +24,8 @@ interface Props {
   onAccountChange: (account: Account | null) => Promise<void>;
   onSignOut: () => Promise<void>;
   onConnectionChange: () => void;
+  onWipeCatalog: () => void;
+  catalogCount: number;
 }
 
 export function SyncPanel({
@@ -35,6 +38,8 @@ export function SyncPanel({
   onAccountChange,
   onSignOut,
   onConnectionChange,
+  onWipeCatalog,
+  catalogCount,
 }: Props) {
   const notify = useNotify();
   const [settings, setSettings] = useState<GoogleSettings | null>(null);
@@ -62,11 +67,30 @@ export function SyncPanel({
   }, [account]);
 
   // Scroll lock, focus trap, Escape and focus restore — see lib/overlay.
+  // This must stay above every early return: it is a hook, so calling it
+  // conditionally would change the hook count between renders.
   useOverlay(overlayRef, onClose);
 
-  if (!settings) return null;
+  /*
+     The shell renders before the settings do.
+
+     useOverlay reads ref.current once, in an effect whose deps never change.
+     Returning null here — as this did — meant the overlay div did not exist on
+     the render that effect fired after, so it captured null and the focus trap
+     never ran for the life of the panel. Escape kept working, because it is
+     checked before the node guard, and that is what hid the bug: the panel
+     behaved like a modal from the keyboard's point of view right up until you
+     pressed Tab and walked out into the catalog behind it.
+
+     So the frame with no settings yet still renders the dialog, and the ref has
+     something to hold.
+  */
 
   const update = (changes: Partial<GoogleSettings>) => {
+    // Only reachable once the panel has its settings — the shell render below
+    // has no controls to call this from — but the guard is what tells the
+    // compiler that, now that the early return sits underneath.
+    if (!settings) return;
     const next = { ...settings, ...changes };
     setSettings(next);
     void writeSettings(next);
@@ -113,18 +137,30 @@ export function SyncPanel({
     }
   };
 
+  const shell = {
+    className: 'overlay',
+    role: 'dialog',
+    'aria-modal': true,
+    'aria-label': 'Google Drive sync',
+    ref: overlayRef,
+    tabIndex: -1,
+    onMouseDown: (event: ReactMouseEvent<HTMLDivElement>) => {
+      if (event.target === event.currentTarget) onClose();
+    },
+  } as const;
+
+  if (!settings) {
+    return (
+      <div {...shell}>
+        <div className="sync-panel">
+          <p className="sync-loading">Loading sync settings…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className="overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Google Drive sync"
-      ref={overlayRef}
-      tabIndex={-1}
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
+    <div {...shell}>
       <div className="sync-panel">
         <header className="detail-head">
           <div className="detail-head-row">
@@ -282,6 +318,23 @@ export function SyncPanel({
                 catalogs apart in the app, not from someone inspecting storage directly.
               </dd>
             </div>
+          </Section>
+
+          <Section title="Danger zone">
+            <p className="sync-note">
+              Deleting the catalog removes every design on this device at once. Unlike
+              deleting one, it is not staged and there is nothing to undo it with — take a
+              backup from the header first if you want one.
+            </p>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={onWipeCatalog}
+              disabled={catalogCount === 0}
+            >
+              Delete entire catalog
+              {catalogCount > 0 ? ` (${catalogCount})` : ''}
+            </button>
           </Section>
         </div>
       </div>

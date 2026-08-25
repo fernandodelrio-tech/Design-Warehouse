@@ -148,11 +148,29 @@ function request<T>(req: IDBRequest<T>): Promise<T> {
   });
 }
 
+/**
+ * The catalog, without anything in the bin.
+ *
+ * Every caller that matters reads through here — the app, the account switch,
+ * and the sync engine's push — so filtering in this one place is what keeps a
+ * binned design out of the grid, out of exports and off the wire, without each
+ * of them having to remember to ask.
+ */
 export async function listDesigns(): Promise<DesignRecord[]> {
   const records = await tx([STORE_DESIGNS], 'readonly', (t) =>
     request(t.objectStore(STORE_DESIGNS).getAll() as IDBRequest<DesignRecord[]>),
   );
-  return records.sort((a, b) => b.createdAt - a.createdAt);
+  return records.filter((r) => r.deletedAt == null).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+/** Everything in the bin, newest deletion first. */
+export async function listDeleted(): Promise<DesignRecord[]> {
+  const records = await tx([STORE_DESIGNS], 'readonly', (t) =>
+    request(t.objectStore(STORE_DESIGNS).getAll() as IDBRequest<DesignRecord[]>),
+  );
+  return records
+    .filter((r) => r.deletedAt != null)
+    .sort((a, b) => (b.deletedAt ?? 0) - (a.deletedAt ?? 0));
 }
 
 export async function saveDesign(record: DesignRecord, blobs?: DesignBlobs): Promise<void> {
@@ -178,12 +196,77 @@ export async function getBlobs(id: string): Promise<DesignBlobs | undefined> {
   );
 }
 
+/**
+ * Hard delete: the record, its blobs, and a tombstone so the deletion sticks
+ * instead of being pulled back by the next sync. Used by the bin when a
+ * staged deletion ages out, and by nothing else.
+ */
 export async function deleteDesign(id: string): Promise<void> {
   await tx([STORE_DESIGNS, STORE_BLOBS, STORE_TOMBSTONES], 'readwrite', (t) => {
     t.objectStore(STORE_DESIGNS).delete(id);
     t.objectStore(STORE_BLOBS).delete(id);
     t.objectStore(STORE_TOMBSTONES).put({ id, deletedAt: Date.now() });
   });
+}
+
+/**
+ * Stages a deletion: stops listing the design and writes its tombstone, but
+ * keeps the record and the image on this machine so it can be put back.
+ *
+ * The tombstone goes out now rather than at purge because the alternative is
+ * a delete that does not reach the other devices for a month.
+ */
+export async function binDesign(id: string): Promise<DesignRecord | undefined> {
+  const at = Date.now();
+  return tx([STORE_DESIGNS, STORE_TOMBSTONES], 'readwrite', async (t) => {
+    const store = t.objectStore(STORE_DESIGNS);
+    const record = await request(store.get(id) as IDBRequest<DesignRecord | undefined>);
+    if (!record) return undefined;
+    const binned = { ...record, deletedAt: at };
+    store.put(binned);
+    t.objectStore(STORE_TOMBSTONES).put({ id, deletedAt: at });
+    return binned;
+  });
+}
+
+/**
+ * Puts a binned design back, and clears the tombstone that took it away.
+ *
+ * `updatedAt` moves to now deliberately: the sync engine reconciles on
+ * timestamps, so a restore has to be newer than the deletion it undoes or the
+ * next round would simply delete it again.
+ */
+export async function restoreDesign(id: string): Promise<DesignRecord | undefined> {
+  return tx([STORE_DESIGNS, STORE_TOMBSTONES], 'readwrite', async (t) => {
+    const store = t.objectStore(STORE_DESIGNS);
+    const record = await request(store.get(id) as IDBRequest<DesignRecord | undefined>);
+    if (!record) return undefined;
+    const { deletedAt: _binned, ...rest } = record;
+    const restored = { ...rest, updatedAt: Date.now() } as DesignRecord;
+    store.put(restored);
+    t.objectStore(STORE_TOMBSTONES).delete(id);
+    return restored;
+  });
+}
+
+/** How long a staged deletion can be undone for. */
+export const BIN_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * Applies the deletions that have aged out. Their tombstones already exist,
+ * so this only reclaims the space the kept copies were holding.
+ */
+export async function purgeBin(maxAgeMs = BIN_RETENTION_MS): Promise<number> {
+  const cutoff = Date.now() - maxAgeMs;
+  const expired = (await listDeleted()).filter((r) => (r.deletedAt ?? 0) <= cutoff);
+  if (!expired.length) return 0;
+  await tx([STORE_DESIGNS, STORE_BLOBS], 'readwrite', (t) => {
+    for (const record of expired) {
+      t.objectStore(STORE_DESIGNS).delete(record.id);
+      t.objectStore(STORE_BLOBS).delete(record.id);
+    }
+  });
+  return expired.length;
 }
 
 export interface Tombstone {

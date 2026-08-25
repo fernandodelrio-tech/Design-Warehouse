@@ -49,43 +49,49 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Vermilion Frontispiece**, a design catalogued in the app itself and then
+The app wears **Ochre Broadsheet**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#fdf1ee` `#ffffff` `#8f40c5` `#e37658` `#9c515b` `#9b4a96` `#2b1b21` `#c67080` |
+| **Colour** | Seven measured tokens, exact — `#faf0e6` `#191a1a` `#ede5d9` `#e5d53b` `#bb7158` `#99c0da` `#cfd4d1` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
-| **Page inset** | 5% left and right |
-| **Type scale** | 12 · 14 · 16 · 20 · 24 · 32, sharing four steps with the spacing scale |
-| **Corners** | 8px — a frontispiece is a plate, and this design is panels on a ground rather than rules |
-| **Faces** | Young Serif for the wordmark and headings, Hanken Grotesk for everything else |
+| **Page inset** | 12px, level on both sides |
+| **Type scale** | 12 · 14 · 16 · 24 · 41, and a head that clamps between 34 and 67 |
+| **Corners** | 4px — the sharpest of these so far, on the densest capture |
+| **Faces** | Public Sans, one variable file, cut at 400 and 600 — chosen, not measured |
 
-A generous palette: **10 of the 28 pairs clear 4.5:1**. Two things about it shape the
-whole skin.
+**Two of this spec's readings are not usable, and saying so is the honest part of
+applying it.** The app measures what it can and labels the rest, and this capture is
+where that mattered most.
 
-**Three of the tokens sit within 0.006 of one another in luminance** — the purple, the
-maroon and the magenta — so they cannot stack into a hierarchy, but they all clear AA on
-both light grounds. They are spent on *hue* rather than on level: the maroon is the
-faintest text, the purple is what focus looks like, and the magenta is a mark. A coloured
-secondary tier is something this palette can afford and none of the previous four could.
+**The weight column is broken.** All three type steps report the same stem — 27.4px —
+for ink heights of 59, 36 and 14. Three sizes cannot share one stem width, and 27.4px
+on 14px of ink is a stroke twice as tall as the letter it belongs inside. That is one
+global number printed three times rather than three measurements, so no weight
+transfers from this capture. The 400 and 600 above are chosen, and the stylesheet says
+so where it sets them.
 
-**And the vermilion carries the ink at 5.46:1** while failing at 2.71 as type on the
-page. That is the ordinary shape of an accent, and it means the primary button is a
-filled one again rather than the outlined one Scarlet Threshold had to settle for.
+**The "top navigation" is 797px tall.** A navigation band is not eight hundred pixels
+deep; on a 6073px capture that is the nav plus everything beneath it, read as one
+region. Its fill transfers — `#fffdf1`, a near-white cream that takes the ink at
+17.09 — and its height does not.
 
-**The evening edition.** The three mid tokens that carry the light theme's colour all die
-on the ink — 2.89, 2.92 and 2.98 — so none survives the inversion, and each is lifted
-toward the blush until it reads. The vermilion needs no help: it clears 5.46 on the ink
-as type *and* still carries the ink as a fill, the one token that means the same thing in
-both themes.
+**What is solid is the colour**, and it is the most colourful of these by a distance: a
+cream page across 63% of the canvas, a near-black ink at 15.51, and then a vivid
+yellow, a light blue card, an orange field and a gold rule. The yellow reads 1.34 as a
+letter and 11.56 with the ink knocked out of it, so it is a fill rather than type — and
+for once hover toward the light does exactly what the spec says, because this label
+really is the ink: 11.56 opens to 13.58.
+
+**And it is dense**: 50% of the canvas carries detail, the highest yet, on a 4px corner.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
 
-The two faces are self-hosted from `src/styles/fonts/` — 80 KB of latin-subset woff2,
-five static instances. The app has to work with the network switched off, and opening it
-should not tell a font CDN that you did.
+The face is self-hosted from `src/styles/fonts/` — a single 27 KB latin-subset variable
+woff2. The app has to work with the network switched off, and opening it should not tell
+a font CDN that you did.
 
 ## Getting designs in
 
@@ -398,6 +404,23 @@ Leave sync switched off and use **⬇** / **⬆** in the header, which write and
 a single backup file holding every design. That moves a catalog between machines by
 hand, with nothing leaving them in between.
 
+## Deleting, and changing your mind
+
+Deleting a design does not destroy it. The record and its image stay on the machine
+and stop being listed, so the **Undo** in the toast puts it straight back — there is
+no dialog in front of a delete, because an undo you can reach is a better guard than
+one more thing to dismiss. Anything still in the bin after thirty days is applied for
+real on the next launch.
+
+The deletion still reaches your other devices immediately: what is kept is this
+machine's own copy, not the design's place in the catalog. Undoing it puts the design
+back everywhere, because a restore is newer than the deletion it undoes and the most
+recent edit is what wins.
+
+**Delete entire catalog**, in the sync panel under *Danger zone*, is the exception. It
+removes every design on the device at once, it is not staged, and nothing undoes it —
+take a backup first.
+
 ## Backups
 
 The catalog lives in the browser profile you use, and each profile has its own.
@@ -416,6 +439,8 @@ src/
     layout.ts      column, section, margin and density heuristics
     image.ts       decoding, thumbnailing, pixel sampling
     analyze.ts     orchestrates analysis and seeds a spec from it
+    analyze.worker.ts   the same analysis, off the main thread
+    analyze-client.ts   talks to the worker, and falls back to the page
     title.ts       decides whether a filename is worth keeping as a title
     naming.ts      names a design when it is not — evocative, and deterministic
     grouping.ts    the sort and group-by options behind the grid controls

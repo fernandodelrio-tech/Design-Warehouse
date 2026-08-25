@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useFullImageUrl } from '../hooks/useImageUrl';
 import { ANALYZER_VERSION } from '../lib/analyze';
-import { readableOn } from '../lib/color';
 import { describeAspect, formatBytes } from '../lib/image';
 import { useOverlay } from '../lib/overlay';
 import { scrollerAbove, usePinchZoom } from '../lib/pinch';
@@ -25,7 +25,8 @@ import type { ColorToken, DesignRecord, TypeStep } from '../lib/types';
 import { useNotify } from './Toast';
 import { ListEditor } from './ListEditor';
 import { PaletteStrip } from './PaletteStrip';
-import { Field, Section, TextArea, TextField } from './SpecFields';
+import { MeasuredDetail } from './MeasuredDetail';
+import { Field, Section, TextArea, TextField, recordedLabel } from './SpecFields';
 import {
   IconClose,
   IconCopy,
@@ -43,6 +44,51 @@ interface Props {
   onDelete: (id: string) => void;
   onReanalyze: (id: string) => void;
   onDownloadImage: (record: DesignRecord) => void;
+}
+
+/**
+ * The export routes, behind one control.
+ *
+ * A <details> rather than a popover: it opens in flow inside a panel that is
+ * already tall, so nothing is covered and no anchor positioning is needed. But
+ * a bare <details> is not a menu — it does not close when you press Escape or
+ * click away — and in this drawer the first of those is worse than missing.
+ * The dialog listens for Escape on the document, so without this the key that
+ * should dismiss the menu closed the whole drawer behind it.
+ */
+function ExportMenu({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || !node.open) return;
+      // Before the dialog's own handler, which would close the drawer.
+      event.stopPropagation();
+      event.preventDefault();
+      node.open = false;
+      node.querySelector('summary')?.focus();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (node.open && !node.contains(event.target as Node)) node.open = false;
+    };
+
+    // Capture, so this runs before the document-level listener in lib/overlay.
+    document.addEventListener('keydown', onKeyDown, true);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, []);
+
+  return (
+    <details className="export-menu" ref={ref}>
+      {children}
+    </details>
+  );
 }
 
 export function DesignDetail({
@@ -187,6 +233,13 @@ export function DesignDetail({
 
         <div className="detail-side">
           <header className="detail-head">
+            {/*
+               The title on screen is an editable input, which is right — it is
+               the field you rename a design in — but an input is not a heading,
+               and the drawer had no heading at all. A screen reader navigating
+               by heading landed nowhere inside it.
+            */}
+            <h2 className="visually-hidden">{draft.title}</h2>
             <div className="detail-head-row">
               <input
                 className="detail-title"
@@ -234,6 +287,17 @@ export function DesignDetail({
               </span>
             </Field>
 
+            {/*
+               One primary action, and one door to the rest.
+
+               This row carried eight buttons before any content — copy prompt,
+               spec, JSON, CSS, .md, image, re-analyze, delete — all the same
+               size, all competing, with the destructive one as the eighth
+               sibling. Four of them are one idea in four formats, so they are
+               one control now; the two that manage the record rather than use
+               it moved to the end of the drawer, where the sync panel already
+               keeps its equivalent.
+            */}
             <div className="detail-actions">
               <button
                 type="button"
@@ -250,66 +314,62 @@ export function DesignDetail({
               >
                 <IconSparkle /> Copy prompt for Claude
               </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => copy('Spec', toMarkdownSpec(draft))}
-              >
-                <IconCopy /> Spec
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => copy('Tokens JSON', JSON.stringify(toTokens(draft), null, 2))}
-              >
-                <IconCopy /> JSON
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => copy('CSS variables', toCssVariables(draft))}
-              >
-                <IconCopy /> CSS
-              </button>
-              <button
-                type="button"
-                className="btn"
-                title="Save the spec as a markdown file"
-                onClick={() => downloadText(`${fileBase}.md`, toMarkdownSpec(draft), 'text/markdown')}
-              >
-                <IconDownload /> .md
-              </button>
-              <button
-                type="button"
-                className="btn"
-                title="Save the original image"
-                onClick={() => onDownloadImage(draft)}
-              >
-                <IconDownload /> Image
-              </button>
-              <button
-                type="button"
-                className={stale ? 'btn btn-primary' : 'btn'}
-                title={
-                  stale
-                    ? 'Catalogued by an older analyzer. Re-run it to measure what this design is still missing — the exported prompt leaves out every blank field.'
-                    : 'Run the analyzer again over the pixels'
-                }
-                onClick={() => onReanalyze(draft.id)}
-              >
-                <IconRefresh /> Re-analyze{stale ? ' ·' : ''}
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => onDelete(draft.id)}
-              >
-                <IconTrash /> Delete
-              </button>
+
+              <ExportMenu>
+                <summary className="btn">
+                  <IconDownload /> Export
+                </summary>
+                <div className="export-menu-list">
+                  <button type="button" className="btn" onClick={() => copy('Spec', toMarkdownSpec(draft))}>
+                    <IconCopy /> Copy spec
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => copy('Tokens JSON', JSON.stringify(toTokens(draft), null, 2))}
+                  >
+                    <IconCopy /> Copy tokens as JSON
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => copy('CSS variables', toCssVariables(draft))}
+                  >
+                    <IconCopy /> Copy CSS variables
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => downloadText(`${fileBase}.md`, toMarkdownSpec(draft), 'text/markdown')}
+                  >
+                    <IconDownload /> Download spec as .md
+                  </button>
+                  <button type="button" className="btn" onClick={() => onDownloadImage(draft)}>
+                    <IconDownload /> Download the screenshot
+                  </button>
+                </div>
+              </ExportMenu>
             </div>
           </header>
 
           <div className="detail-body">
+            {/*
+               Stale used to be a bare "·" appended to a button label, explained
+               only in a title attribute — an invisible state on the one action
+               that fills in what is missing. It says so now, where it will be
+               read, and carries the action with it.
+            */}
+            {stale && (
+              <div className="detail-stale">
+                <p>
+                  Catalogued by an older analyzer. Re-running it measures what this design is
+                  still missing — every blank field is dropped from the exported prompt.
+                </p>
+                <button type="button" className="btn btn-primary" onClick={() => onReanalyze(draft.id)}>
+                  <IconRefresh /> Re-analyze
+                </button>
+              </div>
+            )}
             <datalist id="dw-categories">
               {CATEGORIES.map((c) => (
                 <option key={c} value={c} />
@@ -480,14 +540,9 @@ export function DesignDetail({
               >
                 + Add token
               </button>
-              <div className="mono" style={{ color: 'var(--text-faint)' }}>
-                {draft.auto.palette
-                  .map((c) => `${c.hex} ${c.name} (${Math.round(c.share * 100)}%)`)
-                  .join(' · ')}
-              </div>
             </Section>
 
-            <Section title="Typography" defaultOpen>
+            <Section title="Typography" defaultOpen badge={recordedLabel(draft.spec.typography)}>
               <div className="field-row">
                 <TextField
                   label="Heading family"
@@ -600,10 +655,18 @@ export function DesignDetail({
               />
             </Section>
 
-            <Section title="Layout" defaultOpen>
+            <Section title="Layout" defaultOpen badge={recordedLabel(draft.spec.layout)}>
               <div style={{ color: 'var(--text-muted)', fontSize: 'var(--t-label)' }}>
                 {draft.auto.layout.summary}
               </div>
+              {/*
+                 What the analyzer measured, before the fields it seeded from
+                 it. The corner, the hairline and the elevation were previously
+                 only ever strings in the inputs below.
+              */}
+              <Field label="Measured geometry">
+                <MeasuredDetail detail={draft.auto.detail} palette={draft.auto.palette} />
+              </Field>
               <div className="field-row">
                 <TextField
                   label="Structure"
@@ -674,7 +737,7 @@ export function DesignDetail({
               />
             </Section>
 
-            <Section title="Effects & detail">
+            <Section title="Effects & detail" badge={recordedLabel(draft.spec.effects)}>
               <div className="field-row">
                 <TextField
                   label="Shadows / elevation"
@@ -776,30 +839,30 @@ export function DesignDetail({
                 <dt>Analyzer</dt>
                 <dd>
                   v{draft.auto.version} · {new Date(draft.auto.extractedAt).toLocaleString()}
-                  {stale ? (
-                    <>
-                      <br />
-                      <span className="apply-hint">
-                        Older than v{ANALYZER_VERSION}. Whatever this analyzer measures and that
-                        one did not — radius, hairlines, elevation, type sizes, content width,
-                        gutters, gradients, imagery, the component inventory — is still blank
-                        here, and the exported prompt leaves blank fields out. Re-analyze fills
-                        them in without touching anything you have edited.
-                      </span>
-                    </>
-                  ) : null}
+                  {stale ? ` · older than v${ANALYZER_VERSION}` : ''}
                 </dd>
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {draft.auto.palette.map((color) => (
-                  <span
-                    className="chip"
-                    key={color.hex}
-                    style={{ background: color.hex, color: readableOn(color.hex), borderColor: 'transparent' }}
-                  >
-                    {color.hex} · {color.role}
-                  </span>
-                ))}
+            </Section>
+
+            {/*
+               Managing the record, not using the design. Delete was the eighth
+               button in a row that began with the primary action; here it is
+               one deliberate disclosure away, which is where the sync panel
+               already keeps the equivalent.
+            */}
+            <Section title="Manage this design">
+              <p className="sync-note">
+                Re-analyzing measures the pixels again and fills in blanks without touching
+                anything you have edited. Deleting can be undone from the toast, and for thirty
+                days after that.
+              </p>
+              <div className="manage-actions">
+                <button type="button" className="btn" onClick={() => onReanalyze(draft.id)}>
+                  <IconRefresh /> Re-analyze
+                </button>
+                <button type="button" className="btn btn-danger" onClick={() => onDelete(draft.id)}>
+                  <IconTrash /> Delete
+                </button>
               </div>
             </Section>
           </div>

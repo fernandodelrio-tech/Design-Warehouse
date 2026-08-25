@@ -264,6 +264,17 @@ export interface DesignRecord {
   notes: string;
   tags: string[];
   favorite: boolean;
+  /**
+   * Set when the design is in the bin, cleared when it is put back.
+   *
+   * A deletion is staged rather than applied: the record and its blobs stay
+   * where they are and stop being listed, so undo is a field change and not a
+   * restore from anywhere. The tombstone is written at the same moment, so the
+   * deletion still propagates to other devices exactly as an immediate one
+   * did — what is kept is this machine's own copy, and only for as long as the
+   * bin holds it.
+   */
+  deletedAt?: number;
   image: ImageMeta;
   /**
    * The spec exactly as the analyzer seeded it, kept beside the editable one.

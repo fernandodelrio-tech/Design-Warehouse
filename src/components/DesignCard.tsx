@@ -134,19 +134,29 @@ export const DesignCard = memo(function DesignCard({
       </div>
 
       <footer className="card-footer">
+        {/*
+           The palette leads.
+
+           The comment above this component says the footer is the whole point
+           of the app, and it is: nobody scans a catalog for *this screenshot*,
+           they scan it for a dark dashboard with a copper accent. Colour is
+           the fastest thing to recognise and it was the fourth thing here,
+           under a title and a dimensions line, at 22px.
+
+           The lowercase hex row that used to sit beneath it is gone. It was
+           the same five colours in the slower notation, and printing both said
+           the strip was not trusted to land — every hex is still on the swatch
+           it belongs to, as a tooltip and to a screen reader, and still
+           searchable from the field at the top of the page.
+        */}
+        <PaletteStrip palette={auto.palette} />
+
         <h3 className="card-title">
           <span title={record.title}>{record.title}</span>
         </h3>
         <div className="card-subtitle">
           {image.width}×{image.height} · {describeAspect(image.width, image.height)}
           {spec.category ? ` · ${spec.category}` : ''}
-        </div>
-
-        <PaletteStrip palette={auto.palette} />
-        <div className="card-spec-line" style={{ marginTop: 6 }}>
-          <dd className="mono" style={{ color: 'var(--text-faint)' }}>
-            {auto.palette.slice(0, 5).map((c) => c.hex).join('  ')}
-          </dd>
         </div>
 
         {specLine('Type', typeDetail)}
