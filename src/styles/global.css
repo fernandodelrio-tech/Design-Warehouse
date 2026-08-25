@@ -1217,7 +1217,18 @@ select {
 .card:focus-within .card-overlay,
 .card-attended .card-overlay {
   opacity: 1;
-  transition-delay: 0.18s;
+  /*
+     60ms, not 180.
+
+     The delay is there so a pointer crossing six tiles to reach the seventh
+     does not strobe six sheets on the way. At 180ms it did something much
+     worse: measured across a wall at an ordinary sweeping speed, the sheet
+     appeared ZERO times out of five tiles, and only a half-second rest
+     brought one up. A reveal you have to hold still for is not a reveal, it
+     is a wall that behaves differently every time you cross it. 60ms plus
+     the fade still ignores a sweep and still answers a glance.
+  */
+  transition-delay: 0.06s;
 }
 
 /*
@@ -1295,6 +1306,31 @@ select {
   /* Width, height, radius, rule and cast all arrive inline, each a source
      measurement times this picture's display scale. */
   border-style: solid;
+}
+
+/*
+   What the block is.
+
+   Without it the specimen is an unlabelled rectangle sitting on someone's
+   screenshot — and because it is only drawn where the analyzer actually found
+   a corner, an edge or a cast, it appears on some tiles and not others with
+   nothing on either to say why. The caption ties it to the three rows below
+   that carry its figures, and its absence then reads as those rows reading
+   "none found" rather than as the tile being broken.
+
+   On the design's own ground with the design's own ink, like the slab: it
+   sits on a picture whose colour at that point is not ours to know.
+*/
+.ov-block-label {
+  position: absolute;
+  background: var(--ov-ground);
+  color: var(--ov-ink);
+  padding: 0 var(--s1);
+  font-size: var(--t-label);
+  line-height: calc(var(--s4) + var(--s1));
+  letter-spacing: var(--track-label);
+  text-transform: var(--case);
+  white-space: nowrap;
 }
 
 .ov-slab {

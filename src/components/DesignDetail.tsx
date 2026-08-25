@@ -349,6 +349,24 @@ export function DesignDetail({
                   </button>
                 </div>
               </ExportMenu>
+
+              {/*
+                 Re-analyze belongs here, not only behind a disclosure.
+
+                 It had two homes: a banner when the record was older than the
+                 current analyzer, and a button inside "Manage this design".
+                 A design already on the current version got neither — the
+                 banner is conditional and the section is collapsed — so the
+                 way to re-measure a design against the newest analyzer was
+                 invisible unless the record happened to be stale. Re-running
+                 it is not record management; it is how the spec this drawer
+                 exists to export gets its measurements back.
+              */}
+              {!stale && (
+                <button type="button" className="btn" onClick={() => onReanalyze(draft.id)}>
+                  <IconRefresh /> Re-analyze
+                </button>
+              )}
             </div>
           </header>
 
@@ -852,14 +870,10 @@ export function DesignDetail({
             */}
             <Section title="Manage this design">
               <p className="sync-note">
-                Re-analyzing measures the pixels again and fills in blanks without touching
-                anything you have edited. Deleting can be undone from the toast, and for thirty
-                days after that.
+                Deleting can be undone from the toast, and for thirty days after that.
+                Re-analyzing moved up to the action row, beside the export.
               </p>
               <div className="manage-actions">
-                <button type="button" className="btn" onClick={() => onReanalyze(draft.id)}>
-                  <IconRefresh /> Re-analyze
-                </button>
                 <button type="button" className="btn btn-danger" onClick={() => onDelete(draft.id)}>
                   <IconTrash /> Delete
                 </button>
