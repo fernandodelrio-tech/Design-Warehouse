@@ -90,14 +90,13 @@ labelled as measured or estimated, and carries how many samples agreed.
   by the `Deploy web app` workflow. Two runtime dependencies: React and
   React DOM.
 
-### Explicitly undecided
+### Not a capability
 
-- **A desktop application does not exist.** `public/privacy.html` describes
-  storing designs "in your user profile in the desktop app" and holding the
-  Google sign-in "in your operating system's keychain". Both are stale: there
-  is no Electron or Tauri build in the repository or anywhere in its history.
-  The privacy policy needs correcting; it is not evidence of a shipped or
-  planned capability.
+- **A desktop application does not exist**, and none is planned. The privacy
+  policy used to describe storing designs "in your user profile in the desktop
+  app" and holding the Google sign-in "in your operating system's keychain";
+  both were stale and have been removed. Nothing in the repository or its
+  history implements one.
 
 ### Considered and deliberately not binding
 
@@ -124,8 +123,9 @@ should be defended as a rule:
 
 - `README.md` — a thorough account of intake, naming, what is measured and how,
   what the person fills in, arrangement, export, Drive setup, and backups.
-- `public/privacy.html` — the privacy policy, currently inaccurate about a
-  desktop app (above).
+- `public/privacy.html` — the privacy policy, and the only public statement
+  about where a person's designs live. Behaviour that moves data, or delays its
+  removal, has to be reflected there.
 - Deployed at `https://fernandodelrio-tech.github.io/Design-Warehouse/`.
 - `.impeccable/critique/` — a dated design critique and technical audit of the
   app, with heuristic and dimension scores.
