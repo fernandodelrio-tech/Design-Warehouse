@@ -108,9 +108,13 @@ export interface DetailMeasurement {
     withShadow: number;
     /** How many of them are filled with a ramp rather than a flat colour. */
     withGradient: number;
+    /** How many carry a two-tone edge — a light top over a dark foot, or its
+        inverse — which is what makes a block read as raised or as a well. */
+    withBezel: number;
     border: { px: number; hex: string } | null;
     shadow: { spread: number; strength: number; dx: number; dy: number } | null;
     gradient: { axis: string; from: string; to: string; span: number } | null;
+    bezel: { kind: 'raised' | 'inset'; top: number; foot: number; px: number } | null;
   } | null;
 }
 
@@ -227,6 +231,13 @@ export interface ColorToken {
 
 export interface EffectsSpec {
   shadows: string;
+  /**
+   * The two-tone edge that makes a block read as raised or sunken — a light
+   * along the top over a shade along the foot, or its inverse. Measured off
+   * the block's own fill, so it transfers as a departure rather than as a
+   * fixed white and black.
+   */
+  bezel: string;
   gradients: string;
   blur: string;
   animation: string;

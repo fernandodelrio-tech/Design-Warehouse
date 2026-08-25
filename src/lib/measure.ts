@@ -795,6 +795,116 @@ export function measureBlockEdge(
  * flood fill uses and the block came back whole. A stronger ramp arrives
  * already in pieces; mergeGradientBands() reassembles those.
  */
+export interface BlockBezel {
+  /**
+   * `raised` is a light top edge over a dark foot — a block lit from above,
+   * which is what a protruding control looks like. `inset` is the same edge
+   * inverted, which is what a well looks like.
+   */
+  kind: 'raised' | 'inset';
+  /** How far each band departs from the fill, 0..255. */
+  top: number;
+  foot: number;
+  /** How thick the band is, in sample pixels. */
+  px: number;
+}
+
+/**
+ * A bezel: the two-tone edge that makes a block read as raised or sunken.
+ *
+ * The analyzer already reads a corner, a hairline, a cast and a ramp. It had
+ * no word for the other thing a designer spends on a block — a light along its
+ * top and a shade along its foot, which is what a key, a chip or a pressed
+ * well is made of.
+ *
+ * Worse than silence: it was reading them WRONGLY. A card with a 2px white
+ * inset highlight came back as a uniform 2px #fafaf9 BORDER, because the edge
+ * walk pools all four sides and a one-sided band is still a band. Measured on
+ * a fixture built out of raised keys: ground 198, top band 250, fill 219, foot
+ * band 158 — a light top and a dark foot, reported as a white outline all the
+ * way round, which is wrong on three sides of every card.
+ *
+ * So the bands are read separately and their SIGNS compared. Opposite
+ * departures from the fill are a bezel; matching ones are a border. Both
+ * figures are luminance levels off the block's own fill, because the colour of
+ * a bezel is a function of the surface it edges rather than a fixed white and
+ * black — which is also how it has to be rebuilt.
+ */
+export function measureBlockBezel(
+  d: Uint8ClampedArray,
+  w: number,
+  h: number,
+  b: Block,
+): BlockBezel | null {
+  // Inside the corner arc, so the arc's own blend is not read as a band.
+  const side = Math.max(4, Math.round((b.radius ?? 0) * 1.1) + 3);
+  if (b.w - side * 2 < 12) return null;
+
+  const lum = ([r, g, bl]: [number, number, number]) => 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+  const row = (y: number): number | null => {
+    if (y < 0 || y >= h) return null;
+    const values: number[] = [];
+    const count = Math.min(24, Math.max(6, Math.floor((b.w - side * 2) / 6)));
+    for (let i = 0; i < count; i++) {
+      const x = b.x + side + Math.round((i * (b.w - side * 2 - 1)) / (count - 1 || 1));
+      if (x < 0 || x >= w) continue;
+      values.push(lum(rgbAt(d, (y * w + x) * 4)));
+    }
+    return values.length ? median(values) : null;
+  };
+
+  const fill = lum(b.colour);
+  /*
+     The band sits just OUTSIDE the block box: the block finder stops at the
+     fill, so the highlight and the shade are the rows either side of it. Depth
+     follows whatever the edge walk called a border, because that reading is
+     usually this same band; without one, a single pixel.
+  */
+  const depth = Math.min(4, Math.max(1, b.edge?.border?.px ?? 1));
+
+  const bandAt = (from: number, step: number): number | null => {
+    const values: number[] = [];
+    for (let i = 0; i < depth; i++) {
+      const v = row(from + step * i);
+      if (v !== null) values.push(v);
+    }
+    return values.length ? median(values) : null;
+  };
+
+  const top = bandAt(b.y - depth, 1);
+  const foot = bandAt(b.y + b.h, 1);
+  // The page on either side, so a band that is merely the ground is refused.
+  const groundTop = row(b.y - depth - 3);
+  const groundFoot = row(b.y + b.h + depth + 2);
+  if (top === null || foot === null) return null;
+
+  const dTop = top - fill;
+  const dFoot = foot - fill;
+  /*
+     Six levels each side. Below that a bezel is indistinguishable from the
+     compression noise this file already has to see through, and reporting one
+     would be inventing an effect out of an artifact.
+  */
+  const MIN = 6;
+  if (Math.abs(dTop) < MIN || Math.abs(dFoot) < MIN) return null;
+  // Opposite directions, or it is a border and has its own reading.
+  if (Math.sign(dTop) === Math.sign(dFoot)) return null;
+  /*
+     And each band has to be its own colour rather than the page showing
+     through: a block sitting on a ground darker than itself would otherwise
+     report every foot as a shade.
+  */
+  if (groundTop !== null && Math.abs(top - groundTop) < 4) return null;
+  if (groundFoot !== null && Math.abs(foot - groundFoot) < 4) return null;
+
+  return {
+    kind: dTop > 0 ? 'raised' : 'inset',
+    top: Math.round(Math.abs(dTop)),
+    foot: Math.round(Math.abs(dFoot)),
+    px: depth,
+  };
+}
+
 export function measureBlockGradient(
   d: Uint8ClampedArray,
   w: number,
@@ -1404,7 +1514,9 @@ export function measureEdges(
   let withBorder = 0;
   let withShadow = 0;
   let withGradient = 0;
+  let withBezel = 0;
   let ramp: BlockGradient | null = null;
+  const bezels: BlockBezel[] = [];
   const widths: number[] = [];
   const colours: string[] = [];
   const spreads: number[] = [];
@@ -1415,7 +1527,18 @@ export function measureEdges(
     b.edge = measureBlockEdge(d, w, h, b, blocks);
     // A reassembled element already knows its ramp; anything else is asked.
     if (b.gradient === undefined) b.gradient = measureBlockGradient(d, w, h, b);
-    if (b.edge.border) {
+    /*
+       Measured first, because it decides whether the border reading stands: a
+       2px band that is light on top and dark at the foot is a bezel, and
+       counting it as a border too would tell a target to draw a white outline
+       on all four sides of something that has one on one.
+    */
+    const bezel = measureBlockBezel(d, w, h, b);
+    if (bezel) {
+      withBezel++;
+      bezels.push(bezel);
+    }
+    if (b.edge.border && !(bezel && bezel.px === b.edge.border.px)) {
       withBorder++;
       widths.push(b.edge.border.px);
       colours.push(b.edge.border.hex);
@@ -1432,12 +1555,27 @@ export function measureEdges(
       if (!ramp || b.gradient.span > ramp.span) ramp = b.gradient;
     }
   }
+  const raised = bezels.filter((z) => z.kind === 'raised').length;
   return {
     blocks: blocks.length,
     withBorder,
     withShadow,
     withGradient,
+    withBezel,
     gradient: ramp,
+    /*
+       The modal kind rather than a mixture: a page that raises some blocks and
+       sinks others is describing two components, and the export names the one
+       the page mostly does. The two figures are medians of that kind alone.
+    */
+    bezel: bezels.length
+      ? {
+          kind: (raised >= bezels.length - raised ? 'raised' : 'inset') as 'raised' | 'inset',
+          top: Math.round(median(bezels.filter((z) => z.kind === (raised >= bezels.length - raised ? 'raised' : 'inset')).map((z) => z.top))),
+          foot: Math.round(median(bezels.filter((z) => z.kind === (raised >= bezels.length - raised ? 'raised' : 'inset')).map((z) => z.foot))),
+          px: modal(bezels.map((z) => z.px)) ?? 1,
+        }
+      : null,
     border: widths.length
       ? { px: modal(widths) ?? Math.round(median(widths)), hex: modal(colours) ?? '' }
       : null,
@@ -1496,6 +1634,17 @@ export function measureDetail(
             : null,
           withGradient: edges.withGradient,
           gradient: edges.gradient,
+          withBezel: edges.withBezel,
+          /* The two departures are luminance levels and do not scale; the band
+             thickness is in sample pixels and does. */
+          bezel: edges.bezel
+            ? {
+                kind: edges.bezel.kind,
+                top: edges.bezel.top,
+                foot: edges.bezel.foot,
+                px: Math.max(1, px(edges.bezel.px)),
+              }
+            : null,
         }
       : null,
   };

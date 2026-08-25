@@ -772,6 +772,14 @@ export function DesignDetail({
               </div>
               <div className="field-row">
                 <TextField
+                  label="Bezel / relief"
+                  value={draft.spec.effects.bezel}
+                  placeholder="raised: 1px band, 14/255 lighter at the top, 9/255 darker at the foot"
+                  onChange={(value) => setSpec((s) => ({ ...s, effects: { ...s.effects, bezel: value } }))}
+                />
+              </div>
+              <div className="field-row">
+                <TextField
                   label="Blur / glass"
                   value={draft.spec.effects.blur}
                   placeholder="backdrop-filter: blur(12px)"

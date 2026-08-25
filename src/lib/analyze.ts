@@ -1,3 +1,4 @@
+import { deriveAccent, deriveType } from './derive';
 import { describeAspect, loadBitmap, makeThumbnail, sampleDetail, samplePixels } from './image';
 import { estimateLayout } from './layout';
 import { findBlocks, findGradientBlocks, measureDetail, solidBlocks } from './measure';
@@ -12,7 +13,13 @@ import type {
   PaletteColor,
 } from './types';
 
-export const ANALYZER_VERSION = 8;
+/*
+   9: the bezel reading, and derived values where the pixels held none — a type
+   recommendation argued from the measured density and ladder, and an accent
+   for a palette that scored none. Every record made before this carries blanks
+   where those now sit, which is what Re-analyze is for.
+*/
+export const ANALYZER_VERSION = 9;
 
 export interface AnalysisResult {
   image: ImageMeta;
@@ -335,7 +342,35 @@ function seedFromDetail(detail: AutoAnalysis['detail']) {
       'all below 10px of ink, where a stem is one pixel whatever the weight is.'
     : '';
 
-  return { radius, borders, shadows, scale, notes };
+  /*
+     The bezel: the two-tone edge that makes a block read as raised or sunken.
+
+     It had no reading here at all, so a design built out of keys, chips and
+     wells came through as flat — and the export said nothing rather than
+     saying no, which are different claims. Both figures are luminance levels
+     off the block's own fill, which is why they are given as levels and not
+     as colours: the colour depends on the fill they sit on.
+  */
+  const bezel = blind
+    ? unmeasured('bezels')
+    : e
+      ? e.bezel && e.withBezel
+        ? `${e.bezel.kind === 'raised' ? 'Raised' : 'Inset'}: a ${e.bezel.px}px band along each ` +
+          `edge that runs ${e.bezel.top}/255 ${e.bezel.kind === 'raised' ? 'lighter' : 'darker'} ` +
+          `at the top and ${e.bezel.foot}/255 ${e.bezel.kind === 'raised' ? 'darker' : 'lighter'} ` +
+          `at the foot than the fill it sits on, on ${e.withBezel} of the ${e.blocks} blocks ` +
+          `measured` +
+          (rest(e.withBezel) > 0
+            ? `. The other ${rest(e.withBezel)} ${plural(rest(e.withBezel), 'has', 'have')} a flat edge.`
+            : ' — every one of them is bezelled.') +
+          ` Build it from the fill rather than from a fixed white and black: the band is a ` +
+          `departure FROM the surface it edges, so on a dark fill it is a light that lifts and ` +
+          `on a light fill it is a shade that seats.`
+        : `None. All ${e.blocks} measured blocks meet the page with a flat edge — no light along ` +
+          'the top, no shade along the foot.'
+      : '';
+
+  return { radius, borders, shadows, bezel, scale, notes };
 }
 
 /**
@@ -597,18 +632,58 @@ export function seedSpec(image: ImageMeta, stored: AutoAnalysis): DesignSpec {
   const m = auto.layout.margins;
   const measured = seedFromDetail(auto.detail);
   const built = seedFromStructure(image, auto);
+  /*
+     What the pixels could not say, worked out from what they did. Both are
+     labelled as derived wherever they surface; see lib/derive.ts.
+  */
+  const bodyStep = auto.detail?.text?.steps?.length
+    ? auto.detail.text.steps.reduce((a, b) => (b.rows > a.rows ? b : a)).px
+    : null;
+  const derivedType = deriveType(auto, bodyStep);
+  const derivedAccent = deriveAccent(auto.palette, auto.palette.find((c) => c.role === 'background')?.hex ?? '');
+
   return {
     category,
     platform,
     styleKeywords: guessStyleKeywords(auto),
-    colorTokens: tokensFromPalette(auto.palette),
+    /*
+       The measured palette, plus an accent where the capture holds none.
+
+       A design with no accent role — five greys, say — exported a palette a
+       target could not build an action out of, and the omission read as "this
+       design has no accent" rather than "nothing in this capture scored as
+       one". The derived token is appended last, named `accent-derived` so it
+       cannot be mistaken for a reading, and carries its own reasoning and its
+       ratio against the page in its usage line.
+    */
+    colorTokens: derivedAccent
+      ? [
+          ...tokensFromPalette(auto.palette),
+          {
+            name: 'accent-derived',
+            value: derivedAccent.hex,
+            usage: derivedAccent.why,
+          },
+        ]
+      : tokensFromPalette(auto.palette),
     typography: {
-      headingFamily: '',
-      bodyFamily: '',
-      monoFamily: '',
-      baseSize: '',
+      /*
+         Derived rather than left blank.
+
+         A bitmap holds no font name, so these were empty on every record this
+         app has ever made — and the exporter drops an empty field, so the spec
+         said nothing at all about type character and the design built from it
+         inherited whatever the target already had. A recommendation argued
+         from the measured density and the measured type ladder is more use
+         than silence and exactly as truthful, provided it says which it is.
+         `derivedType.why` says it, and rides in the notes below.
+      */
+      headingFamily: derivedType.heading,
+      bodyFamily: derivedType.body,
+      monoFamily: derivedType.mono,
+      baseSize: derivedType.baseSize,
       scale: measured.scale,
-      notes: measured.notes,
+      notes: [measured.notes, derivedType.why].filter(Boolean).join(' '),
     },
     layout: {
       structure:
@@ -633,6 +708,7 @@ export function seedSpec(image: ImageMeta, stored: AutoAnalysis): DesignSpec {
     uxNotes: built.ux,
     effects: {
       shadows: measured.shadows,
+      bezel: measured.bezel,
       gradients: built.gradients,
       blur: built.blur,
       animation: built.animation,
@@ -709,6 +785,7 @@ export function reseedSpec(
     uxNotes: own(spec.uxNotes, previous.uxNotes, next.uxNotes),
     effects: {
       shadows: own(spec.effects.shadows, previous.effects.shadows, next.effects.shadows),
+      bezel: own(spec.effects.bezel, previous.effects.bezel, next.effects.bezel),
       gradients: own(spec.effects.gradients, previous.effects.gradients, next.effects.gradients),
       blur: own(spec.effects.blur, previous.effects.blur, next.effects.blur),
       animation: own(spec.effects.animation, previous.effects.animation, next.effects.animation),
