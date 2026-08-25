@@ -1,0 +1,512 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-25T00:00:00Z",
+  "title": "Design System: Design Warehouse",
+  "extensions": {
+    "colorMeta": {
+      "parchment": {
+        "role": "neutral",
+        "displayName": "Parchment",
+        "canonical": "#fbf7ec",
+        "tonalRamp": [
+          "#2b2620",
+          "#4a4238",
+          "#695f51",
+          "#8a7e6d",
+          "#a99d8b",
+          "#c7bdac",
+          "#e0d9cb",
+          "#fbf7ec"
+        ]
+      },
+      "vellum": {
+        "role": "neutral",
+        "displayName": "Vellum",
+        "canonical": "#e4dbcc",
+        "tonalRamp": [
+          "#26221c",
+          "#413a30",
+          "#5d5445",
+          "#7a6f5c",
+          "#988c76",
+          "#b5a992",
+          "#cdc4ae",
+          "#e4dbcc"
+        ]
+      },
+      "vellum-raised": {
+        "role": "neutral",
+        "displayName": "Raised Vellum",
+        "canonical": "#f0e9dc",
+        "tonalRamp": [
+          "#292520",
+          "#453f35",
+          "#615a4b",
+          "#7f7663",
+          "#9d937c",
+          "#bab097",
+          "#d7ccb9",
+          "#f0e9dc"
+        ]
+      },
+      "press-black": {
+        "role": "neutral",
+        "displayName": "Press Black",
+        "canonical": "#2b2b2b",
+        "tonalRamp": [
+          "#0d0d0d",
+          "#1a1a1a",
+          "#2b2b2b",
+          "#454545",
+          "#616161",
+          "#8a8a8a",
+          "#b8b8b8",
+          "#e6e6e6"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#322d2f",
+        "tonalRamp": [
+          "#141213",
+          "#232022",
+          "#322d2f",
+          "#4f4749",
+          "#6f6467",
+          "#948789",
+          "#bcb1b3",
+          "#e4dcdd"
+        ]
+      },
+      "sepia": {
+        "role": "neutral",
+        "displayName": "Sepia",
+        "canonical": "#4f433e",
+        "tonalRamp": [
+          "#1c1815",
+          "#332c28",
+          "#4f433e",
+          "#6b5c54",
+          "#8a786e",
+          "#a8968b",
+          "#c6b8af",
+          "#e3dbd5"
+        ]
+      },
+      "sepia-faded": {
+        "role": "neutral",
+        "displayName": "Faded Sepia",
+        "canonical": "#6b594e",
+        "tonalRamp": [
+          "#221c18",
+          "#3b322c",
+          "#544741",
+          "#6b594e",
+          "#8b7669",
+          "#aa9587",
+          "#c8b7aa",
+          "#e5dbd2"
+        ]
+      },
+      "rust-terracotta": {
+        "role": "primary",
+        "displayName": "Rust Terracotta",
+        "canonical": "#a1593e",
+        "tonalRamp": [
+          "#2e150c",
+          "#4b2416",
+          "#693421",
+          "#844e38",
+          "#a1593e",
+          "#c07c5e",
+          "#d9a488",
+          "#f0d2be"
+        ]
+      },
+      "terracotta-deep": {
+        "role": "primary",
+        "displayName": "Deep Terracotta",
+        "canonical": "#844e38",
+        "tonalRamp": [
+          "#26120a",
+          "#3f1e12",
+          "#5a2c1c",
+          "#6f3d28",
+          "#844e38",
+          "#a56d55",
+          "#c59781",
+          "#e4c8b6"
+        ]
+      },
+      "burnt-umber": {
+        "role": "primary",
+        "displayName": "Burnt Umber",
+        "canonical": "#5c3517",
+        "tonalRamp": [
+          "#1b0e05",
+          "#2d1809",
+          "#40230f",
+          "#4e2c13",
+          "#5c3517",
+          "#87552f",
+          "#b3835b",
+          "#dcb692"
+        ]
+      },
+      "clay-rule": {
+        "role": "neutral",
+        "displayName": "Clay Rule",
+        "canonical": "#b38470",
+        "tonalRamp": [
+          "#2f1f18",
+          "#4c342a",
+          "#69493c",
+          "#8a6250",
+          "#b38470",
+          "#c9a292",
+          "#dcc1b5",
+          "#efe0da"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dad9d3",
+        "tonalRamp": [
+          "#232320",
+          "#3b3b37",
+          "#54544f",
+          "#6f6f69",
+          "#8d8d86",
+          "#adaca5",
+          "#c5c4bd",
+          "#dad9d3"
+        ]
+      },
+      "dry-clay": {
+        "role": "neutral",
+        "displayName": "Dry Clay",
+        "canonical": "#c5b4a1",
+        "tonalRamp": [
+          "#241d15",
+          "#3d3226",
+          "#564839",
+          "#70604d",
+          "#8b7a64",
+          "#a7977e",
+          "#c5b4a1",
+          "#e2d8cb"
+        ]
+      },
+      "stone": {
+        "role": "neutral",
+        "displayName": "Stone",
+        "canonical": "#a89b8b",
+        "tonalRamp": [
+          "#1f1b16",
+          "#353027",
+          "#4c4438",
+          "#655c4b",
+          "#7f7460",
+          "#988c77",
+          "#a89b8b",
+          "#cfc6ba"
+        ]
+      },
+      "ochre": {
+        "role": "tertiary",
+        "displayName": "Ochre",
+        "canonical": "#c08b55",
+        "tonalRamp": [
+          "#33200c",
+          "#513416",
+          "#6e4820",
+          "#8d5f2f",
+          "#a97440",
+          "#c08b55",
+          "#d4ab80",
+          "#eacfb1"
+        ]
+      },
+      "umber-mark": {
+        "role": "neutral",
+        "displayName": "Umber Mark",
+        "canonical": "#917662",
+        "tonalRamp": [
+          "#1e1811",
+          "#33291f",
+          "#48392c",
+          "#5f4c3b",
+          "#77604c",
+          "#917662",
+          "#b19a88",
+          "#d4c5b6"
+        ]
+      }
+    },
+    "darkTheme": {
+      "note": "Derived from the capture's own measured #2b2b2b band, not by inverting the light theme. The accent lifts to #cca173 (6.01 on the ground) because the light accent dies on the ink.",
+      "bg": "#2b2b2b",
+      "surface": "#3c3835",
+      "surfaceHover": "#4b4642",
+      "chrome": "#1f1f1f",
+      "toolbar": "#a1593e",
+      "text": "#fbf7ec",
+      "textMuted": "#e4dbcc",
+      "textFaint": "#c5b4a1",
+      "accent": "#cca173",
+      "accentStrong": "#dec1a1",
+      "border": "#c08b55"
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page and empty-state headings. 2.76x body, honoured exactly from the measurement."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings in wide layouts."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel titles: the design drawer and the sync panel."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running prose and field values."
+      },
+      "small": {
+        "displayName": "Small",
+        "purpose": "Secondary prose, toasts, help text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Captions, chips, buttons, counts. The only bold in the system, and the measured inversion the design runs on."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift-sm",
+        "value": "-2px 2px 4px rgb(0 0 0 / 0.08)",
+        "purpose": "Controls resting on a catalogued screenshot."
+      },
+      {
+        "name": "lift",
+        "value": "-4px 3px 7px rgb(0 0 0 / 0.12)",
+        "purpose": "Cards and raised panels."
+      },
+      {
+        "name": "lift-lg",
+        "value": "-7px 5px 14px rgb(0 0 0 / 0.16)",
+        "purpose": "Overlays and the open export menu."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state",
+        "value": "0.15s ease",
+        "purpose": "Background and border-color on hover and focus. The feedback, not the decoration."
+      },
+      {
+        "name": "reveal",
+        "value": "0.12s ease",
+        "purpose": "Opacity on hover-revealed card actions, and the disclosure marker."
+      },
+      {
+        "name": "travel",
+        "value": "0.2s ease",
+        "purpose": "Transform only: the progress bar's scaleX."
+      },
+      {
+        "name": "entrance",
+        "value": "0.15s-0.18s ease",
+        "purpose": "Overlay fade-in and toast arrival."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "travel and repetition removed; colour and border kept",
+        "purpose": "Sweeps become steps and the spinner dims rather than turning. State feedback survives, because removing it would take the signal with the movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "900px"
+      },
+      {
+        "name": "tablet",
+        "value": "760px"
+      },
+      {
+        "name": "compact",
+        "value": "700px"
+      },
+      {
+        "name": "phone",
+        "value": "460px"
+      }
+    ],
+    "focus": {
+      "token": "--focus-shadow",
+      "value": "0 0 0 2px var(--focus-ring), 0 0 0 3px var(--focus)",
+      "purpose": "Applied on :focus-visible. Every interactive control must carry it."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one primary action on a surface. Hover goes darker, not lighter, because the label is the page colour.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18\"/></svg> Copy prompt for Claude</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:24px;border:1px solid transparent;cursor:pointer;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;transition:background .15s ease,border-color .15s ease;}.ds-btn-primary{background:#a1593e;color:#fbf7ec;}.ds-btn-primary:hover{background:#844e38;}.ds-btn-primary:focus-visible{box-shadow:0 0 0 2px #c5b4a1,0 0 0 3px #a1593e;outline:none;}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "The default for everything that is not the one primary action. Borderless; hover lifts the fill one measured step toward the light.",
+      "html": "<button class=\"ds-btn ds-btn-ghost\">Files</button>",
+      "css": ".ds-btn-ghost{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:24px;border:1px solid transparent;background:#e4dbcc;color:#322d2f;cursor:pointer;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;transition:background .15s ease,border-color .15s ease;}.ds-btn-ghost:hover{background:#f0e9dc;}.ds-btn-ghost:focus-visible{box-shadow:0 0 0 2px #c5b4a1,0 0 0 3px #a1593e;outline:none;}"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Ruled at rest and filled on hover. In a palette with no red the edge is the signal: the only outlined control in a row of borderless peers.",
+      "html": "<button class=\"ds-btn ds-btn-danger\"><svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 7h14M10 7V5h4v2M6.5 7l.8 12h9.4l.8-12\"/></svg> Delete</button>",
+      "css": ".ds-btn-danger{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:24px;background:#e4dbcc;border:1px solid #322d2f;color:#322d2f;cursor:pointer;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;transition:background .15s ease,border-color .15s ease;}.ds-btn-danger:hover{background:#322d2f;border-color:#322d2f;color:#fbf7ec;}.ds-btn-danger:focus-visible{box-shadow:0 0 0 2px #c5b4a1,0 0 0 3px #a1593e;outline:none;}"
+    },
+    {
+      "name": "Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A recorded value. Its empty twin is dashed rather than fainter, so blank and written are different shapes.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Corner radius</span><input class=\"ds-input\" value=\"24px\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:4px;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;}.ds-field-label{font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:#6b594e;}.ds-input{height:35px;padding:4px 8px;border-radius:24px;background:#e4dbcc;border:1px solid #b38470;color:#322d2f;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:14px;font-weight:300;}.ds-input:focus-visible{box-shadow:0 0 0 2px #c5b4a1,0 0 0 3px #a1593e;outline:none;}"
+    },
+    {
+      "name": "Empty Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Nothing was written here. The dashed rule is structural, not decorative: it is how the product's honesty about unmeasurable values becomes visible.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Heading family</span><input class=\"ds-input ds-input-empty\" placeholder=\"Inter\"></label>",
+      "css": ".ds-input-empty{height:35px;padding:4px 8px;border-radius:24px;background:#e4dbcc;border:1px dashed #b38470;color:#322d2f;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:14px;font-weight:300;}.ds-input-empty::placeholder{color:#6b594e;}"
+    },
+    {
+      "name": "Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "A measured or edited property, as a label. The accent variant marks an active filter.",
+      "html": "<span class=\"ds-chip\">3 col</span> <span class=\"ds-chip ds-chip-accent\">inspiration</span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:24px;background:#fbf7ec;border:1px solid transparent;color:#4f433e;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;}.ds-chip-accent{background:#a1593e;color:#fbf7ec;}"
+    },
+    {
+      "name": "Catalog Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A fixed-height tile. The palette band leads the footer at full bleed, because a design is recognised by its colour before its name.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-image\"></div><div class=\"ds-card-palette\"><span style=\"background:#111827;flex-grow:3\"></span><span style=\"background:#1d2939;flex-grow:1.6\"></span><span style=\"background:#53b1fd;flex-grow:.9\"></span><span style=\"background:#12b76a;flex-grow:.7\"></span></div><div class=\"ds-card-body\"><h3 class=\"ds-card-title\">Saas Dashboard</h3><p class=\"ds-card-sub\">2880x1800 &middot; 16:10 &middot; Web app / dashboard</p></div></article>",
+      "css": ".ds-card{display:flex;flex-direction:column;width:260px;height:300px;background:#e4dbcc;border:1px solid transparent;border-radius:24px;overflow:hidden;box-shadow:-4px 3px 7px rgb(0 0 0 / .12);transition:background .15s ease,border-color .15s ease;}.ds-card:hover{background:#f0e9dc;}.ds-card-image{flex:1 1 auto;background:linear-gradient(160deg,#111827,#1d2939);}.ds-card-palette{display:flex;height:32px;}.ds-card-palette span{display:block;}.ds-card-body{padding:12px 12px 24px;text-align:center;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;}.ds-card-title{margin:0 0 4px;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;font-size:14px;color:#322d2f;}.ds-card-sub{margin:0;font-family:inherit;font-size:12px;font-weight:300;letter-spacing:.05em;text-transform:uppercase;color:#6b594e;}"
+    },
+    {
+      "name": "Masthead",
+      "kind": "nav",
+      "refersTo": "masthead",
+      "description": "The measured footer band of the source capture, promoted to the top of the app. Borderless, no shadow, carrying four levels of type.",
+      "html": "<header class=\"ds-masthead\"><span class=\"ds-mark\"><i style=\"background:#c08b55\"></i><i style=\"background:#a89b8b\"></i><i style=\"background:#c5b4a1\"></i><i style=\"background:#a1593e\"></i></span> Design Warehouse <span class=\"ds-count\">42 &middot; 12 MB</span></header>",
+      "css": ".ds-masthead{display:flex;align-items:center;gap:8px;height:56px;padding:0 16px;background:#2b2b2b;color:#fbf7ec;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;font-size:17px;}.ds-mark{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;width:18px;height:18px;}.ds-mark i{display:block;border-radius:50%;}.ds-count{font-size:12px;font-weight:700;color:#c5b4a1;letter-spacing:.05em;}"
+    },
+    {
+      "name": "Measured Sample",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The signature component. A measurement drawn at its own scale on the catalogued design's own ground, with the figure and how many samples agreed beneath it.",
+      "html": "<figure class=\"ds-measured\"><div class=\"ds-measured-stage\"><div class=\"ds-measured-block\"></div></div><figcaption class=\"ds-measured-cap\"><b>10px</b> radius<span>36 corners agreed</span></figcaption></figure>",
+      "css": ".ds-measured{margin:0;width:156px;padding:12px;background:#f5f6f8;border:1px solid #b38470;border-radius:24px;overflow:hidden;}.ds-measured-stage{display:flex;align-items:center;justify-content:center;height:72px;margin-bottom:12px;}.ds-measured-block{width:76px;height:48px;box-sizing:border-box;background:#fff;border:1px solid rgb(0 0 0 / .22);border-radius:10px;}.ds-measured-cap{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:24px;background:#e4dbcc;color:#322d2f;font-family:'Public Sans', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;font-size:12px;font-weight:300;}.ds-measured-cap b{font-weight:700;}.ds-measured-cap span{color:#6b594e;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Measured Room",
+    "overview": "Nothing in this interface was chosen by taste. Every value was measured off a screenshot the app itself catalogued, and then honoured - including where the measurement was inconvenient. The page is hung off its left margin at 4% with 1% on the right, because that is what the capture did. The stylesheet records the reasoning beside each value, so the system is falsifiable rather than merely consistent.\n\nThe result is warm, editorial and deliberate. Beige grounds, a single copper band across the toolbar, and a generous inset make it read closer to a printed reference than to application chrome. Colour is spent in exactly two places, and everything else is ground, space and tracking. All three measured type steps are capitals, and the smallest is the only bold one.\n\nThis is a room the product furnishes for other people's designs. The interface holds screenshots whose colours are not ours to choose, and it recedes so they can be compared.",
+    "keyCharacteristics": [
+      "Warm neutral grounds with a single copper accent; no second hue anywhere",
+      "One radius (24px) at every size, so every control is a lozenge",
+      "One variable face, cut at 300 and 700 - contrast by weight, never by family",
+      "Capitals and letter-spacing carry hierarchy; ornament does not",
+      "Borderless by default; an edge means something specific",
+      "Asymmetric page inset, preserved from the measurement"
+    ],
+    "rules": [
+      {
+        "name": "The Two Places Rule",
+        "body": "Colour appears in exactly two places: the accent and the toolbar band. Everything else is ground, space and tracking. A third hue is not a variation on this system, it is a different one.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Red Rule",
+        "body": "This palette contains no red and no green, because the screenshot it was measured from contained neither. Severity cannot be carried by hue: --danger resolves to the body-text ink in light and the page cream in dark. Any state that must be distinguishable must carry a drawn mark and a word. Colour may reinforce it; colour may never be the only signal.",
+        "section": "colors"
+      },
+      {
+        "name": "The Borderless Ground Rule",
+        "body": "Thirty-six of the forty-two measured blocks carry no border, and the app follows that wherever its own ground is underneath. The exception is a control sitting on a catalogued screenshot, whose colour is arbitrary - there an edge is the only thing keeping the control visible. The page colour on a pale capture measures 1.02:1.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heavy Label Rule",
+        "body": "The smallest step is the only bold one - a 700 at 12px against a 300 at 34px. This inversion is measured, not stylistic. The labels are the heavy end of this design, and reversing that reverses the system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Caption-Only Capitals Rule",
+        "body": "text-transform: uppercase belongs to the label role - captions, chips, buttons, counts. It must never reach a sentence. A label that wraps a control and its explanation is prose, not a caption.",
+        "section": "typography"
+      },
+      {
+        "name": "The Eight Steps Rule",
+        "body": "Every padding, margin and gap resolves to one of the eight spacing tokens: 4, 8, 12, 16, 24, 32, 48, 64. There is no 6px, no 10px, no arbitrary nudge - and an inline style carrying one is drift, not an exception.",
+        "section": "layout"
+      },
+      {
+        "name": "The 320 Rule",
+        "body": "The page never scrolls sideways at 320px, the reference width WCAG measures reflow against. Flex rows holding labelled controls need min-width: 0 on the container as well as its children, and the room comes out of padding before it comes out of a word.",
+        "section": "layout"
+      },
+      {
+        "name": "The Tonal-First Rule",
+        "body": "Reach for the next ground step before reaching for a shadow. A shadow on a surface that is not genuinely raised above the page is decoration, and this system has no budget for it.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One Radius Rule",
+        "body": "Every corner in the system is 24px. A component that wants a tighter corner is asking to be a different component.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Dashed-Means-Empty Rule",
+        "body": "A dashed border means 'nothing was written here', and it means nothing else. It is how a blank field is distinguished from a recorded one by shape rather than by a fainter grey.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do resolve every padding, margin and gap to the eight-step scale (4/8/12/16/24/32/48/64).",
+      "Do carry severity with a drawn mark and a word. Colour may reinforce; it may never be the only signal, because this palette has no red and no green.",
+      "Do give a control an edge when it sits on a catalogued screenshot. That is the one ground whose colour is not ours.",
+      "Do reach for the next tonal step before reaching for a shadow.",
+      "Do draw a measurement at its own scale rather than printing it as text.",
+      "Do show how firmly a value is known - measured, estimated, or blank - and how many samples agreed.",
+      "Do apply :focus-visible styling to every interactive control; the --focus-shadow token exists for exactly this."
+    ],
+    "donts": [
+      "Don't introduce a third hue. The accent and the toolbar band are the two places colour lives.",
+      "Don't let text-transform: uppercase reach a sentence. Capitals belong to the label role.",
+      "Don't tighten a corner. Every radius in the system is 24px.",
+      "Don't centre the page. The 4%/1% inset is measured and asymmetric.",
+      "Don't add a border to a surface sitting on our own ground; borderless is the measured default.",
+      "Don't animate a layout property. Transitions belong on colour, border, opacity and transform.",
+      "Don't kill motion wholesale under prefers-reduced-motion. Nearly all motion here is state feedback; remove travel and repetition, keep the colour and border changes that carry meaning."
+    ]
+  }
+}
