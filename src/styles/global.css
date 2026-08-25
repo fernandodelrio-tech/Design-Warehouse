@@ -387,7 +387,7 @@ select,
 .chip,
 .badge,
 .group-heading,
-.card-spec-line dt,
+.ov-label,
 .readout dt,
 .field > label[for],
 .field-label,
@@ -988,12 +988,27 @@ select {
   box-shadow: 0 0 0 2px var(--focus);
 }
 
+/*
+   The stage: the picture, the overlay and the hover actions in one positioned
+   box. The overlay is measured from here rather than from the card, so its
+   foot lands on the screenshot's own bottom edge instead of under the palette
+   band.
+*/
+.card-stage {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Takes whatever height the footer leaves, which is what makes the tiles equal. */
 .card-image {
   position: relative;
   display: block;
   flex: 1 1 auto;
   width: 100%;
+  min-width: 0;
   min-height: 60px;
   background: var(--bg-elevated);
   border: 0;
@@ -1038,6 +1053,7 @@ select {
   line-height: 1.5;
   letter-spacing: var(--track-label);
   pointer-events: none;
+  transition: opacity 0.12s ease;
 }
 
 .card-image-placeholder {
@@ -1136,7 +1152,9 @@ select {
 .card-footer {
   text-align: center;
   flex: 0 0 auto;
-  padding: var(--s3) var(--s3) var(--s5);
+  /* Was 24px at the foot, sized for the six rows that used to sit here. Two
+     rows do not need it, and every pixel it gives back goes to the picture. */
+  padding: var(--s3) var(--s3);
   line-height: var(--s4);
 }
 
@@ -1164,62 +1182,215 @@ select {
   white-space: nowrap;
 }
 
-.card-subtitle {
-  /* The one measured row is in capitals, and this is the app's densest row. */
-  text-transform: var(--case);
-  color: var(--text-faint);
-  font-size: var(--t-label);
-  margin-bottom: var(--s3);
+/* --- the measurement overlay --------------------------------------------- */
+
+/*
+   Drawn over the screenshot for the tile being attended to, and nowhere else.
+
+   Two zones with different rules. The drawings — the corner block and the
+   gutter rules — sit on the screenshot with nothing behind them, because
+   geometry is read by shape and putting it on the design is the whole point:
+   you check the measurement against the thing it was taken from. The figures
+   sit in a slab on the design's OWN measured background, with ink picked to
+   clear it, because text over an unknown capture is a contrast gamble and
+   text over a colour we measured is not.
+*/
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  /* The frame inside is deliberately larger than this box on one axis — that
+     is what cover means — so the overflow is clipped here. */
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Never a click target: the picture underneath stays one clean target for
+     opening the design, and the actions above it keep their own hit boxes. */
+  pointer-events: none;
+  opacity: 0;
+  /*
+     A delay on the way in, none on the way out. A mouse crossing six tiles to
+     reach the seventh would otherwise strobe six sheets on the way, which is
+     the thing that makes hover reveals feel cheap.
+  */
+  transition: opacity 0.12s ease;
+}
+
+.card:hover .card-overlay,
+.card:focus-within .card-overlay,
+.card-attended .card-overlay {
+  opacity: 1;
+  transition-delay: 0.18s;
 }
 
 /*
-   One row, clipped rather than wrapped. A second row on the cards that happen
-   to carry more chips would make those tiles taller than the rest, and the
-   whole point of the grid is that none of them are.
+   The picture's own geometry, reproduced.
+
+   `min-width`/`min-height` at 100% with the source's aspect-ratio resolves to
+   the smallest box covering the tile, which is exactly what `object-fit:
+   cover` computes; `top: 0` with a centred left matches `object-position: top
+   center`. The image and this box therefore occupy the same rectangle, so a
+   percentage inside it is a coordinate in the SOURCE — which is the only
+   space the analyzer's measurements are in.
 */
-/* The chips ride with the centred footer. */
-.card-meta {
-  justify-content: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s1);
-  margin-top: var(--s3);
+.ov-frame {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  translate: -50% 0;
+  min-width: 100%;
+  min-height: 100%;
+  /* aspect-ratio is set inline, per design: it is the source's own ratio. */
+}
+
+/*
+   The crop badge and the slab both anchor to the picture's bottom edge, and
+   the slab is opaque — so while the sheet is up the badge was simply behind
+   it. The sheet carries the same sentence as its own line; the badge steps
+   aside rather than being covered, which is the difference between one
+   statement and two fighting for a 20px band.
+*/
+.card:hover .card-crop-badge,
+.card:focus-within .card-crop-badge,
+.card-attended .card-crop-badge {
+  opacity: 0;
+}
+
+/*
+   A rule where a gutter actually measured, not a column count divided into
+   equal parts. Three pixels wide rather than one: the ink is a hairline, and
+   the two flanking lines of the design's own ground are what keep it visible
+   over a screenshot whose colour at that x is unknowable.
+*/
+.ov-gutter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ov-ink);
+  border-left: 1px solid var(--ov-ground);
+  border-right: 1px solid var(--ov-ground);
+  opacity: 0.65;
+}
+
+/*
+   One drawing, three measurements: a card at its measured corner, wearing its
+   measured hairline, throwing its measured cast — which is how they occur in
+   the capture. Their figures and sample counts are in the slab.
+*/
+.ov-block {
+  position: absolute;
   /*
-     Exactly one row. The height is derived rather than chosen: a chip comes to
-     its leading plus its padding plus its border, and the clamp has to equal
-     that. A step too short slices the row's own chips; a step too tall lets the
-     next row start inside the box and slices those instead — which is what a
-     32px box did to a 26px chip.
+     The tile's own corner, in the tile's own coordinates.
+
+     It briefly sat inside the frame, which put it off-screen on a wide
+     capture; the fix for that centred it, which put it in the middle of the
+     picture and abandoned the corner the contract asks for. Neither was
+     necessary — the specimen is sized in real pixels now, so it has no reason
+     to live in the frame's coordinate space at all.
+
+     Below the select box on purpose: attending to a tile reveals them
+     together, and the checkbox's backing landed inside the sample.
   */
-  height: calc(var(--s4) + var(--s1) * 2 + 2px);
-  overflow: hidden;
+  top: calc(var(--s5) + var(--s4));
+  left: var(--s3);
+  /* Width, height, radius, rule and cast all arrive inline, each a source
+     measurement times this picture's display scale. */
+  border-style: solid;
 }
 
-/* The readout inside the tile keeps its own alignment: it is a label/value
-   grid, and centring a grid is not what ranging a line centre means. */
-.card-spec-line {
-  text-align: left;
-  display: flex;
-  gap: var(--s2);
+.ov-slab {
+  position: absolute;
+  inset: auto 0 0;
+  background: var(--ov-ground);
+  color: var(--ov-ink);
+  padding: var(--s2) var(--s3);
   font-size: var(--t-label);
-  color: var(--text-muted);
-  margin-top: var(--s2);
+  line-height: var(--s4);
 }
 
-.card-spec-line dt {
-  color: var(--text-faint);
-  min-width: 54px;
+.ov-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  white-space: nowrap;
+}
+
+.ov-label {
+  /* The one measured row in this design is in capitals, and this is its
+     densest row — same treatment the tile subtitle used to carry. */
+  text-transform: var(--case);
+  letter-spacing: var(--track-label);
   flex: 0 0 auto;
+  min-width: 46px;
+  /* Mixed toward the ground rather than set at an opacity: the same recipe
+     the sample counts use, so all three inks on this slab are one decision
+     and all three can be measured off the rendered page. */
+  color: color-mix(in srgb, var(--ov-ink) 62%, var(--ov-ground));
 }
 
-.card-spec-line dd {
-  margin: 0;
+.ov-value {
+  flex: 0 0 auto;
+  font-weight: var(--w-semi);
+}
+
+/*
+   How firmly the figure is known, which is the product's second commitment
+   and not a detail. Mixed toward the ground rather than set in a grey: the
+   ground is a different colour on every tile, and a fixed grey would fail
+   against half of them.
+*/
+.ov-samples {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: color-mix(in srgb, var(--ov-ink) 62%, var(--ov-ground));
+}
+
+/* A fact about the tile, not about the design: the picture is longer than the
+   box it is in. Set in the ground's own ink at full strength, because it is
+   the one line here that changes what pressing the tile gets you. */
+.ov-crop {
+  margin-top: var(--s2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Written by hand rather than measured off pixels, and told apart by a rule
+   of the ground's own ink rather than by being quietly dimmer. */
+.ov-written {
+  margin-top: var(--s2);
+  padding-top: var(--s2);
+  border-top: 1px solid color-mix(in srgb, var(--ov-ink) 24%, var(--ov-ground));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--ov-ink) 62%, var(--ov-ground));
+}
+
+/* An absent pass is not a measurement of zero, and the tile says which. */
+.ov-none {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--ov-ink) 72%, var(--ov-ground));
+}
+
+/*
+   No pointer to say which tile is being looked at, so scrolling says it: the
+   tile holding the middle of the viewport carries the sheet, and the rest of
+   the wall stays pictures. See lib/attention.ts.
+
+   The first version here simply set every sheet visible. That is not data on
+   demand — it put a slab on all two hundred tiles and handed the wall back to
+   metadata, which is the arrangement this composition exists to replace. The
+   drawings stay drawn, because the drawings ARE the composition; suppressing
+   them left the metadata and threw away the thesis.
+*/
+@media (hover: none) {
+  .card-attended .card-overlay {
+    transition: none;
+  }
 }
 
 /* --- palette strip ------------------------------------------------------- */
@@ -1238,7 +1409,10 @@ select {
    recognised by, rather than a 22px detail below its name.
 */
 .card-footer .palette {
-  height: var(--s6);
+  /* Halved from 32px. Under the old footer this band opened a stack of
+     readouts and had to hold its own against them; over a picture that leads
+     it only has to be scannable, and 16px of full-bleed colour is. */
+  height: var(--s4);
   /*
      Full width, but not flush to the screenshot above it. Pulled to the image
      the band merged into it on exactly the designs colour matters most for —
@@ -2581,13 +2755,34 @@ kbd {
      scrolls sideways rather than wrapping, so the bar keeps a fixed height and
      the grid below it does not jump when a button appears.
   */
+  /*
+     Not sticky here, and the filter bar takes the pin instead.
+
+     The bar grows to three rows at this width — `height: auto` above — while
+     `.filters` is pinned at `--topbar-height`, a fixed 60px. So the filter bar
+     stuck 90px short of the bar's real foot and, being the higher layer, drew
+     straight over the Paste, Files and Folder buttons on every scroll: the
+     three ways of adding a design, covered by the controls for filtering the
+     ones already there.
+
+     Pinning both would need the bar's rendered height, which varies with how
+     the three rows wrap and is not a number CSS can be told here. It does not
+     need to be: 150px is a fifth of a phone viewport spent on a wordmark and a
+     search field, and the controls worth keeping on screen while scrolling a
+     wall are the ones that govern what is on it. The masthead scrolls away,
+     the filters pin to the top, and the collision cannot recur.
+  */
   .topbar {
-    position: sticky;
+    position: static;
     height: auto;
     flex-wrap: wrap;
     gap: var(--s2);
     padding: var(--s2) var(--s3);
     padding-top: max(var(--s2), env(safe-area-inset-top));
+  }
+
+  .filters {
+    top: 0;
   }
 
   .brand {
@@ -2879,6 +3074,13 @@ kbd {
 
   .palette-swatch {
     transition: none;
+  }
+
+  /* The sheet arrives, it does not fade in — and it still waits out the
+     delay, so crossing the wall does not flash it on every tile. */
+  .card-overlay,
+  .card-crop-badge {
+    transition-property: none;
   }
 
   /* Arrive, do not fade in. */

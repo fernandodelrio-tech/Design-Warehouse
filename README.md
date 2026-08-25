@@ -1,9 +1,10 @@
 # Design Warehouse
 
 A catalog for design screenshots. Paste or drop a screenshot, and it is filed as a
-vignette in a grid of equal tiles with a footer of design metadata — palette,
-contrast, type scale, layout structure, effects — that Claude Code and Claude Design
-can read back when building a prototype.
+vignette in a grid of equal tiles. A tile is the picture, the palette band it was
+measured off, and its name; the rest of what was measured — contrast, type scale,
+layout structure, effects — appears over the picture for the tile you are looking
+at, and leaves as a spec Claude Code and Claude Design can build from.
 
 Everything runs in the browser. Images and specs live in IndexedDB on the machine you
 use; nothing is uploaded anywhere and there is no server to run.
@@ -120,8 +121,8 @@ page*. A filename that says nothing — a clipboard paste, `IMG_4471.PNG`,
 | Dark dashboard, no colour in it | **Basalt Observatory** |
 
 The colour word comes from the accent's hue, the noun from the kind of screen, so
-the name still tells you something — and the factual line under it on the card keeps
-carrying the measurements. It is entirely deterministic: the same design always earns
+the name still tells you something — and the measurements are a hover away on the
+tile itself. It is entirely deterministic: the same design always earns
 the same name, with no model call, so it works offline.
 
 A second red dashboard becomes *Crimson Cockpit* rather than *Ember Console 2* —
@@ -183,16 +184,26 @@ populated one.
 
 ## Arranging the grid
 
-Every tile is the same height, whatever shape the screenshot is, so the footers line
-up across a row and can be read down the page. A screenshot taller than its tile is
-cropped from the top — the part that identifies it — and marked *Full length on
-open*; opening it shows the whole thing, scrolling if it is long. **Size** sets how
-wide the tiles are, and the tile height follows from it.
+Every tile is the same height, whatever shape the screenshot is, so the palette bands
+line up across a row and a wall of designs can be read down the page for colour. A
+screenshot the tile has to cut is cropped from the top — the part that identifies it
+— and marked *Full view on open*; opening it shows the whole thing, scrolling if it
+is long. **Size** sets how wide the tiles are, and the tile height follows from it.
+
+Pointing at a tile, or tabbing to it, draws the measurements over the screenshot they
+came from rather than beside it: a card at the measured corner radius wearing the
+measured hairline and casting the measured shadow, a rule down each gutter the
+analyzer found, and the figures on the design's own background with its own ink. Each
+one says how firmly it is known — how many corners agreed, how many edges matched,
+and which figures are estimated rather than measured.
 
 The layout adapts down to a phone: the catalog drops to one tile per row, the filter
-bar becomes a single scrolling strip, and the detail and sync panels take the whole
-screen. Card actions that appear on hover with a mouse are simply always visible on
-a touch screen.
+bar becomes a single scrolling strip and pins to the top while the masthead scrolls
+away, and the detail and sync panels take the whole screen. With no pointer to say
+which tile you are looking at, scrolling says it — the tile crossing the middle of
+the screen shows its measurements, and the rest of the wall stays pictures. Card
+actions that appear on hover with a mouse are simply always visible on a touch
+screen.
 
 Two controls in the filter bar, remembered between sessions.
 
@@ -444,6 +455,9 @@ src/
     title.ts       decides whether a filename is worth keeping as a title
     naming.ts      names a design when it is not — evocative, and deterministic
     grouping.ts    the sort and group-by options behind the grid controls
+    measured-colors.ts  the grounds a measurement is drawn on, tile and drawer
+    stage.ts       how large a tile's picture is, so drawings match its scale
+    attention.ts   which tile is being looked at where there is no pointer
     accounts.ts    who is signed in, and which catalog is theirs
     session.ts     switching accounts: swap catalogs, adopt a signed-out one
   lib/sync/

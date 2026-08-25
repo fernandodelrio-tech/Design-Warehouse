@@ -9,3 +9,7 @@ release
 
 # Impeccable live-server runtime state (PID/port/token, per-session)
 .impeccable/live/
+
+# Per-run finish-review captures. Evidence for one review, not a record: they
+# are screenshots of throwaway fixtures and they are re-taken every round.
+.impeccable/review/
