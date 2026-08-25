@@ -1,4 +1,4 @@
-import { contrastRatio, isLight } from '../lib/color';
+import { edgeFor, groundOf, surfaceOf } from '../lib/measured-colors';
 import type { DetailMeasurement, PaletteColor } from '../lib/types';
 
 /**
@@ -16,6 +16,10 @@ import type { DetailMeasurement, PaletteColor } from '../lib/types';
  * background, with the figure and the sample count beside it. The count is the
  * honesty: a radius four corners agreed on is worth more than one that a
  * single corner produced, and the number says which this is.
+ *
+ * The wall draws the same three measurements over the tile in `CardOverlay`.
+ * Both take their grounds from `lib/measured-colors`, so a radius reads the
+ * same in the tile and in the drawer rather than being two facts to reconcile.
  */
 
 interface Props {
@@ -26,37 +30,6 @@ interface Props {
 
 /** A sample wider than the column would be a lie about the measurement. */
 const MAX_SAMPLE = 96;
-
-function ground(palette: PaletteColor[]): string {
-  return palette.find((c) => c.role === 'background')?.hex ?? '#ffffff';
-}
-
-/**
- * The fill for the sample card: the design's own surface.
- *
- * Not the highest-contrast colour in the palette — that picks the text ink and
- * draws a black slab, which is not what a radius was measured off. A card on
- * its ground is, so the sample is the surface on the background, exactly as
- * the capture had it.
- */
-function stageFill(palette: PaletteColor[]): string {
-  return (
-    palette.find((c) => c.role === 'surface')?.hex ??
-    palette.find((c) => c.role === 'background')?.hex ??
-    '#ffffff'
-  );
-}
-
-/**
- * Surface and background are routinely within a point of each other on a dark
- * design, which leaves the sample invisible. A hairline of the ground's own
- * ink keeps the shape readable without pretending to be a measurement — the
- * measured border has its own panel, next to this one.
- */
-function edgeFor(bg: string, fill: string): string {
-  if (contrastRatio(bg, fill) >= 1.25) return 'transparent';
-  return isLight(bg) ? 'rgb(0 0 0 / 0.22)' : 'rgb(255 255 255 / 0.28)';
-}
 
 export function MeasuredDetail({ detail, palette }: Props) {
   if (!detail) return null;
@@ -71,8 +44,8 @@ export function MeasuredDetail({ detail, palette }: Props) {
     );
   }
 
-  const bg = ground(palette);
-  const fg = stageFill(palette);
+  const bg = groundOf(palette);
+  const fg = surfaceOf(palette);
   const edge = edgeFor(bg, fg);
 
   return (

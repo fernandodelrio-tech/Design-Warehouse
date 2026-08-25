@@ -891,7 +891,6 @@ export default function App() {
       onToggleFavorite={toggleFavorite}
       onCopySpec={copySpec}
       onDelete={removeRecord}
-      onTagClick={toggleTag}
     />
   );
 
