@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { readableOn } from '../lib/color';
 import { edgeFor, groundOf, surfaceOf } from '../lib/measured-colors';
+import { coverScale, useStageSize } from '../lib/stage';
 import type { DesignRecord } from '../lib/types';
 
 /**
@@ -42,13 +43,14 @@ import type { DesignRecord } from '../lib/types';
 interface Props {
   record: DesignRecord;
   /**
-   * Whether the tile is showing a crop. The picture carries its own badge for
-   * this, and the slab is opaque and lands on the same bottom edge — so while
-   * the sheet is up the badge is behind it. On a coarse pointer the sheet is
-   * never down, which made the crop affordance permanently invisible there.
-   * The sheet says it instead, and the badge steps aside.
+   * Which edge the tile's box cuts, or null when it cuts neither. The picture
+   * carries its own badge for this, and the slab is opaque and lands on the
+   * same bottom edge — so while the sheet is up the badge is behind it. On a
+   * coarse pointer the sheet is never down, which made the crop affordance
+   * permanently invisible there. The sheet says it instead, and the badge
+   * steps aside.
    */
-  cropped: boolean;
+  cropped: 'sides' | 'foot' | null;
 }
 
 /**
@@ -58,6 +60,9 @@ interface Props {
  * corner beside it comparable rather than merely nearby.
  */
 const SPECIMEN = 260;
+
+/** A sub-pixel rule renders as nothing; a 1px one renders as a hairline. */
+const MIN_RULE = 1;
 
 /** One row of the slab: what was measured, the figure, and how firmly. */
 function Row({
@@ -87,33 +92,46 @@ export function CardOverlay({ record, cropped }: Props) {
   const ink = readableOn(bg);
   const edge = edgeFor(bg, fill);
 
+  // Source pixels to screen pixels for this tile's picture. Zero until the
+  // first measurement lands, which is read as "not yet" rather than as a size.
+  const scale = coverScale(useStageSize(), image.width, image.height);
+
   const radius = detail?.radius ?? null;
   const border = detail?.border ?? null;
   const shadow = detail?.shadow ?? null;
 
   /*
-     One drawing carries the corner and the edge together, because that is how
-     they occur: a card has both at once, and splitting them would invent a
-     relationship the capture never had.
+     One drawing carries the corner, the edge and the cast together, because
+     that is how they occur: a card has all three at once, and splitting them
+     would invent a relationship the capture never had.
 
-     Sized and rounded in source pixels expressed as a share of the frame, so
-     both track the picture's own scale. The hairline cannot join them — CSS
-     takes no percentage border-width, and a measured 1px hairline is a
-     quarter of a device pixel at thumbnail scale anyway — so it draws at its
-     measured COLOUR at the thinnest width a screen can render, and the slab
-     carries its true width. The cast is left off the drawing for the same
-     reason: blur radius takes no percentage either, and an elevation drawn at
-     four times the picture's scale is the error this frame exists to fix. Its
-     figure is in the slab.
+     Every dimension is a source measurement multiplied by the picture's own
+     display scale, so the specimen is a card of this design at the size this
+     design's cards are drawn on this tile — which is what makes the corner
+     beside it checkable rather than merely nearby. It sits in the tile's own
+     corner, in tile coordinates, because that is where the contract puts it
+     and because the frame's coordinates are off-screen on a wide capture.
+
+     A hairline is the one measurement that cannot go below the device: a 1px
+     rule at quarter scale is a quarter of a pixel, so it is floored at one and
+     the slab carries the true width.
   */
-  const pct = (sourcePx: number) => `calc(${sourcePx} / ${image.width} * 100%)`;
-  const block = {
-    background: fill,
-    width: pct(SPECIMEN),
-    height: pct(SPECIMEN),
-    borderColor: border ? border.hex : edge,
-    borderRadius: pct(Math.min(radius?.px ?? 0, SPECIMEN / 2)),
-  };
+  const px = (sourcePx: number) => `${(sourcePx * scale).toFixed(2)}px`;
+  const block = scale
+    ? {
+        background: fill,
+        width: px(SPECIMEN),
+        height: px(SPECIMEN),
+        borderWidth: `${Math.max(MIN_RULE, (border?.px ?? 1) * scale).toFixed(2)}px`,
+        borderColor: border ? border.hex : edge,
+        borderRadius: px(Math.min(radius?.px ?? 0, SPECIMEN / 2)),
+        boxShadow: shadow
+          ? `0 ${px(shadow.spread / 3)} ${px(shadow.spread)} rgb(0 0 0 / ${(
+              shadow.strength / 255
+            ).toFixed(3)})`
+          : 'none',
+      }
+    : null;
 
   // Real measured positions, not a column count divided into equal parts: the
   // analyzer records where each gutter actually fell, and an evenly spaced
@@ -139,8 +157,17 @@ export function CardOverlay({ record, cropped }: Props) {
           <span className="ov-gutter" key={`${x}-${i}`} style={{ left: `${x * 100}%` }} />
         ))}
 
-        {detail && (radius || border) && <span className="ov-block" style={block} />}
       </div>
+
+      {/*
+         In the tile's corner, not the frame's: the frame hangs off both sides
+         of a wide capture, so its top-left is off-screen there. Outside the
+         frame it also keeps its true proportions — a percentage width and a
+         percentage height resolve against different axes, and one ratio
+         applied to both squashed the specimen and turned its corner into an
+         ellipse.
+      */}
+      {block && (radius || border || shadow) && <span className="ov-block" style={block} />}
 
       <div className="ov-slab">
         {!detail ? (
@@ -205,10 +232,14 @@ export function CardOverlay({ record, cropped }: Props) {
            A fact about the tile rather than about the design, which is why it
            is not a measured row. It used to promise "full length", which was
            true of a tall capture and a lie about a wide one: those are cut at
-           the SIDES by the same box, and were saying nothing at all. Naming no
-           edge is the honest version, and the marker now fires either way.
+           the SIDES by the same box, and were saying nothing at all. The edge
+           is compared rather than guessed now, so it can be named.
         */}
-        {cropped && <div className="ov-crop">Cropped to the tile — full view on open</div>}
+        {cropped && (
+          <div className="ov-crop">
+            {cropped === 'foot' ? 'Foot cropped' : 'Sides cropped'} — full view on open
+          </div>
+        )}
 
         {/* Written rather than measured, and kept apart so the difference is
             visible rather than asserted. */}

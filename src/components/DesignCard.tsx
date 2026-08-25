@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import type { DesignRecord } from '../lib/types';
 import { useThumbUrl } from '../hooks/useImageUrl';
 import { useAttention } from '../lib/attention';
+import { registerStage, useStageSize } from '../lib/stage';
 import { PaletteStrip } from './PaletteStrip';
 import { CardOverlay } from './CardOverlay';
 import { IconCopy, IconStar, IconTrash } from './Icons';
@@ -53,15 +54,29 @@ export const DesignCard = memo(function DesignCard({
   const attended = useAttention(node);
 
   /*
-     The box crops in both directions, so both count. A capture taller than the
-     box loses its foot; one much wider than the box loses its sides, and those
-     were passing as uncropped — five of twelve tiles on a test wall showed
-     half-cut words with no marker at all. The bounds bracket the range of
-     aspects the tile takes across its column widths and Size settings; the
-     sentence names no edge, because which one is cut depends on the tile.
+     Which edge the box cuts, measured rather than guessed.
+
+     This was a constant, then two constants, and both were wrong for the same
+     reason: the tile's aspect is not a number the component knows — it moves
+     with the column width and the Size control. A 1280×900 capture in a box
+     of aspect 1.05 loses a third of its width, and sat inside every threshold
+     picked by hand, so three of eight tiles on a test wall were cut mid-word
+     and said nothing. Comparing the two real aspects also names the edge,
+     which guessing never could.
   */
-  const boxAspect = image.height / image.width;
-  const cropped = boxAspect > 0.82 || boxAspect < 0.62;
+  const stage = useStageSize();
+  const cropped: 'sides' | 'foot' | null = (() => {
+    if (!stage.w || !stage.h) return null;
+    const ratio = image.width / image.height / (stage.w / stage.h);
+    // How much of the cut axis the box actually takes. A marker on every tile
+    // is not a marker: an exact comparison flags a 2% trim as loudly as the
+    // 30% one that cuts a heading in half, and the wall ends up wearing the
+    // badge as decoration. This is the point where something is missing that
+    // you would want to open the design to see.
+    const lost = ratio > 1 ? 1 - 1 / ratio : 1 - ratio;
+    if (lost < 0.12) return null;
+    return ratio > 1 ? 'sides' : 'foot';
+  })();
 
   return (
     <article
@@ -81,7 +96,7 @@ export const DesignCard = memo(function DesignCard({
          overlay would be measured from the card, and its foot would land under
          the palette band rather than on the screenshot's own bottom edge.
       */}
-      <div className="card-stage">
+      <div className="card-stage" ref={registerStage}>
         <button
           type="button"
           className="card-image"
@@ -102,7 +117,9 @@ export const DesignCard = memo(function DesignCard({
           )}
           {cropped && (
             <>
-              <span className="card-crop-fade" aria-hidden />
+              {/* The fade belongs to the foot; a side crop has no bottom edge
+                  to soften and would just get a band across the picture. */}
+              {cropped === 'foot' && <span className="card-crop-fade" aria-hidden />}
               <span className="card-crop-badge">Full view on open</span>
             </>
           )}

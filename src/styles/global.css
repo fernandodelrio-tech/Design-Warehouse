@@ -1279,25 +1279,22 @@ select {
 .ov-block {
   position: absolute;
   /*
-     Anchored where the frame and the tile agree.
+     The tile's own corner, in the tile's own coordinates.
 
-     The frame is top-aligned and horizontally centred on the tile — that is
-     what `object-position: top center` means — so `top` and a centred `left`
-     are the two offsets that mean the same thing in both boxes. A fixed
-     `left` does not: on a landscape capture the frame is wider than the tile
-     and hangs off both sides, and 12px from ITS edge was 72px off-screen.
+     It briefly sat inside the frame, which put it off-screen on a wide
+     capture; the fix for that centred it, which put it in the middle of the
+     picture and abandoned the corner the contract asks for. Neither was
+     necessary — the specimen is sized in real pixels now, so it has no reason
+     to live in the frame's coordinate space at all.
 
-     Below the select box on purpose, too: attending to a tile reveals them
+     Below the select box on purpose: attending to a tile reveals them
      together, and the checkbox's backing landed inside the sample.
   */
   top: calc(var(--s5) + var(--s4));
-  left: 50%;
-  translate: -50% 0;
-  /* Width, height and radius all arrive in source-pixel percentages of the
-     frame. The border width is the one measurement that cannot: CSS takes no
-     percentage there, so it draws at the thinnest a screen can and the slab
-     carries the true figure. */
-  border: 1px solid;
+  left: var(--s3);
+  /* Width, height, radius, rule and cast all arrive inline, each a source
+     measurement times this picture's display scale. */
+  border-style: solid;
 }
 
 .ov-slab {
