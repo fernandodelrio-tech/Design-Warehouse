@@ -140,6 +140,7 @@ export function toMarkdownSpec(record: DesignRecord): string {
 
   const effects = section('Effects & detail', [
     bullet('Shadows / elevation', spec.effects.shadows),
+    bullet('Bezel / relief', spec.effects.bezel),
     bullet('Gradients', spec.effects.gradients),
     bullet('Blur / glass', spec.effects.blur),
     bullet('Motion', spec.effects.animation),
