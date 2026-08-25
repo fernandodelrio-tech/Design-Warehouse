@@ -143,10 +143,9 @@ export default function App() {
   const [lastSync, setLastSync] = useState<number | null>(null);
   const [lastSummary, setLastSummary] = useState<SyncSummary | null>(null);
   const [account, setAccount] = useState<Account | null>(null);
-  // "Copper Panorama" is a light design — a #fbf7ec page carrying a #2b2b2b
-  // band and a copper toolbar — so light is the resting state and the dark
-  // theme is the derived one, built from that measured band rather than by
-  // inverting the light one.
+  // "Ochre Broadsheet" is a light design — a #faf0e6 cream page across 63% of
+  // the canvas, under a near-white #fffdf1 band — so light is the resting
+  // state and the dark theme is the derived one.
   const [theme, setTheme] = useState<'dark' | 'light'>(
     () => (localStorage.getItem('dw-theme') as 'dark' | 'light') || 'light',
   );

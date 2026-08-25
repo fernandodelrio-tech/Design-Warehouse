@@ -49,44 +49,42 @@ are exposed by it.
 
 ## Look and feel
 
-The app wears **Copper Panorama**, a design catalogued in the app itself and then
+The app wears **Ochre Broadsheet**, a design catalogued in the app itself and then
 applied back to it. Its measurements drive the interface directly:
 
 | | |
 | --- | --- |
-| **Colour** | Eight measured tokens, exact — `#fbf7ec` `#e4dbcc` `#a1593e` `#322d2f` `#c5b4a1` `#a89b8b` `#917662` `#c08b55` |
+| **Colour** | Seven measured tokens, exact — `#faf0e6` `#191a1a` `#ede5d9` `#e5d53b` `#bb7158` `#99c0da` `#cfd4d1` |
 | **Spacing** | 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64, and nothing in between — every padding, margin and gap in the stylesheet resolves to one of the eight |
-| **Page inset** | 4% left, 1% right — asymmetric, as measured, rather than tidied into a symmetry the capture does not have |
-| **Type scale** | 12 · 14 · 17 · 24 · 34, and a head that clamps between 30 and 47 |
-| **Corners** | 24px — one radius, used everywhere, large enough that a 35px control reads as a lozenge |
-| **Faces** | Public Sans, one variable file, cut at 300 and 700 |
+| **Page inset** | 12px, level on both sides |
+| **Type scale** | 12 · 14 · 16 · 24 · 41, and a head that clamps between 34 and 67 |
+| **Corners** | 4px — the sharpest of these so far, on the densest capture |
+| **Faces** | Public Sans, one variable file, cut at 400 and 600 — chosen, not measured |
 
-**The accent is allowed to be a letter.** `#a1593e` is 4.89:1 on the page — AA, measured,
-and reported as a pass rather than a failure — so for once the colour a spec calls
-"primary action, links, highlights" can actually be one. On the surface it drops to 3.81,
-so there it is a fill and not type, and the app's own contrast walk is what holds that
-line.
+**Two of this spec's readings are not usable, and saying so is the honest part of
+applying it.** The app measures what it can and labels the rest, and this capture is
+where that mattered most.
 
-**The hover convention inverts.** The spec says hover shifts an accent toward the light,
-and gives its reason: darkening a saturated accent drops its own label below AA. That
-reasoning assumes a dark label. Here the copper takes the page colour at 4.89 and the ink
-at 2.59, so the label is light — and lightening the fill is what would drop it. The
-reasoning transfers and the direction does not: hover goes darker, to the measured
-`#844e38`, and the pair opens from 4.89 to 6.27.
+**The weight column is broken.** All three type steps report the same stem — 27.4px —
+for ink heights of 59, 36 and 14. Three sizes cannot share one stem width, and 27.4px
+on 14px of ink is a stroke twice as tall as the letter it belongs inside. That is one
+global number printed three times rather than three measurements, so no weight
+transfers from this capture. The 400 and 600 above are chosen, and the stylesheet says
+so where it sets them.
 
-**Two measured bands, and the app has two slots for them.** A `#2b2b2b` footer, which
-becomes the masthead and carries four levels on it — the page colour at 13.23, the
-surface at 10.32, the muted at 7.02 and muted-4 at 4.76 — and a copper toolbar of five
-controls on one baseline, which is exactly what the filter row is.
+**The "top navigation" is 797px tall.** A navigation band is not eight hundred pixels
+deep; on a 6073px capture that is the nav plus everything beneath it, read as one
+region. Its fill transfers — `#fffdf1`, a near-white cream that takes the ink at
+17.09 — and its height does not.
 
-**All three type steps are capitals, and the smallest is the only bold one.** A 4px stem
-on 14px of ink where the two above it are light. The heavy end of this design is its
-labels, which is why the app's base weight is a 300 and its "semibold" a 700.
+**What is solid is the colour**, and it is the most colourful of these by a distance: a
+cream page across 63% of the canvas, a near-black ink at 15.51, and then a vivid
+yellow, a light blue card, an orange field and a gold rule. The yellow reads 1.34 as a
+letter and 11.56 with the ink knocked out of it, so it is a fill rather than type — and
+for once hover toward the light does exactly what the spec says, because this label
+really is the ink: 11.56 opens to 13.58.
 
-**The evening edition.** The dark theme is derived rather than inverted: its ground is the
-capture's own measured footer band, not the light theme turned upside down. The copper
-needs no help across the change — it clears AA on the ink as type *and* still carries the
-ink as a fill, the one token that means the same thing in both themes.
+**And it is dense**: 50% of the canvas carries detail, the highest yet, on a 4px corner.
 
 Every text pair in both themes is checked against its WCAG threshold by walking the
 real DOM, across the empty state, the catalog, the detail drawer and the sync panel.
