@@ -59,6 +59,16 @@ const subscribe = (notify: () => void) => {
   };
 };
 
+/**
+ * The same signal outside React.
+ *
+ * Attention ranks tiles by how near their centres are to the middle of the
+ * viewport, and the Size control changes every one of those centres without
+ * scrolling the page or resizing the window — so the ranking would go stale
+ * with nothing to announce it. This is the announcement.
+ */
+export const subscribeStage = subscribe;
+
 /** The stage's rendered size. `{0, 0}` until the first observation lands. */
 export function useStageSize(): StageSize {
   return useSyncExternalStore(subscribe, () => size, () => size);

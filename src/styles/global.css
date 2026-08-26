@@ -1479,7 +1479,17 @@ select {
    them left the metadata and threw away the thesis.
 */
 @media (hover: none) {
-  .card-attended .card-overlay {
+  /*
+     Both directions, not just the way in.
+
+     The delay and the fade exist for a pointer crossing tiles it does not mean
+     to open; a scroll has no such problem, and attention here hands from one
+     tile straight to the next. Leaving the fade on the way out meant the
+     outgoing sheet spent 120ms dissolving while the incoming one was already
+     up — two sheets on screen through every handover, which reads as the wall
+     blinking rather than as attention moving.
+  */
+  .card-overlay {
     transition: none;
   }
 }
