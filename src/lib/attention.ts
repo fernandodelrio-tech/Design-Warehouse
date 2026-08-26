@@ -1,143 +1,135 @@
 /**
- * Which tile is being attended to, on a device with no pointer to say so.
+ * Which tile is showing its measurement sheet, on a device with no pointer.
  *
  * The overlay is meant for one tile at a time — that is the composition. With
- * a mouse, hover and focus say which one. A touch screen has neither, and the
- * first answer here was to show every sheet at once, which is not "data on
- * demand": it put 150px of slab on every one of two hundred tiles and gave the
- * wall back to metadata, the exact arrangement the sheet was built to replace.
+ * a mouse, hover and focus say which one. A touch screen has neither, and this
+ * is the third answer to that.
  *
- * So scrolling is the gesture. The tile holding the middle of the viewport is
- * the one being looked at, and it is the one that opens. Attention moves as the
- * thumb moves, one tile at a time, and a tap still opens a design rather than
- * being spent on revealing a spec.
+ * The first showed every sheet at once, which is not "data on demand": it put
+ * 150px of slab on every one of two hundred tiles and gave the wall back to
+ * metadata, the exact arrangement the sheet was built to replace.
  *
- * The second answer was a narrow horizontal band across the viewport, lighting
- * whatever intersected it. That is one tile only where the grid is one column
- * wide. On an iPad the same band lit an entire ROW of five, and lit two rows —
- * ten tiles — through every handover, so scrolling flashed rows on and off.
- * Reproduced at 1180×820 with touch emulation: five lit at rest, ten mid-swap,
- * nine such states over a 1400px scroll. A band cannot express "one tile",
- * because a band is a shape and the answer is a ranking.
+ * The second let scrolling decide — whichever tile held the middle of the
+ * viewport carried the sheet. It read well in principle and badly in the hand.
+ * Attention arrived unasked while the thumb was somewhere else entirely, so a
+ * sheet you did not call up covered a picture you were trying to look at, and
+ * the wall changed under you as you moved through it. Scrolling is how you
+ * look at a wall, not how you ask it a question.
  *
- * So the observer stops deciding and starts gathering. It keeps the set of
- * tiles that are on screen at all — cheap, and the only part worth a callback —
- * and the winner is the one whose centre lies nearest the centre of the
- * viewport, recomputed on a frame boundary while the wall moves. Exactly one
- * tile is lit whenever any tile is visible, and attention hands from that tile
- * to the next rather than switching a row off and another on.
+ * So the tap asks. A tap on a tile paints its sheet; a second tap on the same
+ * tile opens the design; a tap anywhere else puts the sheet away. Nothing
+ * appears that was not asked for, and the wall stays pictures until it is.
  *
- * One observer for the whole wall rather than one per tile, and none at all on
- * a device that has a pointer.
+ * The cost is honest and worth naming: opening a design on touch is now two
+ * taps rather than one. The contract calls opening the primary action, and
+ * this demotes it half a step. It buys the thing the contract wanted more —
+ * "he picks without opening anything" — because the sheet is what decides, and
+ * a sheet you can call up on demand is worth more than one taken for granted.
+ *
+ * A pointer device never enters any of this. Hover and focus already say what
+ * is being attended to, and this store stays empty there.
  */
-import { useEffect, useState } from 'react';
-import { subscribeStage } from './stage';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 
-type Listener = (attended: boolean) => void;
+/** The tile showing its sheet, by record id. At most one, ever. */
+let attended: string | null = null;
 
-let observer: IntersectionObserver | null = null;
+const subscribers = new Set<() => void>();
 
-/** Every mounted tile, so the winner can be told apart from the last winner. */
-const listeners = new Map<Element, Listener>();
-
-/** The tiles on screen — the only ones whose boxes are worth measuring. */
-const onScreen = new Set<Element>();
-
-let winner: Element | null = null;
-let frame = 0;
-
-/**
- * How much closer a challenger must be before attention moves, in pixels.
- *
- * Two tiles are equidistant from the middle at every handover, and without a
- * margin a rubber-band scroll or a pixel of jitter sits on that tie and flips
- * the sheet back and forth. Small enough that a deliberate scroll hands over
- * when it looks like it should.
- */
-const HOLD = 24;
-
-/** Distance from a tile's centre to the middle of the viewport. */
-function offCentre(node: Element): number {
-  const r = node.getBoundingClientRect();
-  const dx = r.left + r.width / 2 - window.innerWidth / 2;
-  const dy = r.top + r.height / 2 - window.innerHeight / 2;
-  return Math.hypot(dx, dy);
+function publish(): void {
+  for (const notify of subscribers) notify();
 }
 
-function elect(): void {
-  frame = 0;
+const subscribe = (notify: () => void) => {
+  subscribers.add(notify);
+  return () => {
+    subscribers.delete(notify);
+  };
+};
 
-  let next: Element | null = null;
-  let best = Infinity;
-  for (const node of onScreen) {
-    const d = offCentre(node);
-    if (d < best) {
-      best = d;
-      next = node;
-    }
-  }
+/*
+   Whether this device is one that taps.
 
-  if (next === winner) return;
-  // The incumbent keeps it until it is beaten by more than the tie margin, so
-  // a handover happens once rather than twice.
-  if (winner && onScreen.has(winner) && offCentre(winner) - best < HOLD) return;
+   Watched rather than read once: an iPad with a keyboard case attached gains a
+   pointer mid-session, and a tile that still wanted two taps after the trackpad
+   arrived would be a tile that ignores the hardware in front of it.
+*/
+const coarseQuery = typeof matchMedia === 'undefined' ? null : matchMedia('(hover: none)');
+let coarse = coarseQuery?.matches ?? false;
 
-  const previous = winner;
-  winner = next;
-  if (previous) listeners.get(previous)?.(false);
-  if (next) listeners.get(next)?.(true);
+coarseQuery?.addEventListener('change', (event) => {
+  coarse = event.matches;
+  // A sheet held open by a tap has no way to be dismissed once hover takes
+  // over, so gaining a pointer clears it.
+  if (!coarse) attended = null;
+  publish();
+});
+
+const readCoarse = () => coarse;
+
+/** True where a tap is what reveals a sheet, rather than a pointer. */
+export function useTapReveals(): boolean {
+  return useSyncExternalStore(subscribe, readCoarse, () => false);
 }
 
-/** Coalesce scroll, resize and intersection into one measurement per frame. */
-function schedule(): void {
-  if (frame) return;
-  frame = requestAnimationFrame(elect);
+/*
+   A tap outside every tile puts the sheet away.
+
+   Capture phase, so it is decided before the tile's own handler runs and
+   cannot be swallowed by anything in between. Bound once, on the first tile to
+   mount on a touch device, and never on a pointer device at all.
+*/
+let dismissBound = false;
+
+function bindDismiss(): void {
+  if (dismissBound || typeof document === 'undefined') return;
+  dismissBound = true;
+  document.addEventListener(
+    'pointerdown',
+    (event) => {
+      if (!attended) return;
+      const target = event.target;
+      // Inside any tile is that tile's business: it either moves attention to
+      // itself or opens, and either way this is not the one to decide.
+      if (target instanceof Element && target.closest('.card')) return;
+      attended = null;
+      publish();
+    },
+    true,
+  );
 }
 
-function shared(): IntersectionObserver | null {
-  if (observer) return observer;
-  if (typeof IntersectionObserver === 'undefined') return null;
-  observer = new IntersectionObserver((entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) onScreen.add(entry.target);
-      else onScreen.delete(entry.target);
-    }
-    schedule();
-  });
-  addEventListener('scroll', schedule, { passive: true });
-  addEventListener('resize', schedule);
-  // Changing the Size control resizes every tile without moving the page, so
-  // the ranking changes with nothing else to announce it.
-  subscribeStage(schedule);
-  return observer;
+/** Show this tile's sheet, and put away whichever one was up. */
+export function attend(id: string): void {
+  if (attended === id) return;
+  attended = id;
+  publish();
 }
 
-/** True when this element holds the middle of the viewport on a touch device. */
-export function useAttention(node: Element | null): boolean {
-  const [attended, setAttended] = useState(false);
+/** Put away whatever sheet is up. */
+export function dismiss(): void {
+  if (attended === null) return;
+  attended = null;
+  publish();
+}
+
+/** True when this tile is the one showing its sheet. */
+export function useAttention(id: string): boolean {
+  const read = useCallback(() => attended === id, [id]);
+  const isAttended = useSyncExternalStore(subscribe, read, () => false);
 
   useEffect(() => {
-    if (!node) return;
-    // A device with a pointer says what it is attending to by pointing at it.
-    if (typeof matchMedia === 'undefined' || !matchMedia('(hover: none)').matches) return;
-    const io = shared();
-    if (!io) return;
-    listeners.set(node, setAttended);
-    io.observe(node);
-    schedule();
+    if (!coarse) return;
+    bindDismiss();
     return () => {
-      io.unobserve(node);
-      listeners.delete(node);
-      onScreen.delete(node);
-      // Filtering the catalog can unmount the tile that held attention; the
-      // election has to be told, or the wall stays dark until the next scroll.
-      if (winner === node) {
-        winner = null;
-        schedule();
+      // Filtering the catalog unmounts tiles, and a sheet belonging to a tile
+      // that is no longer on the wall would keep the store pointing at nothing.
+      if (attended === id) {
+        attended = null;
+        publish();
       }
-      setAttended(false);
     };
-  }, [node]);
+  }, [id]);
 
-  return attended;
+  return isAttended;
 }

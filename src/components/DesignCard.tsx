@@ -1,7 +1,7 @@
-import { memo, useState } from 'react';
+import { memo } from 'react';
 import type { DesignRecord } from '../lib/types';
 import { useThumbUrl } from '../hooks/useImageUrl';
-import { useAttention } from '../lib/attention';
+import { attend, useAttention, useTapReveals } from '../lib/attention';
 import { registerStage, useStageSize } from '../lib/stage';
 import { PaletteStrip } from './PaletteStrip';
 import { CardOverlay } from './CardOverlay';
@@ -49,9 +49,18 @@ export const DesignCard = memo(function DesignCard({
 }: Props) {
   const url = useThumbUrl(record.id);
   const { image, auto } = record;
-  // Null on a pointer device: the hook opts out and never observes.
-  const [node, setNode] = useState<HTMLElement | null>(null);
-  const attended = useAttention(node);
+
+  /*
+     On a touch device the picture answers before it opens.
+
+     A tap paints this tile's sheet; a second tap on the same tile opens the
+     design; a tap anywhere else puts the sheet away. Opening therefore costs
+     two taps here and one everywhere else, which is the trade the wall is
+     worth: nothing appears that was not asked for. See lib/attention.ts.
+  */
+  const tapReveals = useTapReveals();
+  const attended = useAttention(record.id);
+  const revealFirst = tapReveals && !attended;
 
   /*
      Which edge the box cuts, measured rather than guessed.
@@ -79,10 +88,7 @@ export const DesignCard = memo(function DesignCard({
   })();
 
   return (
-    <article
-      ref={setNode}
-      className={`card${selected ? ' selected' : ''}${attended ? ' card-attended' : ''}`}
-    >
+    <article className={`card${selected ? ' selected' : ''}${attended ? ' card-attended' : ''}`}>
       <input
         type="checkbox"
         className="card-select"
@@ -100,8 +106,11 @@ export const DesignCard = memo(function DesignCard({
         <button
           type="button"
           className="card-image"
-          onClick={() => onOpen(record.id)}
-          aria-label={`Open ${record.title}`}
+          onClick={() => (revealFirst ? attend(record.id) : onOpen(record.id))}
+          /* The name says what THIS tap does, because on touch the two taps
+             do different things and a label that only ever promised "open"
+             would be describing the second one. */
+          aria-label={revealFirst ? `Show measurements for ${record.title}` : `Open ${record.title}`}
         >
           {url ? (
             <img

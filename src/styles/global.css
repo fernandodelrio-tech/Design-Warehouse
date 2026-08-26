@@ -1468,26 +1468,30 @@ select {
 }
 
 /*
-   No pointer to say which tile is being looked at, so scrolling says it: the
-   tile holding the middle of the viewport carries the sheet, and the rest of
-   the wall stays pictures. See lib/attention.ts.
+   No pointer to say which tile is being looked at, so the tap says it: a tap
+   paints that tile's sheet, a second tap on it opens the design, and a tap
+   anywhere else puts the sheet away. The rest of the wall stays pictures.
+   See lib/attention.ts.
 
    The first version here simply set every sheet visible. That is not data on
    demand — it put a slab on all two hundred tiles and handed the wall back to
    metadata, which is the arrangement this composition exists to replace. The
    drawings stay drawn, because the drawings ARE the composition; suppressing
    them left the metadata and threw away the thesis.
+
+   The second let scrolling decide, which read well and felt wrong: a sheet
+   arrived unasked over a picture you were trying to look at, and the wall
+   changed under the thumb as it moved. Scrolling is how you look at a wall,
+   not how you ask it a question.
 */
 @media (hover: none) {
   /*
      Both directions, not just the way in.
 
      The delay and the fade exist for a pointer crossing tiles it does not mean
-     to open; a scroll has no such problem, and attention here hands from one
-     tile straight to the next. Leaving the fade on the way out meant the
-     outgoing sheet spent 120ms dissolving while the incoming one was already
-     up — two sheets on screen through every handover, which reads as the wall
-     blinking rather than as attention moving.
+     to open. A tap has no such problem — it is deliberate, and it deserves an
+     answer in the same frame rather than a fade that makes a direct request
+     feel like a suggestion.
   */
   .card-overlay {
     transition: none;
