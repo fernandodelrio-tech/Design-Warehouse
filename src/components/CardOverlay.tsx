@@ -15,7 +15,8 @@ import type { DesignRecord } from '../lib/types';
  * by its screenshot, and the screenshot was the smaller half.
  *
  * So the tile is a picture, and this appears over it only for the tile being
- * attended to. Two zones, and the split is deliberate:
+ * attended to — pointed at on a mouse, tapped on a touch screen. Two zones,
+ * and the split is deliberate:
  *
  *   - The DRAWINGS sit directly on the screenshot with nothing behind them.
  *     A corner block at the measured radius, wearing the measured hairline,
@@ -45,10 +46,9 @@ interface Props {
   /**
    * Which edge the tile's box cuts, or null when it cuts neither. The picture
    * carries its own badge for this, and the slab is opaque and lands on the
-   * same bottom edge — so while the sheet is up the badge is behind it. On a
-   * coarse pointer the sheet is never down, which made the crop affordance
-   * permanently invisible there. The sheet says it instead, and the badge
-   * steps aside.
+   * same bottom edge — so while the sheet is up the badge is behind it. The
+   * sheet says it instead, and the badge steps aside: one statement rather
+   * than two fighting for the same 20px band.
    */
   cropped: 'sides' | 'foot' | null;
 }
